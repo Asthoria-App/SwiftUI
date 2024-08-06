@@ -1,0 +1,59 @@
+//
+//  TopView.swift
+//  Meditation_swiftUI
+//
+//  Created by Aysema Çam on 6.08.2024.
+//
+
+import Foundation
+import SwiftUI
+
+struct TopView: View {
+    var title: String
+
+    var body: some View {
+        ZStack {
+            HStack {
+                // Spacer to ensure buttons are on the right
+                Spacer()
+
+                Button(action: {
+                    // Action for notification button
+                }) {
+                    Image(systemName: "bell")
+                        .font(.title3)
+                        .padding(5)
+                        .foregroundColor(.white)
+                        .background(Color.white.opacity(0.16))
+                        .clipShape(Circle())
+                }
+
+                // Search button
+                Button(action: {
+                }) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title3)
+                        .padding(5)
+                        .foregroundColor(.white)
+                        .background(Color.white.opacity(0.15))
+                        .clipShape(Circle())
+                }
+            }
+            .padding(.trailing)
+
+            // Title in the center
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+        }
+        .background(Color.black)
+        .padding()
+    }
+}
+
+struct TopView_Previews: PreviewProvider {
+    static var previews: some View {
+        TopView(title: "Sleep")
+    }
+}
