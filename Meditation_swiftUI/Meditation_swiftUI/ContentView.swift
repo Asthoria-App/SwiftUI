@@ -7,17 +7,39 @@
 
 import SwiftUI
 
+
+// Preview
 struct ContentView: View {
+    let categories = [
+        (title: "Sleep Meditations", icon: "icon1"),
+        (title: "Relaxation", icon: "icon2"),
+        (title: "Focus", icon: "icon3"),
+        (title: "Stress Relief", icon: "icon4"),
+        (title: "Mindfulness", icon: "icon5")
+    ]
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ScrollView {
+            VStack {
+                TopPart()
+                    .frame(height: 80)
+                
+                CategoriesCollectionView(categories: categories)
+                    .padding(.horizontal)
+                    .padding(.top)
+                
+                CategorySection(title: "Sleep Meditations", meditations: sampleMeditations)
+                CategorySection(title: "Relaxation", meditations: sampleMeditations)
+                CategorySection(title: "Focus", meditations: sampleMeditations2)
+                CategorySection(title: "Stress Relief", meditations: sampleMeditations)
+                CategorySection(title: "Mindfulness", meditations: sampleMeditations)
+            }
         }
-        .padding()
+        .background(Color.black)
     }
 }
+
+
 
 #Preview {
     ContentView()

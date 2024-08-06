@@ -15,6 +15,11 @@
 		5630E3B22C620EEF00299CE8 /* SecondTopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3B12C620EEF00299CE8 /* SecondTopView.swift */; };
 		5630E3B42C620F7900299CE8 /* TopPart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3B32C620F7900299CE8 /* TopPart.swift */; };
 		5630E3B62C62142E00299CE8 /* CategorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3B52C62142E00299CE8 /* CategorySection.swift */; };
+		5630E3BA2C625AA200299CE8 /* CtagoryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3B92C625AA200299CE8 /* CtagoryDetail.swift */; };
+		5630E3D42C627BD800299CE8 /* Meditation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3D32C627BD800299CE8 /* Meditation.swift */; };
+		5630E3D62C627C9300299CE8 /* MeditationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3D52C627C9300299CE8 /* MeditationCell.swift */; };
+		5630E3D82C627CD700299CE8 /* MeditationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3D72C627CD700299CE8 /* MeditationCollectionView.swift */; };
+		5630E3DA2C627E8800299CE8 /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5630E3D92C627E8800299CE8 /* CategoryCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +32,11 @@
 		5630E3B12C620EEF00299CE8 /* SecondTopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondTopView.swift; sourceTree = "<group>"; };
 		5630E3B32C620F7900299CE8 /* TopPart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopPart.swift; sourceTree = "<group>"; };
 		5630E3B52C62142E00299CE8 /* CategorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySection.swift; sourceTree = "<group>"; };
+		5630E3B92C625AA200299CE8 /* CtagoryDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CtagoryDetail.swift; sourceTree = "<group>"; };
+		5630E3D32C627BD800299CE8 /* Meditation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meditation.swift; sourceTree = "<group>"; };
+		5630E3D52C627C9300299CE8 /* MeditationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationCell.swift; sourceTree = "<group>"; };
+		5630E3D72C627CD700299CE8 /* MeditationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationCollectionView.swift; sourceTree = "<group>"; };
+		5630E3D92C627E8800299CE8 /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +69,7 @@
 		561D057B2C6207A700B82965 /* Meditation_swiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				5630E3D22C627BBE00299CE8 /* Model */,
 				5630E3AE2C620C8E00299CE8 /* Utilities */,
 				561D057C2C6207A700B82965 /* Meditation_swiftUIApp.swift */,
 				561D057E2C6207A700B82965 /* ContentView.swift */,
@@ -83,8 +94,20 @@
 				5630E3B12C620EEF00299CE8 /* SecondTopView.swift */,
 				5630E3B32C620F7900299CE8 /* TopPart.swift */,
 				5630E3B52C62142E00299CE8 /* CategorySection.swift */,
+				5630E3B92C625AA200299CE8 /* CtagoryDetail.swift */,
+				5630E3D52C627C9300299CE8 /* MeditationCell.swift */,
+				5630E3D72C627CD700299CE8 /* MeditationCollectionView.swift */,
+				5630E3D92C627E8800299CE8 /* CategoryCell.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		5630E3D22C627BBE00299CE8 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				5630E3D32C627BD800299CE8 /* Meditation.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -157,12 +180,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5630E3D62C627C9300299CE8 /* MeditationCell.swift in Sources */,
 				5630E3B22C620EEF00299CE8 /* SecondTopView.swift in Sources */,
+				5630E3D42C627BD800299CE8 /* Meditation.swift in Sources */,
+				5630E3BA2C625AA200299CE8 /* CtagoryDetail.swift in Sources */,
 				5630E3B42C620F7900299CE8 /* TopPart.swift in Sources */,
 				561D057F2C6207A700B82965 /* ContentView.swift in Sources */,
 				5630E3B62C62142E00299CE8 /* CategorySection.swift in Sources */,
 				5630E3B02C620CA300299CE8 /* TopView.swift in Sources */,
+				5630E3D82C627CD700299CE8 /* MeditationCollectionView.swift in Sources */,
 				561D057D2C6207A700B82965 /* Meditation_swiftUIApp.swift in Sources */,
+				5630E3DA2C627E8800299CE8 /* CategoryCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

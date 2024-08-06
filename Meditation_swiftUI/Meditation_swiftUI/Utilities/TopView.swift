@@ -14,7 +14,6 @@ struct TopView: View {
     var body: some View {
         ZStack {
             HStack {
-                // Spacer to ensure buttons are on the right
                 Spacer()
 
                 Button(action: {
@@ -28,7 +27,6 @@ struct TopView: View {
                         .clipShape(Circle())
                 }
 
-                // Search button
                 Button(action: {
                 }) {
                     Image(systemName: "magnifyingglass")
@@ -41,7 +39,6 @@ struct TopView: View {
             }
             .padding(.trailing)
 
-            // Title in the center
             Text(title)
                 .font(.subheadline)
                 .fontWeight(.medium)

@@ -29,8 +29,4 @@ struct SecondTopView: View {
         .padding()
     }
 }
-struct SecondTopView_Previews: PreviewProvider {
-    static var previews: some View {
-        SecondTopView(title: "Sleep")
-    }
-}
+
