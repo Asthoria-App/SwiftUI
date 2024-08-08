@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-
-// Preview
 struct ContentView: View {
+    @State private var showDetailView = false
     let categories = [
         (title: "Sleep Meditations", icon: "icon1"),
         (title: "Relaxation", icon: "icon2"),
@@ -19,23 +18,26 @@ struct ContentView: View {
     ]
     
     var body: some View {
-        ScrollView {
-            VStack {
-                TopPart()
-                    .frame(height: 80)
-                
-                CategoriesCollectionView(categories: categories)
-                    .padding(.horizontal)
-                    .padding(.top)
-                
-                CategorySection(title: "Sleep Meditations", meditations: sampleMeditations)
-                CategorySection(title: "Relaxation", meditations: sampleMeditations)
-                CategorySection(title: "Focus", meditations: sampleMeditations2)
-                CategorySection(title: "Stress Relief", meditations: sampleMeditations)
-                CategorySection(title: "Mindfulness", meditations: sampleMeditations)
+        NavigationView {
+            ScrollView {
+                VStack {
+                    TopPart()
+                        .frame(height: 80)
+                    
+                    CategoriesCollectionView(categories: categories)
+                        .padding(.horizontal)
+                        .padding(.top)
+                    
+                    CategorySection(title: "Sleep Meditations", meditations: sampleMeditations, showDetailView: $showDetailView)
+                    CategorySection(title: "Relaxation", meditations: sampleMeditations, showDetailView: $showDetailView)
+                    CategorySection(title: "Focus", meditations: sampleMeditations2, showDetailView: $showDetailView)
+                    CategorySection(title: "Stress Relief", meditations: sampleMeditations, showDetailView: $showDetailView)
+                    CategorySection(title: "Mindfulness", meditations: sampleMeditations, showDetailView: $showDetailView)
+                }
             }
+            .background(Color.black)
+            .navigationBarTitle(" ", displayMode: .inline)
         }
-        .background(Color.black)
     }
 }
 

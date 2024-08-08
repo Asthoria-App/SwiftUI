@@ -11,16 +11,16 @@ import SwiftUI
 
 let sampleMeditations = [
     Meditation(title: "Relaxing Sounds", image: "image1", icon: "icon1", description: "Relax with calming sounds.", isPremium: false),
-    Meditation(title: "Deep Sleep", image: "image2", icon: "icon2", description: "Fall into a deep sleep.", isPremium: true),
-    Meditation(title: "Stress Relief", image: "image3", icon: "icon3", description: "Relieve your stress.", isPremium: false),
-    Meditation(title: "Mindfulness", image: "image4", icon: "icon4", description: "Be present in the moment.", isPremium: true)
+    Meditation(title: "Deep Sleep", image: "image2", icon: "icon1", description: "Fall into a deep sleep.", isPremium: true),
+    Meditation(title: "Stress Relief", image: "image3", icon: "icon1", description: "Relieve your stress.", isPremium: false),
+    Meditation(title: "Mindfulness", image: "image4", icon: "icon1", description: "Be present in the moment.", isPremium: true)
 ]
 
 let sampleMeditations2 = [
     Meditation(title: "Relaxing Sounds", image: "image6", icon: "icon1", description: "Relax with calming sounds.", isPremium: false),
-    Meditation(title: "Deep Sleep", image: "image7", icon: "icon2", description: "Fall into a deep sleep.", isPremium: true),
-    Meditation(title: "Stress Relief", image: "image8", icon: "icon3", description: "Relieve your stress.", isPremium: false),
-    Meditation(title: "Mindfulness", image: "image9", icon: "icon4", description: "Be present in the moment.", isPremium: true)
+    Meditation(title: "Deep Sleep", image: "image7", icon: "icon1", description: "Fall into a deep sleep.", isPremium: true),
+    Meditation(title: "Stress Relief", image: "image8", icon: "icon1", description: "Relieve your stress.", isPremium: false),
+    Meditation(title: "Mindfulness", image: "image9", icon: "icon1", description: "Be present in the moment.", isPremium: true)
 ]
 
 extension View {
@@ -59,10 +59,10 @@ struct CategoriesCollectionView: View {
     }
 }
 
-// Category Section View
 struct CategorySection: View {
     var title: String
     var meditations: [Meditation]
+    @Binding var showDetailView: Bool
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -72,7 +72,7 @@ struct CategorySection: View {
                     .foregroundColor(.white)
                 Spacer()
                 Button(action: {
-                    // See All Action
+                    showDetailView = true
                 }) {
                     Text("See all")
                         .foregroundColor(.gray)
@@ -84,5 +84,8 @@ struct CategorySection: View {
                 .padding(.horizontal)
         }
         .padding(.top)
+        .fullScreenCover(isPresented: $showDetailView) {
+            DetailView(title: title, meditations: meditations)
+        }
     }
 }
