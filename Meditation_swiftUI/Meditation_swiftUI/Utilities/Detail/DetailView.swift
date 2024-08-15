@@ -28,7 +28,6 @@ struct DetailView: View {
             }
             .background(Color.black)
             
-            // Blur effect at the top
             VisualEffectBlur(blurStyle: .systemMaterialDark)
                 .edgesIgnoringSafeArea(.top)
                 .frame(height: 60)
@@ -46,9 +45,8 @@ struct DetailView: View {
                     , alignment: .bottom
                 )
 
-            // Independent back button
             Button(action: {
-                print("Back button pressed") // Debugging statement
+                print("detail back button tapped")
                 presentationMode.wrappedValue.dismiss()
             }) {
                 Image(systemName: "chevron.left")
@@ -60,7 +58,7 @@ struct DetailView: View {
             .padding(.top, 16)
         }
         .background(Color.black)
-        .navigationBarHidden(true) // Hide the navigation bar in DetailView
+        .navigationBarHidden(true)
     }
 }
 

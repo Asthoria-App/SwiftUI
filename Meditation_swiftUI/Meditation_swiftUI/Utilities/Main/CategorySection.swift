@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-
-
 let sampleMeditations = [
     Meditation(title: "Relaxing Sounds", image: "image1", icon: "icon1", description: "Relax with calming sounds.", isPremium: false),
     Meditation(title: "Deep Sleep", image: "image2", icon: "icon1", description: "Fall into a deep sleep.", isPremium: true),
@@ -39,17 +37,14 @@ struct RoundedCorner: Shape {
     }
 }
 
-
-
-
-
-// Categories Collection View
 struct CategoriesCollectionView: View {
     let categories: [(title: String, icon: String)]
+
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
+                
                 ForEach(categories, id: \.title) { category in
                     CategoryCell(title: category.title, icon: category.icon)
                         .padding(.trailing, 8)
@@ -63,6 +58,7 @@ struct CategorySection: View {
     var title: String
     var meditations: [Meditation]
     @Binding var showDetailView: Bool
+    @State private var selectedMeditation: Meditation? = nil
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -73,6 +69,7 @@ struct CategorySection: View {
                 Spacer()
                 Button(action: {
                     showDetailView = true
+                    print("eee")
                 }) {
                     Text("See all")
                         .foregroundColor(.gray)
@@ -80,12 +77,13 @@ struct CategorySection: View {
             }
             .padding(.horizontal)
             
-            MeditationCollectionView(meditations: meditations)
+            MeditationCollectionView(meditations: meditations, showDetailView: $showDetailView, selectedMeditation: $selectedMeditation)
                 .padding(.horizontal)
         }
         .padding(.top)
-        .fullScreenCover(isPresented: $showDetailView) {
-            DetailView(title: title, meditations: meditations)
+        .fullScreenCover(item: $selectedMeditation) { meditation in
+            PlayerView(meditation: meditation)
         }
     }
 }
+
