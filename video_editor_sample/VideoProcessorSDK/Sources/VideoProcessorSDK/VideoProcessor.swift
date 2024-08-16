@@ -5,42 +5,38 @@ import SwiftUI
 public class VideoProcessor: ObservableObject {
     private let videoURL: URL
     private var speed: Float = 1.0
-    private var selectedFilter: VideoFilter?
+    private var selectedFilter: VideoFilter = .none
 
     public init(videoURL: URL) {
         self.videoURL = videoURL
     }
 
-    // Set video speed
-    public func setVideo(speed: Float = 1.0) {
+    public func processVideo(speed: Float = 1.0, loopDuration: Double = 0.0, makeLoop: Bool = false, filter: VideoFilter = .none, completion: @escaping (URL?) -> Void) {
         self.speed = speed
-    }
-
-    // Set the video filter
-    public func setFilter(_ filter: VideoFilter) {
         self.selectedFilter = filter
-    }
-
-    // Process video with optional boomerang effect
-    public func processVideo(applyBoomerang: Bool, completion: @escaping (URL?) -> Void) {
+        
         let asset = AVAsset(url: videoURL)
         let composition = AVMutableComposition()
 
         Task {
             do {
                 let videoTrack = try await asset.loadTracks(withMediaType: .video).first
-                let duration = try await asset.load(.duration)
+                let originalDuration = try await asset.load(.duration)
+                let scaledDuration = CMTimeMultiplyByFloat64(originalDuration, multiplier: 1.0 / Float64(speed))
 
                 guard let videoTrack = videoTrack else {
                     completion(nil)
                     return
                 }
 
-                // Step 1: Create the initial composition
-                let videoComposition = try createBoomerangComposition(for: videoTrack, duration: duration, in: composition, applyBoomerang: applyBoomerang)
+                let videoComposition: AVMutableVideoComposition
+                if makeLoop {
+                    videoComposition = try createLoopingComposition(for: videoTrack, originalDuration: scaledDuration, in: composition, loopDuration: loopDuration)
+                } else {
+                    videoComposition = try createSimpleComposition(for: videoTrack, originalDuration: scaledDuration, in: composition)
+                }
 
-                // Step 2: Apply filter if any
-                if let filter = self.selectedFilter?.filter {
+                if let filter = self.selectedFilter.filter {
                     applyCIFilter(filter, to: videoComposition, using: composition, completion: completion)
                 } else {
                     export(composition: composition, videoComposition: videoComposition, completion: completion)
@@ -51,54 +47,46 @@ public class VideoProcessor: ObservableObject {
         }
     }
 
-    // Create boomerang composition
-    private func createBoomerangComposition(for videoTrack: AVAssetTrack, duration: CMTime, in composition: AVMutableComposition, applyBoomerang: Bool) throws -> AVMutableVideoComposition {
+    private func createLoopingComposition(for videoTrack: AVAssetTrack, originalDuration: CMTime, in composition: AVMutableComposition, loopDuration: Double) throws -> AVMutableVideoComposition {
         let videoComposition = AVMutableVideoComposition()
-        let timeRange = CMTimeRange(start: .zero, duration: duration)
-
-        // Add the forward video track
+        let timeRange = CMTimeRange(start: .zero, duration: originalDuration)
+        
         let videoCompositionTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)!
         try videoCompositionTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-        videoCompositionTrack.scaleTimeRange(timeRange, toDuration: CMTimeMultiplyByFloat64(duration, multiplier: 1.0 / Double(speed)))
-
-        // Handle boomerang
-        if applyBoomerang {
-            // Reverse the video and append
-            let reversedTrack = try reverseVideoTrack(for: videoTrack, in: composition, duration: duration)
-            
-            let forwardInstruction = AVMutableVideoCompositionInstruction()
-            forwardInstruction.timeRange = CMTimeRange(start: .zero, duration: duration)
-            forwardInstruction.layerInstructions = [AVMutableVideoCompositionLayerInstruction(assetTrack: videoCompositionTrack)]
-
-            let reverseInstruction = AVMutableVideoCompositionInstruction()
-            reverseInstruction.timeRange = CMTimeRange(start: duration, duration: duration)
-            reverseInstruction.layerInstructions = [AVMutableVideoCompositionLayerInstruction(assetTrack: reversedTrack)]
-
-            videoComposition.instructions = [forwardInstruction, reverseInstruction]
-        } else {
-            let instruction = AVMutableVideoCompositionInstruction()
-            instruction.timeRange = CMTimeRange(start: .zero, duration: duration)
-            instruction.layerInstructions = [AVMutableVideoCompositionLayerInstruction(assetTrack: videoCompositionTrack)]
-            videoComposition.instructions = [instruction]
+        
+        var currentDuration = originalDuration
+        while currentDuration.seconds < loopDuration {
+            try videoCompositionTrack.insertTimeRange(timeRange, of: videoTrack, at: currentDuration)
+            currentDuration = currentDuration + originalDuration
         }
+
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: currentDuration)
+        instruction.layerInstructions = [AVMutableVideoCompositionLayerInstruction(assetTrack: videoCompositionTrack)]
+        videoComposition.instructions = [instruction]
 
         videoComposition.renderSize = videoTrack.naturalSize
         videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
         return videoComposition
     }
 
-    // Reverse video track
-    private func reverseVideoTrack(for videoTrack: AVAssetTrack, in composition: AVMutableComposition, duration: CMTime) throws -> AVMutableCompositionTrack {
-        let reversedTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)!
+    private func createSimpleComposition(for videoTrack: AVAssetTrack, originalDuration: CMTime, in composition: AVMutableComposition) throws -> AVMutableVideoComposition {
+        let videoComposition = AVMutableVideoComposition()
+        let timeRange = CMTimeRange(start: .zero, duration: originalDuration)
+        
+        let videoCompositionTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)!
+        try videoCompositionTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
 
-        // Insert reversed frames
-        let timeRange = CMTimeRange(start: .zero, duration: duration)
-        try reversedTrack.insertTimeRange(timeRange, of: videoTrack, at: duration)
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: originalDuration)
+        instruction.layerInstructions = [AVMutableVideoCompositionLayerInstruction(assetTrack: videoCompositionTrack)]
+        videoComposition.instructions = [instruction]
 
-        return reversedTrack
+        videoComposition.renderSize = videoTrack.naturalSize
+        videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
+        return videoComposition
     }
 
-    // Apply CIFilter to video
     private func applyCIFilter(_ filter: CIFilter, to videoComposition: AVMutableVideoComposition, using composition: AVMutableComposition, completion: @escaping (URL?) -> Void) {
         let videoCompositionWithFilter = AVVideoComposition(asset: composition) { request in
             let source = request.sourceImage.clampedToExtent()
@@ -110,7 +98,6 @@ public class VideoProcessor: ObservableObject {
         export(composition: composition, videoComposition: videoCompositionWithFilter, completion: completion)
     }
 
-    // Export the video to a file
     private func export(composition: AVMutableComposition, videoComposition: AVVideoComposition? = nil, completion: @escaping (URL?) -> Void) {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
         if FileManager.default.fileExists(atPath: outputURL.path) {
@@ -137,10 +124,12 @@ public class VideoProcessor: ObservableObject {
 }
 
 public enum VideoFilter {
-    case sepia, noir, invert, posterize, vignette, comic, blur, monochrome
+    case none, sepia, noir, invert, posterize, vignette, comic, blur, monochrome
     
     var filter: CIFilter? {
         switch self {
+        case .none:
+            return nil
         case .sepia:
             let filter = CIFilter(name: "CISepiaTone")!
             filter.setValue(1.0, forKey: kCIInputIntensityKey)
@@ -172,170 +161,85 @@ public enum VideoFilter {
         }
     }
 }
+import AVFoundation
 
+public class VideoCreator: ObservableObject {
+    
+    public init() {}
 
+    public func createBoomerangVideo(from images: [UIImage], completion: @escaping (URL?) -> Void) {
+        let forwardImages = images
+        let backwardImages = images.reversed()
+        let combinedImages = forwardImages + backwardImages
 
-//public struct VideoPlayerWithOverlay: UIViewControllerRepresentable {
-//    public let videoURL: URL
-//    public let overlayColor: UIColor
-//    public let overlayAlpha: CGFloat
-//
-//    public init(videoURL: URL, overlayColor: UIColor, overlayAlpha: CGFloat) {
-//        self.videoURL = videoURL
-//        self.overlayColor = overlayColor
-//        self.overlayAlpha = overlayAlpha
-//    }
-//
-//    public func makeUIViewController(context: Context) -> AVPlayerViewController {
-//        let playerViewController = AVPlayerViewController()
-//        let player = AVPlayer(url: videoURL)
-//        playerViewController.player = player
-//
-//        let overlayManager = VideoOverlayManager()
-//        let overlayView = overlayManager.createOverlayView(frame: playerViewController.view.bounds, color: overlayColor, alpha: overlayAlpha)
-//
-//        playerViewController.contentOverlayView?.addSubview(overlayView)
-//        return playerViewController
-//    }
-//
-//    public func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-//        // Update the overlay color and alpha dynamically
-//        if let overlayView = uiViewController.contentOverlayView?.subviews.first {
-//            overlayView.backgroundColor = overlayColor.withAlphaComponent(overlayAlpha)
-//        }
-//    }
-//}
-//
-//
-//public class VideoProcessor: ObservableObject {
-//    private let videoURL: URL
-//    private var speed: Float = 1.0
-//    private var makeBoomerang: Bool = false
-//    private var overlayColor: UIColor = .clear
-//    private var overlayAlpha: CGFloat = 0.0
-//    
-//    public init(videoURL: URL) {
-//        self.videoURL = videoURL
-//    }
-//    
-//    public func setVideo(speed: Float = 1.0, makeBoomerang: Bool = false) {
-//        self.speed = speed
-//        self.makeBoomerang = makeBoomerang
-//    }
-//    
-//    public func setOverlayColor(color: UIColor, alpha: CGFloat) {
-//        self.overlayColor = color
-//        self.overlayAlpha = alpha
-//    }
-//    
-//    public func processVideo(completion: @escaping (URL?) -> Void) {
-//        let asset = AVAsset(url: videoURL)
-//        let composition = AVMutableComposition()
-//        
-//        Task {
-//            do {
-//                let duration = try await asset.load(.duration)
-//                
-//                let tracks = try await asset.loadTracks(withMediaType: .video)
-//                guard let videoTrack = tracks.first else {
-//                    completion(nil)
-//                    return
-//                }
-//                
-//                try self.processVideoTrack(videoTrack, duration: duration, composition: composition, completion: completion)
-//                
-//            } catch {
-//                print("Error loading asset: \(error.localizedDescription)")
-//                completion(nil)
-//            }
-//        }
-//    }
-//    
-//    private func processVideoTrack(_ videoTrack: AVAssetTrack, duration: CMTime, composition: AVMutableComposition, completion: @escaping (URL?) -> Void) throws {
-//        let timeRange = CMTimeRange(start: .zero, duration: duration)
-//        let scaledDuration = CMTimeMultiplyByFloat64(duration, multiplier: 1.0 / Float64(self.speed))
-//        
-//        // İleri oynatma
-//        let forwardTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
-//        try forwardTrack?.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-//        forwardTrack?.scaleTimeRange(timeRange, toDuration: scaledDuration)
-//        print("Forward track inserted: \(timeRange)")
-//        
-//        if self.makeBoomerang {
-//            let reverseTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
-//            
-//            let frameDuration = CMTime(seconds: 1.0 / Double(videoTrack.nominalFrameRate), preferredTimescale: videoTrack.naturalTimeScale)
-//            let frameCount = Int(duration.seconds * Double(videoTrack.nominalFrameRate))
-//            
-//            for i in (0..<frameCount).reversed() {
-//                let currentFrameTime = CMTime(seconds: Double(i) / Double(videoTrack.nominalFrameRate), preferredTimescale: videoTrack.naturalTimeScale)
-//                let frameTimeRange = CMTimeRange(start: currentFrameTime, duration: frameDuration)
-//                
-//                do {
-//                    try reverseTrack?.insertTimeRange(frameTimeRange, of: videoTrack, at: reverseTrack?.timeRange.duration ?? .zero)
-//                    print("Inserted reverse frame: \(frameTimeRange) at \(reverseTrack?.timeRange.duration ?? .zero)")
-//                } catch {
-//                    print("Error inserting reverse frame: \(error)")
-//                    completion(nil)
-//                    return
-//                }
-//            }
-//            
-//            let reverseTimeRange = CMTimeRange(start: .zero, duration: reverseTrack?.timeRange.duration ?? .zero)
-//            do {
-//                try reverseTrack?.scaleTimeRange(reverseTimeRange, toDuration: scaledDuration)
-//                try forwardTrack?.insertTimeRange(reverseTimeRange, of: reverseTrack!, at: scaledDuration)
-//                print("Reverse track added at duration: \(scaledDuration.seconds)")
-//            } catch {
-//                print("Error adding reverse track to composition: \(error)")
-//                completion(nil)
-//                return
-//            }
-//        }
-//        
-//        self.export(composition: composition, outputFileName: "processed_video.mov", completion: completion)
-//    }
-//    
-//    private func export(composition: AVMutableComposition, outputFileName: String, completion: @escaping (URL?) -> Void) {
-//        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
-//
-//        if FileManager.default.fileExists(atPath: outputURL.path) {
-//            do {
-//                try FileManager.default.removeItem(at: outputURL)
-//            } catch {
-//                print("Failed to remove existing file: \(error)")
-//                completion(nil)
-//                return
-//            }
-//        }
-//
-//        guard let exportSession = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
-//            completion(nil)
-//            return
-//        }
-//
-//        exportSession.outputURL = outputURL
-//        exportSession.outputFileType = .mov
-//
-//        exportSession.exportAsynchronously {
-//            switch exportSession.status {
-//            case .completed:
-//                print("Export completed. Output URL: \(outputURL)")
-//                completion(outputURL)
-//            default:
-//                print("Export failed: \(exportSession.error?.localizedDescription ?? "unknown error")")
-//                completion(nil)
-//            }
-//        }
-//    }
-//}
-//
-//public class VideoOverlayManager {
-//    public init() {}
-//    
-//    public func createOverlayView(frame: CGRect, color: UIColor, alpha: CGFloat) -> UIView {
-//        let overlayView = UIView(frame: frame)
-//        overlayView.backgroundColor = color.withAlphaComponent(alpha)
-//        return overlayView
-//    }
-//}
+        let size = images.first?.size ?? CGSize(width: 1920, height: 1080)
+        let filePath = FileManager.default.temporaryDirectory.appendingPathComponent("boomerang.mov")
+        
+        guard let videoWriter = try? AVAssetWriter(outputURL: filePath, fileType: .mov) else {
+            completion(nil)
+            return
+        }
+
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: size.width,
+            AVVideoHeightKey: size.height
+        ]
+
+        let videoWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoWriterInput, sourcePixelBufferAttributes: nil)
+
+        if videoWriter.canAdd(videoWriterInput) {
+            videoWriter.add(videoWriterInput)
+        }
+
+        videoWriter.startWriting()
+        videoWriter.startSession(atSourceTime: .zero)
+
+        var frameCount: Int64 = 0
+        let frameDuration = CMTime(value: 1, timescale: 30)
+
+        videoWriterInput.requestMediaDataWhenReady(on: DispatchQueue(label: "videoQueue")) {
+            for image in combinedImages {
+                if videoWriterInput.isReadyForMoreMediaData {
+                    let presentationTime = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
+                    if let pixelBuffer = self.pixelBufferFromImage(image: image, size: size) {
+                        adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
+                    }
+                    frameCount += 1
+                }
+            }
+
+            videoWriterInput.markAsFinished()
+            videoWriter.finishWriting {
+                completion(filePath)
+            }
+        }
+    }
+
+    private func pixelBufferFromImage(image: UIImage, size: CGSize) -> CVPixelBuffer? {
+        var pixelBuffer: CVPixelBuffer?
+        let options: [String: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
+            kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
+        ]
+
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, options as CFDictionary, &pixelBuffer)
+
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else { return nil }
+
+        CVPixelBufferLockBaseAddress(buffer, [])
+        let pixelData = CVPixelBufferGetBaseAddress(buffer)
+
+        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
+        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height),
+                                bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+                                space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
+
+        context?.draw(image.cgImage!, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+
+        return buffer
+    }
+}
