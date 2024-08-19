@@ -270,6 +270,7 @@
 //}
 import SwiftUI
 import AVFoundation
+import VideoProcessorSDK
 
 struct ContentView: View {
     @State private var photos: [UIImage] = []
@@ -284,11 +285,9 @@ struct ContentView: View {
             
             Button(action: {
                 if isCapturing {
-                    // Stop capturing and show Boomerang
                     isCapturing = false
                     showBoomerang = true
                 } else {
-                    // Start capturing
                     photos.removeAll()
                     isCapturing = true
                 }
@@ -349,6 +348,7 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
         setupCaptureSession()
     }
     
+    
     func setupCaptureSession() {
         captureSession = AVCaptureSession()
         captureSession.beginConfiguration()
@@ -401,8 +401,13 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        previewLayer.frame = view.bounds
+
+        let screenWidth = UIScreen.main.bounds.width
+        let fixedHeight: CGFloat = 400
+        
+        previewLayer.frame = CGRect(x: 0, y: 0, width: screenWidth, height: fixedHeight)
     }
+
 
     func capturePhoto() {
         guard let photoOutput = photoOutput else { return }
@@ -427,189 +432,12 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
         }
     }
 }
-import AVFoundation
-import UIKit
 
-class BoomerangVideoCreator {
-    
-    func createBoomerangVideo(from images: [UIImage], frameRate: Int, completion: @escaping (URL?) -> Void) {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("boomerangVideo.mov")
-        
-        guard let writer = try? AVAssetWriter(outputURL: fileURL, fileType: .mov) else {
-            completion(nil)
-            return
-        }
-        
-        let videoSize = images.first?.size ?? CGSize(width: 1920, height: 1080)
-        let outputSettings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: videoSize.width,
-            AVVideoHeightKey: videoSize.height
-        ]
-        
-        let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
-        let attributes: [String: Any] = [
-            kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),
-            kCVPixelBufferWidthKey as String: videoSize.width,
-            kCVPixelBufferHeightKey as String: videoSize.height
-        ]
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: attributes)
-        
-        writer.add(writerInput)
-        
-        writer.startWriting()
-        writer.startSession(atSourceTime: .zero)
-        
-        var frameCount: Int64 = 0
-        let durationPerImage = CMTime(seconds: 1.0 / Double(frameRate), preferredTimescale: 600)
-        
-        writerInput.requestMediaDataWhenReady(on: DispatchQueue.global(qos: .background)) {
-            for image in images {
-                while !writerInput.isReadyForMoreMediaData { }
-                
-                if let buffer = self.pixelBufferFromImage(image: image, size: videoSize) {
-                    let time = CMTime(value: frameCount, timescale: 600)
-                    adaptor.append(buffer, withPresentationTime: time)
-                    frameCount += 1
-                }
-            }
-            
-            writerInput.markAsFinished()
-            writer.finishWriting {
-                completion(writer.status == .completed ? fileURL : nil)
-            }
-        }
-    }
-    
-    private func pixelBufferFromImage(image: UIImage, size: CGSize) -> CVPixelBuffer? {
-        let attributes: [CFString: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey: true,
-            kCVPixelBufferCGBitmapContextCompatibilityKey: true
-        ]
-        
-        var pixelBuffer: CVPixelBuffer?
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, attributes as CFDictionary, &pixelBuffer)
-        
-        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
-            return nil
-        }
-        
-        CVPixelBufferLockBaseAddress(buffer, [])
-        let pixelData = CVPixelBufferGetBaseAddress(buffer)
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        
-        guard let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue) else {
-            return nil
-        }
-        
-        context.clear(CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        guard let cgImage = image.cgImage else { return nil }
-        
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        CVPixelBufferUnlockBaseAddress(buffer, [])
-        
-        return buffer
-    }
-}
-import AVFoundation
-import UIKit
 
-import AVFoundation
-import UIKit
 
-class VideoCreator {
-    func createVideo(from images: [UIImage], frameRate: Int, completion: @escaping (URL?) -> Void) {
-        let videoSize = CGSize(width: 1080, height: 1920)
-        let settings = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: videoSize.width,
-            AVVideoHeightKey: videoSize.height
-        ] as [String: Any]
-        
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp4")
-        
-        do {
-            let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
-            let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
-            let sourcePixelBufferAttributes: [String: Any] = [
-                kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),
-                kCVPixelBufferWidthKey as String: videoSize.width,
-                kCVPixelBufferHeightKey as String: videoSize.height
-            ]
-            let pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: sourcePixelBufferAttributes)
-            
-            writer.add(writerInput)
-            writer.startWriting()
-            writer.startSession(atSourceTime: .zero)
-            
-            var frameCount: Int64 = 0
-            let frameDuration = CMTime(value: 1, timescale: CMTimeScale(frameRate))
-            
-               for image in images {
-                   guard let pixelBuffer = image.fixedOrientationPixelBuffer(size: videoSize) else { continue }
-                   
-                   // Frame sayısını hesaba katarak sunum süresini ayarlıyoruz
-                   let presentationTime = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
-                   let adjustedPresentationTime = CMTimeMultiplyByRatio(presentationTime, multiplier: 3, divisor: 2)
 
-                   while !writerInput.isReadyForMoreMediaData {
-                       Thread.sleep(forTimeInterval: 0.1)
-                   }
-                   
-                   pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: adjustedPresentationTime)
-                   frameCount += 1
-               }
-            
-            writerInput.markAsFinished()
-            writer.finishWriting {
-                if writer.status == .completed {
-                    completion(outputURL)
-                } else {
-                    completion(nil)
-                }
-            }
-        } catch {
-            print("Failed to create video: \(error)")
-            completion(nil)
-        }
-    }
-}
-
-extension UIImage {
-    func fixedOrientationPixelBuffer(size: CGSize) -> CVPixelBuffer? {
-        let attrs = [
-            kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue!,
-            kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue!
-        ] as CFDictionary
-        var pixelBuffer: CVPixelBuffer?
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
-        
-        guard status == kCVReturnSuccess, let buffer = pixelBuffer else { return nil }
-        
-        CVPixelBufferLockBaseAddress(buffer, [])
-        let pixelData = CVPixelBufferGetBaseAddress(buffer)
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        
-        guard let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue) else {
-            return nil
-        }
-        
-        context.clear(CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        
-        // Resmin yönünü sabitle
-        guard let cgImage = self.cgImage else { return nil }
-        
-        let orientedImage = UIImage(cgImage: cgImage, scale: self.scale, orientation: .up)  // Yönü sabitle
-        
-        let aspectRect = AVMakeRect(aspectRatio: orientedImage.size, insideRect: CGRect(origin: .zero, size: size))
-        
-        context.draw(orientedImage.cgImage!, in: aspectRect)
-        CVPixelBufferUnlockBaseAddress(buffer, [])
-        
-        return buffer
-    }
-}
-
+import SwiftUI
+import AVKit
 
 import SwiftUI
 import AVKit
@@ -623,11 +451,8 @@ struct BoomerangView: View {
     var body: some View {
         VStack {
             if let videoURL = videoURL {
-                // Video URL mevcutsa videoyu göster
                 VideoPlayer(player: AVPlayer(url: videoURL))
-                    .frame(height: 900)
                     .onAppear {
-                        // Videoyu başlat
                         let player = AVPlayer(url: videoURL)
                         player.play()
                     }
@@ -654,12 +479,10 @@ struct BoomerangView: View {
         let videoCreator = VideoCreator()
         videoCreator.createVideo(from: photos, frameRate: 30) { videoURL in
             if let url = videoURL {
-                print("Video created at: \(url)")
                 self.videoURL = url
             } else {
                 print("Failed to create video.")
             }
         }
-
     }
 }

@@ -161,85 +161,104 @@ public enum VideoFilter {
         }
     }
 }
-import AVFoundation
 
-public class VideoCreator: ObservableObject {
-    
+import AVFoundation
+import UIKit
+
+public class VideoCreator {
     public init() {}
 
-    public func createBoomerangVideo(from images: [UIImage], completion: @escaping (URL?) -> Void) {
-        let forwardImages = images
-        let backwardImages = images.reversed()
-        let combinedImages = forwardImages + backwardImages
-
-        let size = images.first?.size ?? CGSize(width: 1920, height: 1080)
-        let filePath = FileManager.default.temporaryDirectory.appendingPathComponent("boomerang.mov")
-        
-        guard let videoWriter = try? AVAssetWriter(outputURL: filePath, fileType: .mov) else {
+    public func createVideo(from images: [UIImage], frameRate: Int, completion: @escaping (URL?) -> Void) {
+        guard let firstImage = images.first else {
+            print("No images available.")
             completion(nil)
             return
         }
 
-        let settings: [String: Any] = [
+        let videoSize = firstImage.size
+        
+        let settings = [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: size.width,
-            AVVideoHeightKey: size.height
-        ]
-
-        let videoWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoWriterInput, sourcePixelBufferAttributes: nil)
-
-        if videoWriter.canAdd(videoWriterInput) {
-            videoWriter.add(videoWriterInput)
-        }
-
-        videoWriter.startWriting()
-        videoWriter.startSession(atSourceTime: .zero)
-
-        var frameCount: Int64 = 0
-        let frameDuration = CMTime(value: 1, timescale: 30)
-
-        videoWriterInput.requestMediaDataWhenReady(on: DispatchQueue(label: "videoQueue")) {
-            for image in combinedImages {
-                if videoWriterInput.isReadyForMoreMediaData {
-                    let presentationTime = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
-                    if let pixelBuffer = self.pixelBufferFromImage(image: image, size: size) {
-                        adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
-                    }
-                    frameCount += 1
+            AVVideoWidthKey: videoSize.width,
+            AVVideoHeightKey: videoSize.height
+        ] as [String: Any]
+        
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp4")
+        
+        do {
+            let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
+            let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+            let sourcePixelBufferAttributes: [String: Any] = [
+                kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),
+                kCVPixelBufferWidthKey as String: videoSize.width,
+                kCVPixelBufferHeightKey as String: videoSize.height
+            ]
+            let pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: sourcePixelBufferAttributes)
+            
+            writer.add(writerInput)
+            writer.startWriting()
+            writer.startSession(atSourceTime: .zero)
+            
+            var frameCount: Int64 = 0
+            let frameDuration = CMTime(value: 1, timescale: CMTimeScale(frameRate))
+            
+            for image in images {
+                guard let pixelBuffer = image.fixedOrientationPixelBuffer(size: videoSize) else { continue }
+                
+                let presentationTime = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
+                while !writerInput.isReadyForMoreMediaData {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                
+                pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: presentationTime)
+                frameCount += 1
+            }
+            
+            writerInput.markAsFinished()
+            writer.finishWriting {
+                if writer.status == .completed {
+                    completion(outputURL)
+                } else {
+                    completion(nil)
                 }
             }
-
-            videoWriterInput.markAsFinished()
-            videoWriter.finishWriting {
-                completion(filePath)
-            }
+        } catch {
+            print("Failed to create video: \(error)")
+            completion(nil)
         }
     }
+}
 
-    private func pixelBufferFromImage(image: UIImage, size: CGSize) -> CVPixelBuffer? {
+extension UIImage {
+    func fixedOrientationPixelBuffer(size: CGSize) -> CVPixelBuffer? {
+        let attrs = [
+            kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue!,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue!
+        ] as CFDictionary
         var pixelBuffer: CVPixelBuffer?
-        let options: [String: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey as String: kCFBooleanTrue!,
-            kCVPixelBufferCGBitmapContextCompatibilityKey as String: kCFBooleanTrue!
-        ]
-
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, options as CFDictionary, &pixelBuffer)
-
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
+        
         guard status == kCVReturnSuccess, let buffer = pixelBuffer else { return nil }
-
+        
         CVPixelBufferLockBaseAddress(buffer, [])
         let pixelData = CVPixelBufferGetBaseAddress(buffer)
-
         let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height),
-                                bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
-                                space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
+        
+        guard let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue) else {
+            return nil
+        }
+        
+        context.clear(CGRect(x: 0, y: 0, width: size.width, height: size.height))
+        
+        guard let cgImage = self.cgImage else { return nil }
 
-        context?.draw(image.cgImage!, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+        let orientedImage = UIImage(cgImage: cgImage, scale: self.scale, orientation: .up)
 
+        let aspectRect = AVMakeRect(aspectRatio: orientedImage.size, insideRect: CGRect(origin: .zero, size: size))
+        context.draw(orientedImage.cgImage!, in: aspectRect)
         CVPixelBufferUnlockBaseAddress(buffer, [])
-
+        
         return buffer
     }
 }
+
