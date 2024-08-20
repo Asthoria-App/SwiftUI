@@ -4,8 +4,8 @@
 //
 //  Created by Aysema Çam on 19.08.2024.
 //
-
 import SwiftUI
+import PhotosUI
 
 struct StoryEditView: View {
     @State private var showTextEditor: Bool = false
@@ -19,19 +19,42 @@ struct StoryEditView: View {
     @State private var textColor: Color = .white
     @State private var backgroundOpacity: CGFloat = 0.0
     @State private var selectedFont: Font = .body
+    @State private var showBackgroundImagePicker: Bool = false
+    @State private var showDraggableImagePicker: Bool = false
+    @State private var backgroundImage: UIImage? = nil
+    @State private var selectedDraggableImage: UIImage? = nil
+    @State private var imagePosition: CGSize = .zero
+    @State private var imageScale: CGFloat = 1.0
+    @State private var imageAngle: Angle = .zero
+    @State private var imageShowDeleteButton: Bool = false
+    @State private var selectedGradient: LinearGradient? = nil
+    
+    let gradientOptions: [LinearGradient] = [
+        LinearGradient(gradient: Gradient(colors: [.blue, .purple]), startPoint: .top, endPoint: .bottom),
+        LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
+        LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
+    ]
 
     var body: some View {
         ZStack {
-            Image("image")
-                .resizable()
-                .scaledToFill()
-                .edgesIgnoringSafeArea(.all)
+            if let backgroundImage = backgroundImage {
+                Image(uiImage: backgroundImage)
+                    .resizable()
+                    .edgesIgnoringSafeArea(.all)
+            } else if let selectedGradient = selectedGradient {
+                selectedGradient
+                    .edgesIgnoringSafeArea(.all)
+            } else {
+                Image("image")
+                    .resizable()
+                    .edgesIgnoringSafeArea(.all)
+            }
 
             VStack {
                 HStack {
                     if !hideButtons {
                         Button(action: {
-                            print("Buton 1 basıldı")
+                            showBackgroundImagePicker = true
                         }) {
                             Image(systemName: "wallet.pass.fill")
                                 .resizable()
@@ -58,7 +81,7 @@ struct StoryEditView: View {
 
                     if !hideButtons {
                         Button(action: {
-                            print("Buton 3 basıldı")
+                            showDraggableImagePicker = true
                         }) {
                             Image(systemName: "photo.fill")
                                 .resizable()
@@ -80,14 +103,243 @@ struct StoryEditView: View {
                     .padding(.horizontal, 50)
             }
 
+            if let selectedDraggableImage = selectedDraggableImage {
+                DraggableImageView(selectedImage: $selectedDraggableImage, imagePosition: $imagePosition, scale: $imageScale, angle: $imageAngle, showDeleteButton: $imageShowDeleteButton, hideButtons: $hideButtons)
+                    .frame(width: 90, height: 90)
+                    .padding(.horizontal, 50)
+            }
+
             if showOverlay {
                 OverlayView(showOverlay: $showOverlay, userText: $userText, textColor: $textColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont)
-                 
             }
-                
+        }
+        .sheet(isPresented: $showBackgroundImagePicker) {
+            GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
+        }
+        .sheet(isPresented: $showDraggableImagePicker) {
+            ImagePicker(selectedImage: $selectedDraggableImage)
+        }
+        .onChange(of: showOverlay) { newValue in
+            hideButtons = newValue
         }
     }
 }
+
+struct GradientImagePickerView: View {
+    let gradients: [LinearGradient]
+    @Binding var selectedGradient: LinearGradient?
+    @Binding var selectedImage: UIImage?
+    @Binding var showBackgroundImagePicker: Bool
+    
+    @State private var showPhotoPicker = false
+    
+    var body: some View {
+        VStack {
+            Text("Choose a Background")
+                .font(.headline)
+                .padding()
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 20) {
+                    ForEach(gradients.indices, id: \.self) { index in
+                        Button(action: {
+                            selectedGradient = gradients[index]
+                            selectedImage = nil // Galeri seçimini sıfırla
+                            showBackgroundImagePicker = false // Sayfayı kapat
+                        }) {
+                            gradients[index]
+                                .frame(width: 100, height: 100)
+                                .cornerRadius(12)
+                                .shadow(radius: 5)
+                        }
+                    }
+                }
+                .padding()
+            }
+
+            Button("Choose from Gallery") {
+                showPhotoPicker = true
+            }
+            .padding()
+            .sheet(isPresented: $showPhotoPicker) {
+                ImagePicker(selectedImage: $selectedImage)
+                    .onDisappear {
+                        showBackgroundImagePicker = false
+                    }
+            }
+
+            Button("Cancel") {
+                showBackgroundImagePicker = false
+            }
+            
+            
+            .padding()
+        }
+    }
+}
+
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
+                picker.dismiss(animated: true)
+            }
+        }
+    }
+}
+
+
+
+struct DraggableImageView: View {
+    @Binding var selectedImage: UIImage?
+    @Binding var imagePosition: CGSize
+    @Binding var scale: CGFloat
+    @Binding var angle: Angle
+    @Binding var showDeleteButton: Bool
+    @Binding var hideButtons: Bool
+
+    @State private var lastScaleValue: CGFloat = 1.0
+    @State private var currentDragOffset: CGSize = .zero
+
+    var body: some View {
+        ZStack {
+            GeometryReader { geometry in
+                VStack {
+                    if let selectedImage = selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(lastScaleValue * scale)
+                            .rotationEffect(angle)
+                            .overlay(
+                                GeometryReader { imgGeometry in
+                                    if showDeleteButton {
+                                        
+                                        let imgSize = imgGeometry.size
+                                        let scaledSize = CGSize(
+                                            width: imgSize.width * lastScaleValue * scale,
+                                            height: imgSize.height * lastScaleValue * scale
+                                        )
+                                        
+                                        let halfWidth = scaledSize.width / 2
+                                        let halfHeight = scaledSize.height / 2
+                                        let radians = CGFloat(angle.radians)
+                                        
+                                        let cosValue = cos(radians)
+                                        let sinValue = sin(radians)
+                                        
+                                        let rotatedX = halfWidth * cosValue - (-halfHeight) * sinValue
+                                        let rotatedY = halfWidth * sinValue + (-halfHeight) * cosValue
+                                        
+                                        let topRightCornerX = rotatedX + geometry.size.width / 2
+                                        let topRightCornerY = rotatedY + geometry.size.height / 2
+                                        
+                                        Button(action: {
+                                            if self.selectedImage != nil {
+                                                self.selectedImage = nil
+                                                  scale = 1.0
+                                                  angle = .zero
+                                                  showDeleteButton = false
+                                                  imagePosition = .zero
+                                              }
+                                        }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .resizable()
+                                                .frame(width: 25, height: 25)
+                                                .foregroundColor(.white)
+                                        }
+                                        .position(x: topRightCornerX, y: topRightCornerY)
+                                    }
+                                }
+                            )
+                            .position(positionInBounds(geometry))
+                            .scaleEffect(lastScaleValue * scale)
+                            .rotationEffect(angle)
+                            .gesture(
+                                SimultaneousGesture(
+                                    DragGesture()
+                                        .onChanged { value in
+                                            hideButtons = true
+                                            
+                                            let translation = value.translation
+                                            let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
+                                            
+                                            imagePosition = CGSize(
+                                                width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
+                                                height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
+                                            )
+                                        }
+                                        .onEnded { value in
+                                            hideButtons = false
+                                            currentDragOffset = imagePosition
+                                        },
+                                    RotationGesture()
+                                        .onChanged { newAngle in
+                                            angle += newAngle - angle
+                                        }
+                                        .onEnded { newAngle in
+                                            angle = newAngle
+                                        }
+                                )
+                                .simultaneously(with: MagnificationGesture()
+                                    .onChanged { value in
+                                        scale = value
+                                    }
+                                    .onEnded { _ in
+                                        lastScaleValue *= scale
+                                        scale = 1.0
+                                    }
+                                )
+                            )
+                            .onTapGesture {
+                                hideButtons = false
+                            }
+                            .onLongPressGesture {
+                                showDeleteButton = true
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
+        let radians = CGFloat(angle.radians)
+        let newX = point.width * cos(radians) - point.height * sin(radians)
+        let newY = point.width * sin(radians) + point.height * cos(radians)
+        return CGSize(width: newX, height: newY)
+    }
+
+    private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
+        let x = geometry.size.width / 2 + imagePosition.width
+        let y = geometry.size.height / 2 + imagePosition.height
+        return CGPoint(x: x, y: y)
+    }
+}
+
+
+
 
 struct DraggableTextView: View {
     @Binding var userText: String
@@ -103,6 +355,7 @@ struct DraggableTextView: View {
 
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentDragOffset: CGSize = .zero
+    @State private var initialDragPosition: CGSize = .zero
 
     var body: some View {
         ZStack {
@@ -120,7 +373,6 @@ struct DraggableTextView: View {
                                     Button(action: {
                                         userText = ""
                                         backgroundOpacity = 0
-                                        
                                         showDeleteButton = false
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
@@ -132,47 +384,45 @@ struct DraggableTextView: View {
                                 }
                             }
                         )
-                        .position(positionInBounds())
-                        .scaleEffect(scale)
+                        .position(positionInBounds(geometry))
+                        .scaleEffect(lastScaleValue * scale)
                         .rotationEffect(angle)
                         .gesture(
                             SimultaneousGesture(
-                                SimultaneousGesture(
-                                    DragGesture()
-                                        .onChanged { value in
-                                            hideButtons = true
-                                            let adjustedTranslation = CGSize(width: value.translation.width / scale,
-                                                                             height: value.translation.height / scale)
-                                            textPosition = CGSize(width: adjustedTranslation.width + currentDragOffset.width,
-                                                                  height: adjustedTranslation.height + currentDragOffset.height)
-                                        }
-                                        .onEnded { value in
-                                            hideButtons = false
-                                            let adjustedTranslation = CGSize(width: value.translation.width / scale,
-                                                                             height: value.translation.height / scale)
-                                            currentDragOffset = CGSize(width: currentDragOffset.width + adjustedTranslation.width,
-                                                                       height: currentDragOffset.height + adjustedTranslation.height)
-                                        },
-                                    RotationGesture()
-                                        .onChanged { newAngle in
-                                            angle += newAngle - angle
-                                        }
-                                        .onEnded { newAngle in
-                                            angle = newAngle
-                                        }
-                                ),
-                                MagnificationGesture()
+                                DragGesture()
                                     .onChanged { value in
-                                        scale = value
+                                        hideButtons = true
+                                        
+                                        let translation = value.translation
+                                        let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
+                                        
+                                        textPosition = CGSize(
+                                            width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
+                                            height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
+                                        )
                                     }
-                                    .onEnded { _ in
-                                        lastScaleValue = 1.0
+                                    .onEnded { value in
+                                        hideButtons = false
+                                        currentDragOffset = textPosition
+                                    },
+                                RotationGesture()
+                                    .onChanged { newAngle in
+                                        angle += newAngle - angle
+                                    }
+                                    .onEnded { newAngle in
+                                        angle = newAngle
                                     }
                             )
+                            .simultaneously(with: MagnificationGesture()
+                                .onChanged { value in
+                                    scale = value
+                                }
+                                .onEnded { _ in
+                                    lastScaleValue *= scale
+                                    scale = 1.0
+                                }
+                            )
                         )
-
-                    
-
                         .onTapGesture {
                             hideButtons = false
                             showOverlay = true
@@ -185,13 +435,21 @@ struct DraggableTextView: View {
         }
     }
 
-    private func positionInBounds() -> CGPoint {
-        let bounds = UIScreen.main.bounds
-        let x = UIScreen.main.bounds.width / 2 + textPosition.width
-        let y = UIScreen.main.bounds.height / 2 + textPosition.height
+    private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
+        let radians = CGFloat(angle.radians)
+        let newX = point.width * cos(radians) - point.height * sin(radians)
+        let newY = point.width * sin(radians) + point.height * cos(radians)
+        return CGSize(width: newX, height: newY)
+    }
+
+    private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
+        let x = geometry.size.width / 2 + textPosition.width
+        let y = geometry.size.height / 2 + textPosition.height
         return CGPoint(x: x, y: y)
     }
 }
+
+
 
 
 
@@ -200,7 +458,7 @@ struct OverlayView: View {
     @Binding var userText: String
     @Binding var textColor: Color
     @Binding var backgroundOpacity: CGFloat
-    @Binding var selectedFont: Font // Add this binding to track the selected font
+    @Binding var selectedFont: Font
     @State private var textHeight: CGFloat = 30
 
     @State private var showFontCollection: Bool = false
@@ -290,7 +548,7 @@ struct OverlayView: View {
                         .frame(height: 30)
                         .background(Color.white.opacity(0.0))
                         .cornerRadius(10)
-                        .padding(.bottom, 60)
+                        .padding(.bottom, 5)
                 }
 
                 if showFontCollection {
@@ -302,7 +560,7 @@ struct OverlayView: View {
                         .padding(.bottom, 60)
                 }
             }
-            .padding(.top, 50)
+            .padding(.top, 0)
         }
     }
 
@@ -474,3 +732,21 @@ extension Font {
         }
     }
 }
+import SwiftUI
+
+struct CustomTextFieldView: UIViewRepresentable {
+
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField(frame: .zero)
+        textField.placeholder = "Enter Text"
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.white
+        textField.returnKeyType = .done
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        // Nothing to update
+    }
+}
+
