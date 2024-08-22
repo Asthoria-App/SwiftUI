@@ -13,6 +13,13 @@
 		561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 561BAE0B2C7332C600C0991E /* Assets.xcassets */; };
 		561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 561BAE0E2C7332C600C0991E /* Preview Assets.xcassets */; };
 		561BAE162C73335200C0991E /* StoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561BAE152C73335200C0991E /* StoryEditView.swift */; };
+		568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */; };
+		568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */; };
+		568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */; };
+		568D7CAB2C7625C100A4D361 /* Roboto-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAA2C7625C100A4D361 /* Roboto-Medium.ttf */; };
+		568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAC2C7625D300A4D361 /* Righteous-Regular.ttf */; };
+		568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */; };
+		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +29,14 @@
 		561BAE0B2C7332C600C0991E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		561BAE0E2C7332C600C0991E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		561BAE152C73335200C0991E /* StoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEditView.swift; sourceTree = "<group>"; };
+		568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Forum-Regular.ttf"; sourceTree = "<group>"; };
+		568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GreatVibes-Regular.ttf"; sourceTree = "<group>"; };
+		568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GreyQo-Regular.ttf"; sourceTree = "<group>"; };
+		568D7CAA2C7625C100A4D361 /* Roboto-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Medium.ttf"; sourceTree = "<group>"; };
+		568D7CAC2C7625D300A4D361 /* Righteous-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Righteous-Regular.ttf"; sourceTree = "<group>"; };
+		568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-VariableFont_wght.ttf"; sourceTree = "<group>"; };
+		568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "story-photo-edit-Info.plist"; sourceTree = SOURCE_ROOT; };
+		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,6 +54,8 @@
 		561BADFB2C7332C400C0991E = {
 			isa = PBXGroup;
 			children = (
+				568D7CB12C76283E00A4D361 /* Extensions */,
+				568D7CA32C76259100A4D361 /* Fonts */,
 				561BAE062C7332C400C0991E /* story_photo_edit */,
 				561BAE052C7332C400C0991E /* Products */,
 			);
@@ -55,6 +72,7 @@
 		561BAE062C7332C400C0991E /* story_photo_edit */ = {
 			isa = PBXGroup;
 			children = (
+				568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */,
 				561BAE072C7332C400C0991E /* story_photo_editApp.swift */,
 				561BAE092C7332C400C0991E /* ContentView.swift */,
 				561BAE0B2C7332C600C0991E /* Assets.xcassets */,
@@ -70,6 +88,27 @@
 				561BAE0E2C7332C600C0991E /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		568D7CA32C76259100A4D361 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				568D7CAA2C7625C100A4D361 /* Roboto-Medium.ttf */,
+				568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */,
+				568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */,
+				568D7CAC2C7625D300A4D361 /* Righteous-Regular.ttf */,
+				568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */,
+				568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		568D7CB12C76283E00A4D361 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				568D7CB22C76285000A4D361 /* Font+Extensions.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,8 +175,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */,
+				568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */,
+				568D7CAB2C7625C100A4D361 /* Roboto-Medium.ttf in Resources */,
 				561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */,
+				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
+				568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */,
 				561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */,
+				568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,6 +195,7 @@
 			files = (
 				561BAE162C73335200C0991E /* StoryEditView.swift in Sources */,
 				561BAE0A2C7332C400C0991E /* ContentView.swift in Sources */,
+				568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */,
 				561BAE082C7332C400C0991E /* story_photo_editApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -287,6 +333,7 @@
 				DEVELOPMENT_TEAM = ZHQ4442GZL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "story-photo-edit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -316,6 +363,7 @@
 				DEVELOPMENT_TEAM = ZHQ4442GZL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "story-photo-edit-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
