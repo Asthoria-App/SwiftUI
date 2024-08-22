@@ -4,9 +4,9 @@
 //
 //  Created by Aysema Çam on 19.08.2024.
 //
+
 import SwiftUI
-import PhotosUI
-import SwiftUI
+import UIKit
 
 struct StoryEditView: View {
     @State private var showTextEditor: Bool = false
@@ -32,6 +32,12 @@ struct StoryEditView: View {
     @State private var textBackgroundColor: Color = .clear
     @State private var originalTextColor: Color = .clear
     
+    @State private var generatedImage: UIImage? = nil
+    @State private var showGeneratedImageView: Bool = false
+    @State private var buttonsHidden: Bool = false
+    @State private var showEyedropper: Bool = false
+    @State private var fontSize: CGFloat = 34
+    
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .purple]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
@@ -54,9 +60,8 @@ struct StoryEditView: View {
             }
             
             VStack {
-                
-                HStack {
-                    if !hideButtons {
+                if !buttonsHidden && !hideButtons {
+                    HStack {
                         Button(action: {
                             showBackgroundImagePicker = true
                         }) {
@@ -67,11 +72,9 @@ struct StoryEditView: View {
                         }
                         .frame(width: 35, height: 35)
                         .padding(.leading, 15)
-                    }
-                    
-                    Spacer()
-                    
-                    if !hideButtons {
+                        
+                        Spacer()
+                        
                         Button(action: {
                             showOverlay.toggle()
                         }) {
@@ -81,9 +84,8 @@ struct StoryEditView: View {
                                 .foregroundColor(.white)
                         }
                         .frame(width: 35, height: 35)
-                    }
-                    
-                    if !hideButtons {
+                        
+                        
                         Button(action: {
                             showDraggableImagePicker = true
                         }) {
@@ -95,27 +97,61 @@ struct StoryEditView: View {
                         .frame(width: 35, height: 35)
                         .padding(.trailing, 15)
                     }
+                    .frame(width: UIScreen.main.bounds.width)
+                    .padding(.top, 20)
                 }
-                .frame(width: UIScreen.main.bounds.width)
-                .padding(.top, 20)
                 
                 Spacer()
+                
+                if hideButtons && !showOverlay{
+                    VStack {
+                        Spacer()
+                        Image(systemName: "trash.fill")
+                            .padding()
+                            .background(Color.black.opacity(0.5))
+                            .foregroundColor(.white)
+                            .cornerRadius(50)
+                            .frame(width: 100, height: 100)
+                    }
+                    .frame(height: 150)
+                }
+                
+                if !buttonsHidden && !hideButtons && !showOverlay {
+                    VStack {
+                        Spacer()
+                        Button("Done") {
+                            buttonsHidden = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                generateImage()
+                            }
+                        }
+                        .font(.title)
+                        .padding()
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.bottom, 20)
+                    }
+                }
             }
             
             if !showOverlay {
-                DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont)
+                DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, fontSize: $fontSize)
                     .padding(.horizontal, 50)
             }
             
             if let selectedDraggableImage = selectedDraggableImage {
                 DraggableImageView(selectedImage: $selectedDraggableImage, imagePosition: $imagePosition, scale: $imageScale, angle: $imageAngle, showDeleteButton: $imageShowDeleteButton, hideButtons: $hideButtons)
-                    .frame(width: 150, height: 150)
+                    .frame(width: 200, height: 200)
                     .padding(.horizontal, 50)
+                    .aspectRatio(contentMode: .fill)
+                    
             }
             
             if showOverlay {
-                OverlayView(showOverlay: $showOverlay, userText: $userText, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, originalTextColor: $originalTextColor)
+                OverlayView(showOverlay: $showOverlay, userText: $userText, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, originalTextColor: $originalTextColor, fontSize: $fontSize, showEyedropper: $showEyedropper)
             }
+            
+          
         }
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
@@ -123,8 +159,36 @@ struct StoryEditView: View {
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
         }
+        .sheet(isPresented: $showGeneratedImageView) {
+            GeneratedImageView(image: generatedImage)
+        }
         .onChange(of: showOverlay) { newValue in
             hideButtons = newValue
+        }
+    }
+    
+    func generateImage() {
+        let window = UIApplication.shared.windows.first { $0.isKeyWindow }
+        let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
+        generatedImage = renderer.image { context in
+            window?.layer.render(in: context.cgContext)
+        }
+        buttonsHidden = false
+        showGeneratedImageView = true
+    }
+}
+
+struct GeneratedImageView: View {
+    var image: UIImage?
+
+    var body: some View {
+        if let image = image {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .edgesIgnoringSafeArea(.all)
+        } else {
+            Text("No image generated")
         }
     }
 }
@@ -211,7 +275,6 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
 }
 
-
 struct DraggableImageView: View {
     @Binding var selectedImage: UIImage?
     @Binding var imagePosition: CGSize
@@ -219,10 +282,12 @@ struct DraggableImageView: View {
     @Binding var angle: Angle
     @Binding var showDeleteButton: Bool
     @Binding var hideButtons: Bool
-    
+
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentDragOffset: CGSize = .zero
-    
+    @State private var isDraggingOverDelete: Bool = false
+    @State private var cornerRadius: CGFloat = 0.0
+
     var body: some View {
         ZStack {
             GeometryReader { geometry in
@@ -230,53 +295,13 @@ struct DraggableImageView: View {
                     if let selectedImage = selectedImage {
                         Image(uiImage: selectedImage)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
+                            .scaledToFill()
+                            .frame(width: 200, height: 200)
+                            .cornerRadius(cornerRadius)  // Apply corner radius
+                            .clipped()
                             .scaleEffect(lastScaleValue * scale)
                             .rotationEffect(angle)
-                            .overlay(
-                                GeometryReader { imgGeometry in
-                                    if showDeleteButton {
-                                        
-                                        let imgSize = imgGeometry.size
-                                        let scaledSize = CGSize(
-                                            width: imgSize.width * lastScaleValue * scale,
-                                            height: imgSize.height * lastScaleValue * scale
-                                        )
-                                        
-                                        let halfWidth = scaledSize.width / 2
-                                        let halfHeight = scaledSize.height / 2
-                                        let radians = CGFloat(angle.radians)
-                                        
-                                        let cosValue = cos(radians)
-                                        let sinValue = sin(radians)
-                                        
-                                        let rotatedX = halfWidth * cosValue - (-halfHeight) * sinValue
-                                        let rotatedY = halfWidth * sinValue + (-halfHeight) * cosValue
-                                        
-                                        let topRightCornerX = rotatedX + geometry.size.width / 2
-                                        let topRightCornerY = rotatedY + geometry.size.height / 2
-                                        
-                                        Button(action: {
-                                            if self.selectedImage != nil {
-                                                self.selectedImage = nil
-                                                scale = 1.0
-                                                angle = .zero
-                                                showDeleteButton = false
-                                                imagePosition = .zero
-                                            }
-                                        }) {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
-                                                .foregroundColor(.white)
-                                        }
-                                        .position(x: topRightCornerX, y: topRightCornerY)
-                                    }
-                                }
-                            )
                             .position(positionInBounds(geometry))
-                            .scaleEffect(lastScaleValue * scale)
-                            .rotationEffect(angle)
                             .gesture(
                                 SimultaneousGesture(
                                     DragGesture()
@@ -290,8 +315,33 @@ struct DraggableImageView: View {
                                                 width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
                                                 height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
                                             )
+                                            
+                                            let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                            if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
+                                                isDraggingOverDelete = true
+                                            } else {
+                                                isDraggingOverDelete = false
+                                            }
                                         }
                                         .onEnded { value in
+                                            if isDraggingOverDelete {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                                    withAnimation(.smooth(duration: 0.7)) {
+                                                        scale = 0.4
+                                                    }
+                                                }
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                    withAnimation {
+                                                        self.selectedImage = nil
+                                                        imagePosition = .zero
+                                                        scale = 1.0
+                                                        angle = .zero
+                                                    }
+                                                }
+                                            } else {
+                                                print("Image not dropped on delete button!")
+                                            }
+                                            isDraggingOverDelete = false
                                             hideButtons = false
                                             currentDragOffset = imagePosition
                                         },
@@ -314,7 +364,7 @@ struct DraggableImageView: View {
                                 )
                             )
                             .onTapGesture {
-                                hideButtons = false
+                                cornerRadius = cornerRadius == 0 ? 12 : 0
                             }
                             .onLongPressGesture {
                                 showDeleteButton = true
@@ -324,21 +374,20 @@ struct DraggableImageView: View {
             }
         }
     }
-    
+
     private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
         let radians = CGFloat(angle.radians)
         let newX = point.width * cos(radians) - point.height * sin(radians)
         let newY = point.width * sin(radians) + point.height * cos(radians)
         return CGSize(width: newX, height: newY)
     }
-    
+
     private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
         let x = geometry.size.width / 2 + imagePosition.width
         let y = geometry.size.height / 2 + imagePosition.height
         return CGPoint(x: x, y: y)
     }
 }
-
 
 struct DraggableTextView: View {
     @Binding var userText: String
@@ -350,41 +399,24 @@ struct DraggableTextView: View {
     @Binding var showOverlay: Bool
     @Binding var textColor: Color
     @Binding var backgroundColor: Color
-
+    
     @Binding var backgroundOpacity: CGFloat
     @Binding var selectedFont: CustomFont
+    @Binding var fontSize: CGFloat
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentDragOffset: CGSize = .zero
-    @State private var initialDragPosition: CGSize = .zero
+    @State private var isDraggingOverDelete: Bool = false
     
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack {
                     Text(userText)
-                        .font(selectedFont.toSwiftUIFont(size: 34))
+                        .font(selectedFont.toSwiftUIFont(size: fontSize))
                         .foregroundColor(textColor)
                         .padding(8)
                         .background(backgroundColor.opacity(backgroundOpacity))
                         .cornerRadius(5)
-                        .overlay(
-                            GeometryReader { textGeometry in
-                                if showDeleteButton {
-                                    Button(action: {
-                                        userText = ""
-                                        textColor = .white
-                                        backgroundOpacity = 0
-                                        showDeleteButton = false
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .resizable()
-                                            .frame(width: 25, height: 25)
-                                            .foregroundColor(.white)
-                                    }
-                                    .offset(x: textGeometry.size.width - 12.5, y: -12.5)
-                                }
-                            }
-                        )
                         .position(positionInBounds(geometry))
                         .scaleEffect(lastScaleValue * scale)
                         .rotationEffect(angle)
@@ -401,8 +433,33 @@ struct DraggableTextView: View {
                                             width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
                                             height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
                                         )
+                                        let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                        
+                                        if deleteAreaFrame.contains(CGPoint(x: value.location.x, y: value.location.y)) {
+                                            isDraggingOverDelete = true
+                                        } else {
+                                            isDraggingOverDelete = false
+                                        }
                                     }
                                     .onEnded { value in
+                                        if isDraggingOverDelete {
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                                withAnimation(.smooth(duration: 0.7)) {
+                                                    scale = 0.4
+                                                }
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                userText = ""
+                                                textColor = .white
+                                                textPosition = .zero
+                                                backgroundOpacity = 0
+                                                scale = 1.0
+                                            }
+                                            
+                                        } else {
+                                            print("Text not dropped on delete button!")
+                                        }
+                                        isDraggingOverDelete = false
                                         hideButtons = false
                                         currentDragOffset = textPosition
                                     },
@@ -457,13 +514,12 @@ struct OverlayView: View {
     @Binding var backgroundColor: Color
     @Binding var backgroundOpacity: CGFloat
     @Binding var selectedFont: CustomFont
+    @Binding var originalTextColor: Color
+    @Binding var fontSize: CGFloat
+    @Binding var showEyedropper: Bool
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
-    
-    @State private var backgroundMode: Int = 0
-    
-    @Binding var originalTextColor: Color
-    
+
     @State private var showFontCollection: Bool = false
     @State private var showColorCollection: Bool = true
     
@@ -478,6 +534,32 @@ struct OverlayView: View {
             
             VStack {
                 HStack {
+                    VStack {
+                        ZStack(alignment: .bottom) {
+                                             Rectangle()
+                                                 .fill(Color.clear)
+                                                 .contentShape(Rectangle())
+                                                 .frame(width: 60, height: 240)
+                                                 .gesture(DragGesture(minimumDistance: 0).onChanged { value in
+                                                     let percentage = min(max(0, 1 - value.location.y / 200), 1)
+                                                     fontSize = percentage * 70 + 10
+                                                 })
+
+                                             Capsule()
+                                .fill(LinearGradient(gradient: Gradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.8)]), startPoint: .bottom, endPoint: .top))
+                                                 .frame(width: 10, height: 200 * CGFloat(fontSize / 80))
+                                                 .offset(x: 0)
+
+                                             Capsule()
+                                                 .fill(Color.gray.opacity(0.2))
+                                                 .frame(width: 10, height: 200)
+                                                 .offset(x: 0)
+                                                 .mask(Rectangle().frame(height: 200))
+                                         }
+                                         .padding(.top, -280)
+                                         .offset(y: 300)
+                                     }
+                                     
                     Spacer()
                     
                     Button(action: {
@@ -554,7 +636,8 @@ struct OverlayView: View {
                             .foregroundColor(.white)
                     }
                 }
-                .padding()
+                .padding(.top)
+                .padding(.trailing)
                 .frame(maxWidth: .infinity)
                 .background(Color.clear)
                 
@@ -567,7 +650,8 @@ struct OverlayView: View {
                     textHeight: $textHeight,
                     textColor: $textColor,
                     backgroundOpacity: $backgroundOpacity, backgroundColor: $backgroundColor,
-                    selectedFont: $selectedFont, textWidth: $textWidth
+                    selectedFont: $selectedFont, textWidth: $textWidth,
+                    fontSize: $fontSize
                 )
                 .frame(width: textWidth, height: textHeight)
                 .padding(8)
@@ -579,23 +663,28 @@ struct OverlayView: View {
                     }
                 }
                 
-                if showColorCollection {
-                    ColorSelectionView(selectedColor: $textColor, originalColor: $originalTextColor)
-                        .padding(.horizontal)
-                        .frame(height: 30)
-                        .background(Color.white.opacity(0.0))
-                        .cornerRadius(10)
-                        .padding(.bottom, 5)
+                ZStack {
+                    if showColorCollection {
+                        ColorSelectionView(selectedColor: $textColor, originalColor: $originalTextColor, showEyedropper: $showEyedropper)
+                            .padding(.horizontal)
+                            .frame(height: 30)
+                            .background(Color.white.opacity(0.0))
+                            .cornerRadius(10)
+                            .padding(.bottom, 5)
+                            .transition(.opacity)
+                    }
+                    
+                    if showFontCollection {
+                        FontCollectionView(selectedFont: $selectedFont)
+                            .padding(.horizontal)
+                            .frame(height: 35)
+                            .background(Color.white.opacity(0.0))
+                            .cornerRadius(10)
+                            .padding(.bottom, 5)
+                            .transition(.opacity)
+                    }
                 }
-                
-                if showFontCollection {
-                    FontCollectionView(selectedFont: $selectedFont)
-                        .padding(.horizontal)
-                        .frame(height: 35)
-                        .background(Color.white.opacity(0.0))
-                        .cornerRadius(10)
-                        .padding(.bottom, 60)
-                }
+                .animation(.easeInOut, value: showColorCollection || showFontCollection)
             }
             .padding(.top, 0)
         }
@@ -612,7 +701,8 @@ struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var backgroundColor: Color
     @Binding var selectedFont: CustomFont
     @Binding var textWidth: CGFloat
-    
+    @Binding var fontSize: CGFloat
+
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: DynamicHeightTextView
         
@@ -621,12 +711,12 @@ struct DynamicHeightTextView: UIViewRepresentable {
         }
         
         func textViewDidChange(_ textView: UITextView) {
-            let maxWidth = UIScreen.main.bounds.width * 0.9 // Ekranın %90'ı kadar genişlik belirliyoruz
-            let size = textView.sizeThatFits(CGSize(width: maxWidth, height: CGFloat.greatestFiniteMagnitude)) // Genişlik maxWidth ile sınırlandırılıyor
+            let maxWidth = UIScreen.main.bounds.width * 0.9
+            let size = textView.sizeThatFits(CGSize(width: maxWidth, height: CGFloat.greatestFiniteMagnitude))
             self.parent.textHeight = max(self.parent.minHeight, min(size.height, self.parent.maxHeight))
             self.parent.text = textView.text
             DispatchQueue.main.async {
-                self.parent.textWidth = min(size.width, maxWidth) // Genişlik maxWidth'i geçmeyecek şekilde ayarlanıyor
+                self.parent.textWidth = min(size.width, maxWidth)
             }
         }
     }
@@ -646,10 +736,10 @@ struct DynamicHeightTextView: UIViewRepresentable {
         textView.textColor = UIColor(textColor)
         textView.becomeFirstResponder()
         
-        if let uiFont = selectedFont.toUIFont(size: 34) {
+        if let uiFont = selectedFont.toUIFont(size: fontSize) {
             textView.font = uiFont
         } else {
-            textView.font = UIFont.systemFont(ofSize: 34)
+            textView.font = UIFont.systemFont(ofSize: fontSize)
         }
         
         return textView
@@ -660,7 +750,7 @@ struct DynamicHeightTextView: UIViewRepresentable {
         uiView.textColor = UIColor(textColor)
         uiView.backgroundColor = UIColor(backgroundColor).withAlphaComponent(backgroundOpacity)
         
-        if let uiFont = selectedFont.toUIFont(size: 30) {
+        if let uiFont = selectedFont.toUIFont(size: fontSize) {
             uiView.font = uiFont
         }
         
@@ -676,7 +766,8 @@ struct DynamicHeightTextView: UIViewRepresentable {
 struct ColorSelectionView: View {
     @Binding var selectedColor: Color
     @Binding var originalColor: Color
-    
+    @Binding var showEyedropper: Bool
+
     let colors: [Color] = [
         .red, .green, .blue, .yellow, .orange, .purple,
         .pink, .cyan, .mint, .teal, .indigo, .brown,
@@ -703,31 +794,47 @@ struct ColorSelectionView: View {
         Color(red: 0.75, green: 0.85, blue: 0.0)
     ]
     
-    
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 5) {
-                ForEach(colors, id: \.self) { color in
-                    ZStack {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .frame(width: 35, height: 35)
-                        
-                        Circle()
-                            .fill(color)
-                            .frame(width: 20, height: 20)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation {
-                            selectedColor = color
-                            originalColor = color
+        HStack {
+            
+            Button(action: {
+                showEyedropper.toggle()
+            }) {
+                Image(systemName: "eyedropper")
+                    .resizable()
+                    .frame(width: 25, height: 25)
+                    .foregroundColor(.white)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 5) {
+                    ForEach(colors, id: \.self) { color in
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 35, height: 35)
+                            
+                            Circle()
+                                .fill(color)
+                                .frame(width: 20, height: 20)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 1.5)
+                                )
+                                .shadow(color: .black.opacity(0.6), radius: 1, x: 0, y: 0)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation {
+                                selectedColor = color
+                                originalColor = color
+                            }
                         }
                     }
+                    
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 10)
         }
     }
 }
@@ -739,8 +846,8 @@ struct FontCollectionView: View {
         .roboto,
         .greyQo,
         .greatVibes,
-        .righteous,
-        .montserrat
+        .righteous
+        
     ]
     
     var body: some View {
@@ -775,3 +882,28 @@ func focusTextView() {
     UIApplication.shared.sendAction(#selector(UIResponder.becomeFirstResponder), to: nil, from: nil, for: nil)
 }
 
+struct EyedropperView: View {
+    @Binding var showEyedropper: Bool
+    @Binding var textColor: Color
+
+    var body: some View {
+        Rectangle()
+            .fill(Color.clear)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let color = getColor(at: value.location)
+                        textColor = color
+                    }
+                    .onEnded { _ in
+                        showEyedropper = false
+                    }
+            )
+    }
+
+    func getColor(at point: CGPoint) -> Color {
+
+        return Color.red
+    }
+}

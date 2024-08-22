@@ -28,7 +28,7 @@ extension Font {
         return Font.custom("Montserrat-VariableFont_wght", size: size)
     }
     static func Forum(size: CGFloat) -> Font {
-        return Font.custom("Forum-Regular.ttf", size: size)
+        return Font.custom("Forum-Regular", size: size)
     }
 }
 enum CustomFont: String {
@@ -37,7 +37,7 @@ enum CustomFont: String {
     case greatVibes = "GreatVibes-Regular"
     case righteous = "Righteous-Regular"
     case montserrat = "Montserrat-VariableFont_wght"
-    case forum = "Forum-Regular.ttf"
+    case forum = "Forum-Regular"
     
     func toSwiftUIFont(size: CGFloat) -> Font {
         return Font.custom(self.rawValue, size: size)
