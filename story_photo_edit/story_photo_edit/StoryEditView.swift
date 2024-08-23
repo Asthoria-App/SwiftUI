@@ -58,81 +58,86 @@ struct StoryEditView: View {
                     .resizable()
                     .edgesIgnoringSafeArea(.all)
             }
-            
-            VStack {
-                if !buttonsHidden && !hideButtons {
-                    HStack {
-                        Button(action: {
-                            showBackgroundImagePicker = true
-                        }) {
-                            Image(systemName: "wallet.pass.fill")
-                                .resizable()
-                                .frame(width: 25, height: 25)
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 35, height: 35)
-                        .padding(.leading, 15)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            showOverlay.toggle()
-                        }) {
-                            Image(systemName: "textformat")
-                                .resizable()
-                                .frame(width: 25, height: 25)
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 35, height: 35)
-                        
-                        
-                        Button(action: {
-                            showDraggableImagePicker = true
-                        }) {
-                            Image(systemName: "photo.fill")
-                                .resizable()
-                                .frame(width: 25, height: 25)
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 35, height: 35)
-                        .padding(.trailing, 15)
-                    }
-                    .frame(width: UIScreen.main.bounds.width)
-                    .padding(.top, 20)
-                }
+            if !showEyedropper {
                 
-                Spacer()
-                
-                if hideButtons && !showOverlay{
-                    VStack {
-                        Spacer()
-                        Image(systemName: "trash.fill")
-                            .padding()
-                            .background(Color.black.opacity(0.5))
-                            .foregroundColor(.white)
-                            .cornerRadius(50)
-                            .frame(width: 100, height: 100)
-                    }
-                    .frame(height: 150)
-                }
-                
-                if !buttonsHidden && !hideButtons && !showOverlay {
-                    VStack {
-                        Spacer()
-                        Button("Done") {
-                            buttonsHidden = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                generateImage()
+                VStack {
+                    if !buttonsHidden && !hideButtons {
+                        HStack {
+                            Button(action: {
+                                showBackgroundImagePicker = true
+                            }) {
+                                Image(systemName: "wallet.pass.fill")
+                                    .resizable()
+                                    .frame(width: 25, height: 25)
+                                    .foregroundColor(.white)
                             }
+                            .frame(width: 35, height: 35)
+                            .padding(.leading, 15)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                showOverlay.toggle()
+                            }) {
+                                Image(systemName: "textformat")
+                                    .resizable()
+                                    .frame(width: 25, height: 25)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 35, height: 35)
+                            
+                            
+                            Button(action: {
+                                showDraggableImagePicker = true
+                            }) {
+                                Image(systemName: "photo.fill")
+                                    .resizable()
+                                    .frame(width: 25, height: 25)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 35, height: 35)
+                            .padding(.trailing, 15)
                         }
-                        .font(.title)
-                        .padding()
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding(.bottom, 20)
+                        .frame(width: UIScreen.main.bounds.width)
+                        .padding(.top, 20)
+                    }
+                    
+                    Spacer()
+                    
+                    if hideButtons && !showOverlay{
+                        VStack {
+                            Spacer()
+                            Image(systemName: "trash.fill")
+                                .padding()
+                                .background(Color.black.opacity(0.5))
+                                .foregroundColor(.white)
+                                .cornerRadius(50)
+                                .frame(width: 100, height: 100)
+                        }
+                        .frame(height: 150)
+                    }
+                    
+                    if !buttonsHidden && !hideButtons && !showOverlay {
+                        VStack {
+                            Spacer()
+                            Button("Done") {
+                                buttonsHidden = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    generateImage()
+                                }
+                            }
+                            .font(.title)
+                            .padding()
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.bottom, 20)
+                        }
                     }
                 }
+            } else {
+                
             }
+                
             
             if !showOverlay {
                 DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, fontSize: $fontSize)

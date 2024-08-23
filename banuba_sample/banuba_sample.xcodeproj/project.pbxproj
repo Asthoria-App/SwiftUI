@@ -1,0 +1,604 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		564C59F32C78854700881E61 /* AIAEC in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59F22C78854700881E61 /* AIAEC */; };
+		564C59F52C78854700881E61 /* AIAECLL in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59F42C78854700881E61 /* AIAECLL */; };
+		564C59F72C78854700881E61 /* AINS in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59F62C78854700881E61 /* AINS */; };
+		564C59F92C78854700881E61 /* AINSLL in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59F82C78854700881E61 /* AINSLL */; };
+		564C59FB2C78854700881E61 /* AudioBeauty in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59FA2C78854700881E61 /* AudioBeauty */; };
+		564C59FD2C78854700881E61 /* ClearVision in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59FC2C78854700881E61 /* ClearVision */; };
+		564C59FF2C78854700881E61 /* ContentInspect in Frameworks */ = {isa = PBXBuildFile; productRef = 564C59FE2C78854700881E61 /* ContentInspect */; };
+		564C5A012C78854700881E61 /* FaceCapture in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A002C78854700881E61 /* FaceCapture */; };
+		564C5A032C78854700881E61 /* FaceDetection in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A022C78854700881E61 /* FaceDetection */; };
+		564C5A052C78854700881E61 /* LipSync in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A042C78854700881E61 /* LipSync */; };
+		564C5A072C78854700881E61 /* ReplayKit in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A062C78854700881E61 /* ReplayKit */; };
+		564C5A092C78854700881E61 /* RtcBasic in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A082C78854700881E61 /* RtcBasic */; };
+		564C5A0B2C78854700881E61 /* SpatialAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A0A2C78854700881E61 /* SpatialAudio */; };
+		564C5A0D2C78854700881E61 /* VideoAv1CodecDec in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A0C2C78854700881E61 /* VideoAv1CodecDec */; };
+		564C5A0F2C78854700881E61 /* VideoAv1CodecEnc in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A0E2C78854700881E61 /* VideoAv1CodecEnc */; };
+		564C5A112C78854700881E61 /* VideoCodecDec in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A102C78854700881E61 /* VideoCodecDec */; };
+		564C5A132C78854700881E61 /* VideoCodecEnc in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A122C78854700881E61 /* VideoCodecEnc */; };
+		564C5A152C78854700881E61 /* VirtualBackground in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A142C78854700881E61 /* VirtualBackground */; };
+		564C5A172C78854700881E61 /* VQA in Frameworks */ = {isa = PBXBuildFile; productRef = 564C5A162C78854700881E61 /* VQA */; };
+		56D868552C7876E6008B214D /* banuba_sampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56D868542C7876E6008B214D /* banuba_sampleApp.swift */; };
+		56D868572C7876E6008B214D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56D868562C7876E6008B214D /* ContentView.swift */; };
+		56D868592C7876E8008B214D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 56D868582C7876E8008B214D /* Assets.xcassets */; };
+		56D8685C2C7876E8008B214D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 56D8685B2C7876E8008B214D /* Preview Assets.xcassets */; };
+		56D868652C7878BB008B214D /* BNBSdkCore in Frameworks */ = {isa = PBXBuildFile; productRef = 56D868642C7878BB008B214D /* BNBSdkCore */; };
+		56D868682C7878D3008B214D /* BNBEffectPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 56D868672C7878D3008B214D /* BNBEffectPlayer */; };
+		56D8686B2C7878F1008B214D /* BNBScripting in Frameworks */ = {isa = PBXBuildFile; productRef = 56D8686A2C7878F1008B214D /* BNBScripting */; };
+		56D8686E2C78797B008B214D /* BanubaSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 56D8686D2C78797B008B214D /* BanubaSdk */; };
+		56EE439F2C78A6CC005CA9C2 /* effects in Resources */ = {isa = PBXBuildFile; fileRef = 56EE439E2C78A6CC005CA9C2 /* effects */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		56D868512C7876E6008B214D /* banuba_sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = banuba_sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		56D868542C7876E6008B214D /* banuba_sampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = banuba_sampleApp.swift; sourceTree = "<group>"; };
+		56D868562C7876E6008B214D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		56D868582C7876E8008B214D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		56D8685B2C7876E8008B214D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		56EE439E2C78A6CC005CA9C2 /* effects */ = {isa = PBXFileReference; lastKnownFileType = folder; path = effects; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		56D8684E2C7876E6008B214D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				564C59FB2C78854700881E61 /* AudioBeauty in Frameworks */,
+				564C59FF2C78854700881E61 /* ContentInspect in Frameworks */,
+				564C59F52C78854700881E61 /* AIAECLL in Frameworks */,
+				564C5A092C78854700881E61 /* RtcBasic in Frameworks */,
+				564C5A0B2C78854700881E61 /* SpatialAudio in Frameworks */,
+				564C59F92C78854700881E61 /* AINSLL in Frameworks */,
+				564C5A112C78854700881E61 /* VideoCodecDec in Frameworks */,
+				564C5A032C78854700881E61 /* FaceDetection in Frameworks */,
+				564C5A0F2C78854700881E61 /* VideoAv1CodecEnc in Frameworks */,
+				564C5A132C78854700881E61 /* VideoCodecEnc in Frameworks */,
+				56D8686E2C78797B008B214D /* BanubaSdk in Frameworks */,
+				56D868652C7878BB008B214D /* BNBSdkCore in Frameworks */,
+				564C59F32C78854700881E61 /* AIAEC in Frameworks */,
+				564C59F72C78854700881E61 /* AINS in Frameworks */,
+				564C5A0D2C78854700881E61 /* VideoAv1CodecDec in Frameworks */,
+				56D868682C7878D3008B214D /* BNBEffectPlayer in Frameworks */,
+				564C59FD2C78854700881E61 /* ClearVision in Frameworks */,
+				564C5A072C78854700881E61 /* ReplayKit in Frameworks */,
+				564C5A172C78854700881E61 /* VQA in Frameworks */,
+				564C5A052C78854700881E61 /* LipSync in Frameworks */,
+				564C5A012C78854700881E61 /* FaceCapture in Frameworks */,
+				564C5A152C78854700881E61 /* VirtualBackground in Frameworks */,
+				56D8686B2C7878F1008B214D /* BNBScripting in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		564C59F12C78852E00881E61 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		56D868482C7876E6008B214D = {
+			isa = PBXGroup;
+			children = (
+				56EE439E2C78A6CC005CA9C2 /* effects */,
+				56D868532C7876E6008B214D /* banuba_sample */,
+				56D868522C7876E6008B214D /* Products */,
+				564C59F12C78852E00881E61 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		56D868522C7876E6008B214D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56D868512C7876E6008B214D /* banuba_sample.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		56D868532C7876E6008B214D /* banuba_sample */ = {
+			isa = PBXGroup;
+			children = (
+				56D868542C7876E6008B214D /* banuba_sampleApp.swift */,
+				56D868562C7876E6008B214D /* ContentView.swift */,
+				56D868582C7876E8008B214D /* Assets.xcassets */,
+				56D8685A2C7876E8008B214D /* Preview Content */,
+			);
+			path = banuba_sample;
+			sourceTree = "<group>";
+		};
+		56D8685A2C7876E8008B214D /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				56D8685B2C7876E8008B214D /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		56D868502C7876E6008B214D /* banuba_sample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 56D8685F2C7876E8008B214D /* Build configuration list for PBXNativeTarget "banuba_sample" */;
+			buildPhases = (
+				56D8684D2C7876E6008B214D /* Sources */,
+				56D8684E2C7876E6008B214D /* Frameworks */,
+				56D8684F2C7876E6008B214D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = banuba_sample;
+			packageProductDependencies = (
+				56D868642C7878BB008B214D /* BNBSdkCore */,
+				56D868672C7878D3008B214D /* BNBEffectPlayer */,
+				56D8686A2C7878F1008B214D /* BNBScripting */,
+				56D8686D2C78797B008B214D /* BanubaSdk */,
+				564C59F22C78854700881E61 /* AIAEC */,
+				564C59F42C78854700881E61 /* AIAECLL */,
+				564C59F62C78854700881E61 /* AINS */,
+				564C59F82C78854700881E61 /* AINSLL */,
+				564C59FA2C78854700881E61 /* AudioBeauty */,
+				564C59FC2C78854700881E61 /* ClearVision */,
+				564C59FE2C78854700881E61 /* ContentInspect */,
+				564C5A002C78854700881E61 /* FaceCapture */,
+				564C5A022C78854700881E61 /* FaceDetection */,
+				564C5A042C78854700881E61 /* LipSync */,
+				564C5A062C78854700881E61 /* ReplayKit */,
+				564C5A082C78854700881E61 /* RtcBasic */,
+				564C5A0A2C78854700881E61 /* SpatialAudio */,
+				564C5A0C2C78854700881E61 /* VideoAv1CodecDec */,
+				564C5A0E2C78854700881E61 /* VideoAv1CodecEnc */,
+				564C5A102C78854700881E61 /* VideoCodecDec */,
+				564C5A122C78854700881E61 /* VideoCodecEnc */,
+				564C5A142C78854700881E61 /* VirtualBackground */,
+				564C5A162C78854700881E61 /* VQA */,
+			);
+			productName = banuba_sample;
+			productReference = 56D868512C7876E6008B214D /* banuba_sample.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		56D868492C7876E6008B214D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					56D868502C7876E6008B214D = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = 56D8684C2C7876E6008B214D /* Build configuration list for PBXProject "banuba_sample" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 56D868482C7876E6008B214D;
+			packageReferences = (
+				56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */,
+				56D868632C7878BB008B214D /* XCRemoteSwiftPackageReference "BNBSdkCore" */,
+				56D868662C7878D3008B214D /* XCRemoteSwiftPackageReference "BNBEffectPlayer" */,
+				56D868692C7878F1008B214D /* XCRemoteSwiftPackageReference "BNBScripting" */,
+				56D8686C2C78797B008B214D /* XCRemoteSwiftPackageReference "BanubaSdk" */,
+			);
+			productRefGroup = 56D868522C7876E6008B214D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				56D868502C7876E6008B214D /* banuba_sample */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		56D8684F2C7876E6008B214D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56EE439F2C78A6CC005CA9C2 /* effects in Resources */,
+				56D8685C2C7876E8008B214D /* Preview Assets.xcassets in Resources */,
+				56D868592C7876E8008B214D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		56D8684D2C7876E6008B214D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56D868572C7876E6008B214D /* ContentView.swift in Sources */,
+				56D868552C7876E6008B214D /* banuba_sampleApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		56D8685D2C7876E8008B214D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		56D8685E2C7876E8008B214D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		56D868602C7876E8008B214D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"banuba_sample/Preview Content\"";
+				DEVELOPMENT_TEAM = ZHQ4442GZL;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = test;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "test test";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aysemacam.banuba-sample";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		56D868612C7876E8008B214D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"banuba_sample/Preview Content\"";
+				DEVELOPMENT_TEAM = ZHQ4442GZL;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = test;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "test test";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aysemacam.banuba-sample";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		56D8684C2C7876E6008B214D /* Build configuration list for PBXProject "banuba_sample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56D8685D2C7876E8008B214D /* Debug */,
+				56D8685E2C7876E8008B214D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		56D8685F2C7876E8008B214D /* Build configuration list for PBXNativeTarget "banuba_sample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56D868602C7876E8008B214D /* Debug */,
+				56D868612C7876E8008B214D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AgoraIO/AgoraRtcEngine_iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.4.0;
+			};
+		};
+		56D868632C7878BB008B214D /* XCRemoteSwiftPackageReference "BNBSdkCore" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sdk-banuba/BNBSdkCore.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
+		56D868662C7878D3008B214D /* XCRemoteSwiftPackageReference "BNBEffectPlayer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sdk-banuba/BNBEffectPlayer.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
+		56D868692C7878F1008B214D /* XCRemoteSwiftPackageReference "BNBScripting" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sdk-banuba/BNBScripting.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
+		56D8686C2C78797B008B214D /* XCRemoteSwiftPackageReference "BanubaSdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sdk-banuba/BanubaSdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		564C59F22C78854700881E61 /* AIAEC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = AIAEC;
+		};
+		564C59F42C78854700881E61 /* AIAECLL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = AIAECLL;
+		};
+		564C59F62C78854700881E61 /* AINS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = AINS;
+		};
+		564C59F82C78854700881E61 /* AINSLL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = AINSLL;
+		};
+		564C59FA2C78854700881E61 /* AudioBeauty */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = AudioBeauty;
+		};
+		564C59FC2C78854700881E61 /* ClearVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = ClearVision;
+		};
+		564C59FE2C78854700881E61 /* ContentInspect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = ContentInspect;
+		};
+		564C5A002C78854700881E61 /* FaceCapture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = FaceCapture;
+		};
+		564C5A022C78854700881E61 /* FaceDetection */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = FaceDetection;
+		};
+		564C5A042C78854700881E61 /* LipSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = LipSync;
+		};
+		564C5A062C78854700881E61 /* ReplayKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = ReplayKit;
+		};
+		564C5A082C78854700881E61 /* RtcBasic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = RtcBasic;
+		};
+		564C5A0A2C78854700881E61 /* SpatialAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = SpatialAudio;
+		};
+		564C5A0C2C78854700881E61 /* VideoAv1CodecDec */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VideoAv1CodecDec;
+		};
+		564C5A0E2C78854700881E61 /* VideoAv1CodecEnc */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VideoAv1CodecEnc;
+		};
+		564C5A102C78854700881E61 /* VideoCodecDec */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VideoCodecDec;
+		};
+		564C5A122C78854700881E61 /* VideoCodecEnc */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VideoCodecEnc;
+		};
+		564C5A142C78854700881E61 /* VirtualBackground */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VirtualBackground;
+		};
+		564C5A162C78854700881E61 /* VQA */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868622C787808008B214D /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VQA;
+		};
+		56D868642C7878BB008B214D /* BNBSdkCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868632C7878BB008B214D /* XCRemoteSwiftPackageReference "BNBSdkCore" */;
+			productName = BNBSdkCore;
+		};
+		56D868672C7878D3008B214D /* BNBEffectPlayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868662C7878D3008B214D /* XCRemoteSwiftPackageReference "BNBEffectPlayer" */;
+			productName = BNBEffectPlayer;
+		};
+		56D8686A2C7878F1008B214D /* BNBScripting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D868692C7878F1008B214D /* XCRemoteSwiftPackageReference "BNBScripting" */;
+			productName = BNBScripting;
+		};
+		56D8686D2C78797B008B214D /* BanubaSdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 56D8686C2C78797B008B214D /* XCRemoteSwiftPackageReference "BanubaSdk" */;
+			productName = BanubaSdk;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 56D868492C7876E6008B214D /* Project object */;
+}
