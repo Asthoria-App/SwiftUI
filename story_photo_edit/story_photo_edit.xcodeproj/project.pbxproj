@@ -20,6 +20,10 @@
 		568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAC2C7625D300A4D361 /* Righteous-Regular.ttf */; };
 		568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */; };
 		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
+		56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */; };
+		56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */; };
+		56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */; };
+		56AC5F312C7CDCA7000E04DD /* gif_2.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2D2C7CDCA7000E04DD /* gif_2.gif */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +41,10 @@
 		568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-VariableFont_wght.ttf"; sourceTree = "<group>"; };
 		568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "story-photo-edit-Info.plist"; sourceTree = SOURCE_ROOT; };
 		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
+		56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_1.gif; sourceTree = "<group>"; };
+		56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_3.gif; sourceTree = "<group>"; };
+		56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_4.gif; sourceTree = "<group>"; };
+		56AC5F2D2C7CDCA7000E04DD /* gif_2.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_2.gif; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +62,7 @@
 		561BADFB2C7332C400C0991E = {
 			isa = PBXGroup;
 			children = (
+				56AC5F292C7CDC53000E04DD /* Resources */,
 				568D7CB12C76283E00A4D361 /* Extensions */,
 				568D7CA32C76259100A4D361 /* Fonts */,
 				561BAE062C7332C400C0991E /* story_photo_edit */,
@@ -75,7 +84,6 @@
 				568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */,
 				561BAE072C7332C400C0991E /* story_photo_editApp.swift */,
 				561BAE092C7332C400C0991E /* ContentView.swift */,
-				561BAE0B2C7332C600C0991E /* Assets.xcassets */,
 				561BAE0D2C7332C600C0991E /* Preview Content */,
 				561BAE152C73335200C0991E /* StoryEditView.swift */,
 			);
@@ -109,6 +117,18 @@
 				568D7CB22C76285000A4D361 /* Font+Extensions.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		56AC5F292C7CDC53000E04DD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */,
+				56AC5F2D2C7CDCA7000E04DD /* gif_2.gif */,
+				56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */,
+				56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */,
+				561BAE0B2C7332C600C0991E /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -178,11 +198,15 @@
 				568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */,
 				568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */,
 				568D7CAB2C7625C100A4D361 /* Roboto-Medium.ttf in Resources */,
+				56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */,
 				561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */,
 				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
 				568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */,
 				561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */,
+				56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */,
+				56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */,
 				568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */,
+				56AC5F312C7CDCA7000E04DD /* gif_2.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

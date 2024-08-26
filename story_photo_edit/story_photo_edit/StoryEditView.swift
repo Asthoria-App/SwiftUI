@@ -8,6 +8,108 @@
 import SwiftUI
 import UIKit
 
+struct DraggableGifView: View {
+    @Binding var draggableGif: DraggableGif
+    let deleteArea: CGRect
+    
+    var body: some View {
+        Image(uiImage: draggableGif.image)
+            .resizable()
+            .frame(width: 100 * draggableGif.scale, height: 100 * draggableGif.scale)
+            .rotationEffect(draggableGif.angle)
+            .position(draggableGif.position) // CGPoint is expected here
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        draggableGif.position = value.location // CGPoint is used here
+                        checkForDeletion(location: value.location)
+                    }
+            )
+            .gesture(
+                MagnificationGesture()
+                    .onChanged { value in
+                        draggableGif.scale = value
+                    }
+            )
+            .gesture(
+                RotationGesture()
+                    .onChanged { value in
+                        draggableGif.angle = value
+                    }
+            )
+    }
+    
+    func checkForDeletion(location: CGPoint) {
+        if deleteArea.contains(location) {
+            // Logic to delete the GIF if it is dragged to the delete area
+        }
+    }
+}
+
+struct DraggableGif {
+    var image: UIImage
+    var position: CGPoint  // Changed from CGSize to CGPoint
+    var scale: CGFloat
+    var angle: Angle
+}
+
+struct GifPickerView: UIViewControllerRepresentable {
+    var onGifSelected: (UIImage) -> Void
+    
+    func makeUIViewController(context: Context) -> GifPickerViewController {
+        let viewController = GifPickerViewController()
+        viewController.onGifSelected = onGifSelected
+        return viewController
+    }
+    
+    func updateUIViewController(_ uiViewController: GifPickerViewController, context: Context) {
+        // No update needed
+    }
+}
+
+class GifPickerViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+    var onGifSelected: ((UIImage) -> Void)?
+    var gifs: [UIImage] = [UIImage(named: "gif_1")!, UIImage(named: "gif_2")!, UIImage(named: "gif_3")!, UIImage(named: "gif_4")!]
+
+
+    lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width / 4 - 10, height: UIScreen.main.bounds.width / 4 - 10)
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 10
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "GifCell")
+        return collectionView
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.addSubview(collectionView)
+        collectionView.frame = view.bounds
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return gifs.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GifCell", for: indexPath)
+        let imageView = UIImageView(image: gifs[indexPath.item])
+        imageView.contentMode = .scaleAspectFit
+        cell.contentView.addSubview(imageView)
+        imageView.frame = cell.contentView.bounds
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedGif = gifs[indexPath.item]
+        onGifSelected?(selectedGif)
+        dismiss(animated: true)
+    }
+}
 struct StoryEditView: View {
     @State private var showTextEditor: Bool = false
     @State private var userText: String = ""
@@ -38,10 +140,10 @@ struct StoryEditView: View {
     @State private var fontSize: CGFloat = 34
     @State private var eyedropperPosition: CGSize = .zero
     @State private var selectedColor: Color = .white
-    @State private var draggableTexts: [DraggableText] = []  
-    @State private var selectedTextIndex: Int? = nil  // Index of the selected DraggableTextView
-    @State private var draggableImages: [DraggableImage] = []  // Array to store DraggableImage instances
-    @State private var selectedImageIndex: Int? = nil  // Index of the selected DraggableImageView
+    @State private var draggableTexts: [DraggableText] = []
+    @State private var selectedTextIndex: Int? = nil
+    @State private var draggableImages: [DraggableImage] = []
+    @State private var selectedImageIndex: Int? = nil
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
