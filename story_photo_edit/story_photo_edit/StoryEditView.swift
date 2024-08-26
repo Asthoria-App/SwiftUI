@@ -31,19 +31,21 @@ struct StoryEditView: View {
     @State private var selectedGradient: LinearGradient? = nil
     @State private var textBackgroundColor: Color = .clear
     @State private var originalTextColor: Color = .clear
-    
     @State private var generatedImage: UIImage? = nil
     @State private var showGeneratedImageView: Bool = false
     @State private var buttonsHidden: Bool = false
     @State private var showEyedropper: Bool = false
     @State private var fontSize: CGFloat = 34
+    @State private var eyedropperPosition: CGSize = .zero
+    @State private var selectedColor: Color = .white
     
+
     let gradientOptions: [LinearGradient] = [
-        LinearGradient(gradient: Gradient(colors: [.blue, .purple]), startPoint: .top, endPoint: .bottom),
+        LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
-    
+
     var body: some View {
         ZStack {
             if let backgroundImage = backgroundImage {
@@ -58,8 +60,8 @@ struct StoryEditView: View {
                     .resizable()
                     .edgesIgnoringSafeArea(.all)
             }
+
             if !showEyedropper {
-                
                 VStack {
                     if !buttonsHidden && !hideButtons {
                         HStack {
@@ -73,9 +75,7 @@ struct StoryEditView: View {
                             }
                             .frame(width: 35, height: 35)
                             .padding(.leading, 15)
-                            
                             Spacer()
-                            
                             Button(action: {
                                 showOverlay.toggle()
                             }) {
@@ -85,8 +85,6 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
-                            
-                            
                             Button(action: {
                                 showDraggableImagePicker = true
                             }) {
@@ -101,10 +99,10 @@ struct StoryEditView: View {
                         .frame(width: UIScreen.main.bounds.width)
                         .padding(.top, 20)
                     }
-                    
+
                     Spacer()
-                    
-                    if hideButtons && !showOverlay{
+
+                    if hideButtons && !showOverlay {
                         VStack {
                             Spacer()
                             Image(systemName: "trash.fill")
@@ -116,7 +114,7 @@ struct StoryEditView: View {
                         }
                         .frame(height: 150)
                     }
-                    
+
                     if !buttonsHidden && !hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -134,29 +132,30 @@ struct StoryEditView: View {
                         }
                     }
                 }
-            } else {
-                
             }
-                
-            
-            if !showOverlay {
-                DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, fontSize: $fontSize)
-                    .padding(.horizontal, 50)
-            }
-            
+
             if let selectedDraggableImage = selectedDraggableImage {
                 DraggableImageView(selectedImage: $selectedDraggableImage, imagePosition: $imagePosition, scale: $imageScale, angle: $imageAngle, showDeleteButton: $imageShowDeleteButton, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
                     .padding(.horizontal, 50)
                     .aspectRatio(contentMode: .fill)
-                    
             }
-            
+
+            if !showOverlay {
+                DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, fontSize: $fontSize)
+                    .padding(.horizontal, 50)
+            }
+
+            if showEyedropper {
+                DraggableDropView(position: $eyedropperPosition, color: $textColor, onDragEnd: {
+                    showEyedropper = false
+                    showOverlay = true
+                })
+            }
+
             if showOverlay {
                 OverlayView(showOverlay: $showOverlay, userText: $userText, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, originalTextColor: $originalTextColor, fontSize: $fontSize, showEyedropper: $showEyedropper)
             }
-            
-          
         }
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
@@ -171,7 +170,7 @@ struct StoryEditView: View {
             hideButtons = newValue
         }
     }
-    
+
     func generateImage() {
         let window = UIApplication.shared.windows.first { $0.isKeyWindow }
         let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
@@ -182,6 +181,7 @@ struct StoryEditView: View {
         showGeneratedImageView = true
     }
 }
+
 
 struct GeneratedImageView: View {
     var image: UIImage?
@@ -810,6 +810,7 @@ struct ColorSelectionView: View {
                     .frame(width: 25, height: 25)
                     .foregroundColor(.white)
             }
+            .frame(width: 35, height: 45)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 5) {
                     ForEach(colors, id: \.self) { color in
@@ -887,9 +888,11 @@ func focusTextView() {
     UIApplication.shared.sendAction(#selector(UIResponder.becomeFirstResponder), to: nil, from: nil, for: nil)
 }
 
+
 struct EyedropperView: View {
     @Binding var showEyedropper: Bool
     @Binding var textColor: Color
+    @Binding var position: CGSize
 
     var body: some View {
         Rectangle()
@@ -898,17 +901,114 @@ struct EyedropperView: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let color = getColor(at: value.location)
-                        textColor = color
+                        let dropPosition = CGPoint(x: value.location.x, y: value.location.y)
+                        let newColor = getColor(at: dropPosition)
+                        textColor = newColor
+                        position = value.translation
                     }
                     .onEnded { _ in
                         showEyedropper = false
                     }
             )
     }
+}
 
-    func getColor(at point: CGPoint) -> Color {
+import UIKit
+import SwiftUI
+func getColor(at point: CGPoint) -> Color {
+    let keyWindow = UIApplication.shared.windows.first { $0.isKeyWindow }
+    
+    guard let window = keyWindow else { return Color.white }
 
-        return Color.red
+    let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
+    let image = renderer.image { context in
+        window.layer.render(in: context.cgContext)
+    }
+    
+    guard let pixelColor = image.getPixelColor(at: point) else {
+        return Color.white
+    }
+
+    return Color(pixelColor)
+}
+
+import UIKit
+
+extension UIImage {
+    func getPixelColor(at point: CGPoint) -> UIColor? {
+        guard let cgImage = self.cgImage else { return nil }
+
+        let width = self.size.width
+        let height = self.size.height
+
+        guard point.x >= 0 && point.x < width &&
+              point.y >= 0 && point.y < height else { return nil }
+
+        let pixelData = UnsafeMutablePointer<UInt8>.allocate(capacity: 4)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+        let context = CGContext(
+            data: pixelData,
+            width: 1,
+            height: 1,
+            bitsPerComponent: 8,
+            bytesPerRow: 4,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        )
+        
+        context?.translateBy(x: -point.x, y: -(self.size.height - point.y))
+        context?.draw(cgImage, in: CGRect(origin: .zero, size: self.size))
+        
+        let r = CGFloat(pixelData[0]) / 255.0
+        let g = CGFloat(pixelData[1]) / 255.0
+        let b = CGFloat(pixelData[2]) / 255.0
+        let a = CGFloat(pixelData[3]) / 255.0
+
+        pixelData.deallocate()
+
+        return UIColor(red: r, green: g, blue: b, alpha: a)
+    }
+}
+struct DraggableDropView: View {
+    @Binding var position: CGSize
+    @Binding var color: Color
+    var onDragEnd: () -> Void
+
+    @State private var lastDragOffset: CGSize = .zero
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(color)
+                .frame(width: 15, height: 15)
+                .offset(y: 40)
+
+            Image(systemName: "drop.fill")
+                .resizable()
+                .frame(width: 50, height: 60)
+                .foregroundColor(color)
+                .rotationEffect(Angle(degrees: 180))
+        }
+        .position(x: position.width, y: position.height)
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    position = CGSize(
+                        width: lastDragOffset.width + value.translation.width,
+                        height: lastDragOffset.height + value.translation.height
+                    )
+                    let colorSamplePoint = CGPoint(x: position.width, y: position.height - 30)
+                    color = getColor(at: colorSamplePoint)
+                }
+                .onEnded { _ in
+                    lastDragOffset = position
+                    onDragEnd()
+                }
+        )
+        .onAppear {
+            position = CGSize(width: UIScreen.main.bounds.width / 2, height: UIScreen.main.bounds.height / 2)
+            lastDragOffset = position
+        }
     }
 }
