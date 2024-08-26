@@ -38,14 +38,17 @@ struct StoryEditView: View {
     @State private var fontSize: CGFloat = 34
     @State private var eyedropperPosition: CGSize = .zero
     @State private var selectedColor: Color = .white
+    @State private var draggableTexts: [DraggableText] = []  
+    @State private var selectedTextIndex: Int? = nil  // Index of the selected DraggableTextView
+    @State private var draggableImages: [DraggableImage] = []  // Array to store DraggableImage instances
+    @State private var selectedImageIndex: Int? = nil  // Index of the selected DraggableImageView
     
-
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
-
+    
     var body: some View {
         ZStack {
             if let backgroundImage = backgroundImage {
@@ -75,9 +78,34 @@ struct StoryEditView: View {
                             }
                             .frame(width: 35, height: 35)
                             .padding(.leading, 15)
+                            
                             Spacer()
+                            
                             Button(action: {
-                                showOverlay.toggle()
+                              
+                            }) {
+                                Image(systemName: "face.smiling.inverse")
+                                    .resizable()
+                                    .frame(width: 25, height: 25)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 35, height: 35)
+                            
+                            Button(action: {
+                                let newText = DraggableText(
+                                    text: "New Text",
+                                    position: .zero,
+                                    scale: 1.0,
+                                    angle: .zero,
+                                    textColor: textColor,
+                                    backgroundColor: textBackgroundColor,
+                                    backgroundOpacity: backgroundOpacity,
+                                    font: selectedFont,
+                                    fontSize: fontSize
+                                )
+                                draggableTexts.append(newText)
+                                selectedTextIndex = draggableTexts.count - 1
+                                showOverlay = true
                             }) {
                                 Image(systemName: "textformat")
                                     .resizable()
@@ -85,6 +113,7 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            
                             Button(action: {
                                 showDraggableImagePicker = true
                             }) {
@@ -134,27 +163,63 @@ struct StoryEditView: View {
                 }
             }
 
-            if let selectedDraggableImage = selectedDraggableImage {
-                DraggableImageView(selectedImage: $selectedDraggableImage, imagePosition: $imagePosition, scale: $imageScale, angle: $imageAngle, showDeleteButton: $imageShowDeleteButton, hideButtons: $hideButtons)
+            ForEach(draggableImages.indices, id: \.self) { index in
+                DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
                     .padding(.horizontal, 50)
                     .aspectRatio(contentMode: .fill)
             }
 
-            if !showOverlay {
-                DraggableTextView(userText: $userText, textPosition: $textPosition, scale: $scale, angle: $angle, showDeleteButton: $showDeleteButton, hideButtons: $hideButtons, showOverlay: $showOverlay, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, fontSize: $fontSize)
-                    .padding(.horizontal, 50)
+            ForEach(draggableTexts.indices, id: \.self) { index in
+                DraggableTextView(
+                    userText: $draggableTexts[index].text,
+                    textPosition: $draggableTexts[index].position,
+                    scale: $draggableTexts[index].scale,
+                    angle: $draggableTexts[index].angle,
+                    showDeleteButton: $showDeleteButton,
+                    hideButtons: $hideButtons,
+                    showOverlay: $showOverlay,
+                    textColor: $draggableTexts[index].textColor,
+                    backgroundColor: $draggableTexts[index].backgroundColor,
+                    backgroundOpacity: $draggableTexts[index].backgroundOpacity,
+                    selectedFont: $draggableTexts[index].font,
+                    fontSize: $draggableTexts[index].fontSize,
+                    index: index,
+                    selectedTextIndex: $selectedTextIndex
+                )
             }
 
             if showEyedropper {
                 DraggableDropView(position: $eyedropperPosition, color: $textColor, onDragEnd: {
                     showEyedropper = false
                     showOverlay = true
+                }, onColorChange: { newColor in
+                    if let selectedIndex = selectedTextIndex {
+                        draggableTexts[selectedIndex].textColor = newColor
+                    }
                 })
             }
-
-            if showOverlay {
-                OverlayView(showOverlay: $showOverlay, userText: $userText, textColor: $textColor, backgroundColor: $textBackgroundColor, backgroundOpacity: $backgroundOpacity, selectedFont: $selectedFont, originalTextColor: $originalTextColor, fontSize: $fontSize, showEyedropper: $showEyedropper)
+            
+            if showOverlay, let selectedIndex = selectedTextIndex {
+                OverlayView(
+                    showOverlay: $showOverlay,
+                    userText: $draggableTexts[selectedIndex].text,
+                    textColor: $draggableTexts[selectedIndex].textColor,
+                    backgroundColor: $draggableTexts[selectedIndex].backgroundColor,
+                    backgroundOpacity: $draggableTexts[selectedIndex].backgroundOpacity,
+                    selectedFont: $draggableTexts[selectedIndex].font,
+                    originalTextColor: $originalTextColor,
+                    fontSize: $draggableTexts[selectedIndex].fontSize,
+                    showEyedropper: $showEyedropper,
+                    onChange: {
+                        draggableTexts[selectedIndex].originalTextColor = originalTextColor
+                        draggableTexts[selectedIndex].textColor = textColor
+                        draggableTexts[selectedIndex].backgroundColor = textBackgroundColor
+                        draggableTexts[selectedIndex].backgroundOpacity = backgroundOpacity
+                        draggableTexts[selectedIndex].font = selectedFont
+                        draggableTexts[selectedIndex].fontSize = fontSize
+                    }
+                )
             }
         }
         .sheet(isPresented: $showBackgroundImagePicker) {
@@ -162,6 +227,14 @@ struct StoryEditView: View {
         }
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
+                .onDisappear {
+                    if let selectedImage = selectedDraggableImage {
+                        let newImage = DraggableImage(image: selectedImage, position: .zero, scale: 1.0, angle: .zero)
+                        draggableImages.append(newImage)
+                        selectedImageIndex = draggableImages.count - 1
+                        selectedDraggableImage = nil
+                    }
+                }
         }
         .sheet(isPresented: $showGeneratedImageView) {
             GeneratedImageView(image: generatedImage)
@@ -181,6 +254,37 @@ struct StoryEditView: View {
         showGeneratedImageView = true
     }
 }
+
+
+struct DraggableText {
+    var text: String
+    var position: CGSize
+    var scale: CGFloat
+    var angle: Angle
+    var textColor: Color
+    var backgroundColor: Color
+    var backgroundOpacity: CGFloat
+    var font: CustomFont
+    var fontSize: CGFloat
+    var originalTextColor: Color  // Bu property eklenir ve sadece bir kez atanır.
+    
+    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat) {
+        self.text = text
+        self.position = position
+        self.scale = scale
+        self.angle = angle
+        self.textColor = textColor
+        self.originalTextColor = textColor  // İlk atamada textColor ile aynı olacak.
+        self.backgroundColor = backgroundColor
+        self.backgroundOpacity = backgroundOpacity
+        self.font = font
+        self.fontSize = fontSize
+    }
+}
+
+
+
+
 
 
 struct GeneratedImageView: View {
@@ -281,45 +385,36 @@ struct ImagePicker: UIViewControllerRepresentable {
 }
 
 struct DraggableImageView: View {
-    @Binding var selectedImage: UIImage?
-    @Binding var imagePosition: CGSize
-    @Binding var scale: CGFloat
-    @Binding var angle: Angle
-    @Binding var showDeleteButton: Bool
+    @Binding var draggableImage: DraggableImage
+    @Binding var selectedImageIndex: Int?
+    var index: Int
     @Binding var hideButtons: Bool
 
-    @State private var lastScaleValue: CGFloat = 1.0
-    @State private var currentDragOffset: CGSize = .zero
     @State private var isDraggingOverDelete: Bool = false
-    @State private var cornerRadius: CGFloat = 0.0
+    @State private var dragOffset: CGSize = .zero
+    @State private var shouldRemove: Bool = false
 
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack {
-                    if let selectedImage = selectedImage {
-                        Image(uiImage: selectedImage)
+                    if !shouldRemove {
+                        Image(uiImage: draggableImage.image)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 200, height: 200)
-                            .cornerRadius(cornerRadius)  // Apply corner radius
+                            .cornerRadius(12)  // Apply corner radius
                             .clipped()
-                            .scaleEffect(lastScaleValue * scale)
-                            .rotationEffect(angle)
-                            .position(positionInBounds(geometry))
+                            .scaleEffect(draggableImage.lastScaleValue * draggableImage.scale)
+                            .rotationEffect(draggableImage.angle)
+                            .position(x: geometry.size.width / 2 + draggableImage.position.width + dragOffset.width,
+                                      y: geometry.size.height / 2 + draggableImage.position.height + dragOffset.height)
                             .gesture(
                                 SimultaneousGesture(
                                     DragGesture()
                                         .onChanged { value in
                                             hideButtons = true
-                                            
-                                            let translation = value.translation
-                                            let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
-                                            
-                                            imagePosition = CGSize(
-                                                width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
-                                                height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
-                                            )
+                                            dragOffset = value.translation
                                             
                                             let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
                                             if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
@@ -330,67 +425,47 @@ struct DraggableImageView: View {
                                         }
                                         .onEnded { value in
                                             if isDraggingOverDelete {
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                                    withAnimation(.smooth(duration: 0.7)) {
-                                                        scale = 0.4
-                                                    }
+                                                // Sürüklenen öğeyi sil, pozisyonu koru
+                                                withAnimation(.smooth(duration: 0.7)) {
+                                                    shouldRemove = true
                                                 }
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                                    withAnimation {
-                                                        self.selectedImage = nil
-                                                        imagePosition = .zero
-                                                        scale = 1.0
-                                                        angle = .zero
-                                                    }
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                                                    draggableImage = DraggableImage(image: UIImage(), position: draggableImage.position, scale: 1.0, angle: .zero)
                                                 }
                                             } else {
-                                                print("Image not dropped on delete button!")
+                                                // Yeni pozisyonu kaydet
+                                                draggableImage.position.width += dragOffset.width
+                                                draggableImage.position.height += dragOffset.height
                                             }
-                                            isDraggingOverDelete = false
+                                            dragOffset = .zero
                                             hideButtons = false
-                                            currentDragOffset = imagePosition
+                                            isDraggingOverDelete = false
                                         },
                                     RotationGesture()
                                         .onChanged { newAngle in
-                                            angle += newAngle - angle
+                                            draggableImage.angle += newAngle - draggableImage.angle
                                         }
                                         .onEnded { newAngle in
-                                            angle = newAngle
+                                            draggableImage.angle = newAngle
                                         }
                                 )
                                 .simultaneously(with: MagnificationGesture()
                                     .onChanged { value in
-                                        scale = value
+                                        draggableImage.scale = value
                                     }
                                     .onEnded { _ in
-                                        lastScaleValue *= scale
-                                        scale = 1.0
+                                        draggableImage.lastScaleValue *= draggableImage.scale
+                                        draggableImage.scale = 1.0
                                     }
                                 )
                             )
                             .onTapGesture {
-                                cornerRadius = cornerRadius == 0 ? 12 : 0
-                            }
-                            .onLongPressGesture {
-                                showDeleteButton = true
+                                selectedImageIndex = index
                             }
                     }
                 }
             }
         }
-    }
-
-    private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
-        let radians = CGFloat(angle.radians)
-        let newX = point.width * cos(radians) - point.height * sin(radians)
-        let newY = point.width * sin(radians) + point.height * cos(radians)
-        return CGSize(width: newX, height: newY)
-    }
-
-    private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
-        let x = geometry.size.width / 2 + imagePosition.width
-        let y = geometry.size.height / 2 + imagePosition.height
-        return CGPoint(x: x, y: y)
     }
 }
 
@@ -404,107 +479,106 @@ struct DraggableTextView: View {
     @Binding var showOverlay: Bool
     @Binding var textColor: Color
     @Binding var backgroundColor: Color
-    
     @Binding var backgroundOpacity: CGFloat
     @Binding var selectedFont: CustomFont
     @Binding var fontSize: CGFloat
+    var index: Int
+    @Binding var selectedTextIndex: Int?
+
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentDragOffset: CGSize = .zero
     @State private var isDraggingOverDelete: Bool = false
-    
+
     var body: some View {
         ZStack {
             GeometryReader { geometry in
-                VStack {
-                    Text(userText)
-                        .font(selectedFont.toSwiftUIFont(size: fontSize))
-                        .foregroundColor(textColor)
-                        .padding(8)
-                        .background(backgroundColor.opacity(backgroundOpacity))
-                        .cornerRadius(5)
-                        .position(positionInBounds(geometry))
-                        .scaleEffect(lastScaleValue * scale)
-                        .rotationEffect(angle)
-                        .gesture(
-                            SimultaneousGesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        hideButtons = true
-                                        
-                                        let translation = value.translation
-                                        let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
-                                        
-                                        textPosition = CGSize(
-                                            width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
-                                            height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
-                                        )
-                                        let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
-                                        
-                                        if deleteAreaFrame.contains(CGPoint(x: value.location.x, y: value.location.y)) {
-                                            isDraggingOverDelete = true
-                                        } else {
-                                            isDraggingOverDelete = false
-                                        }
-                                    }
-                                    .onEnded { value in
-                                        if isDraggingOverDelete {
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                                withAnimation(.smooth(duration: 0.7)) {
-                                                    scale = 0.4
-                                                }
-                                            }
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                                userText = ""
-                                                textColor = .white
-                                                textPosition = .zero
-                                                backgroundOpacity = 0
-                                                scale = 1.0
-                                            }
-                                            
-                                        } else {
-                                            print("Text not dropped on delete button!")
-                                        }
-                                        isDraggingOverDelete = false
-                                        hideButtons = false
-                                        currentDragOffset = textPosition
-                                    },
-                                RotationGesture()
-                                    .onChanged { newAngle in
-                                        angle += newAngle - angle
-                                    }
-                                    .onEnded { newAngle in
-                                        angle = newAngle
-                                    }
-                            )
-                            .simultaneously(with: MagnificationGesture()
+                Text(userText)
+                    .font(selectedFont.toSwiftUIFont(size: fontSize))
+                    .foregroundColor(textColor)
+                    .padding(8)
+                    // `backgroundColor` ve `backgroundOpacity`'nin doğru uygulanması
+                    .background(backgroundColor.opacity(backgroundOpacity))
+                    .cornerRadius(5)
+                    .position(positionInBounds(geometry))
+                    .scaleEffect(lastScaleValue * scale)
+                    .rotationEffect(angle)
+                    .gesture(
+                        SimultaneousGesture(
+                            DragGesture()
                                 .onChanged { value in
-                                    scale = value
+                                    hideButtons = true
+                                    let translation = value.translation
+                                    let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
+                                    textPosition = CGSize(
+                                        width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
+                                        height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
+                                    )
+                                    
+                                    let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                    if deleteAreaFrame.contains(CGPoint(x: value.location.x, y: value.location.y)) {
+                                        isDraggingOverDelete = true
+                                    } else {
+                                        isDraggingOverDelete = false
+                                    }
                                 }
-                                .onEnded { _ in
-                                    lastScaleValue *= scale
-                                    scale = 1.0
+                                .onEnded { value in
+                                    if isDraggingOverDelete {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            withAnimation(.smooth(duration: 0.7)) {
+                                                scale = 0.4
+                                            }
+                                        }
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                            userText = ""
+                                            textColor = .white
+                                            textPosition = .zero
+                                            backgroundOpacity = 0
+                                            scale = 1.0
+                                        }
+                                    } else {
+                                        print("Text not dropped on delete button!")
+                                    }
+                                    isDraggingOverDelete = false
+                                    hideButtons = false
+                                    currentDragOffset = textPosition
+                                },
+                            RotationGesture()
+                                .onChanged { newAngle in
+                                    angle += newAngle - angle
                                 }
-                            )
+                                .onEnded { newAngle in
+                                    angle = newAngle
+                                }
                         )
-                        .onTapGesture {
-                            hideButtons = false
-                            showOverlay = true
-                        }
-                        .onLongPressGesture {
-                            showDeleteButton = true
-                        }
-                }
+                        .simultaneously(with: MagnificationGesture()
+                            .onChanged { value in
+                                scale = value
+                            }
+                            .onEnded { _ in
+                                lastScaleValue *= scale
+                                scale = 1.0
+                            }
+                        )
+                    )
+                    .onTapGesture {
+                        hideButtons = false
+                        showOverlay = true
+                        selectedTextIndex = index
+                    }
+                    .onLongPressGesture {
+                        showDeleteButton = true
+                    }
             }
         }
     }
-    
+
     private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
         let radians = CGFloat(angle.radians)
         let newX = point.width * cos(radians) - point.height * sin(radians)
         let newY = point.width * sin(radians) + point.height * cos(radians)
         return CGSize(width: newX, height: newY)
     }
-    
+
     private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
         let x = geometry.size.width / 2 + textPosition.width
         let y = geometry.size.height / 2 + textPosition.height
@@ -512,6 +586,7 @@ struct DraggableTextView: View {
     }
 }
 
+  
 struct OverlayView: View {
     @Binding var showOverlay: Bool
     @Binding var userText: String
@@ -522,6 +597,8 @@ struct OverlayView: View {
     @Binding var originalTextColor: Color
     @Binding var fontSize: CGFloat
     @Binding var showEyedropper: Bool
+    var onChange: () -> Void  // Değişiklikleri yansıtmak için closure
+
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
 
@@ -552,19 +629,19 @@ struct OverlayView: View {
 
                                              Capsule()
                                 .fill(LinearGradient(gradient: Gradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.8)]), startPoint: .bottom, endPoint: .top))
-                                                 .frame(width: 10, height: 200 * CGFloat(fontSize / 80))
-                                                 .offset(x: 0)
+                                .frame(width: 10, height: 200 * CGFloat(fontSize / 80))
+                                .offset(x: 0)
 
-                                             Capsule()
-                                                 .fill(Color.gray.opacity(0.2))
-                                                 .frame(width: 10, height: 200)
-                                                 .offset(x: 0)
-                                                 .mask(Rectangle().frame(height: 200))
-                                         }
-                                         .padding(.top, -280)
-                                         .offset(y: 300)
-                                     }
-                                     
+                            Capsule()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 10, height: 200)
+                                .offset(x: 0)
+                                .mask(Rectangle().frame(height: 200))
+                        }
+                        .padding(.top, -280)
+                        .offset(y: 300)
+                    }
+
                     Spacer()
                     
                     Button(action: {
@@ -654,8 +731,10 @@ struct OverlayView: View {
                     maxHeight: 150,
                     textHeight: $textHeight,
                     textColor: $textColor,
-                    backgroundOpacity: $backgroundOpacity, backgroundColor: $backgroundColor,
-                    selectedFont: $selectedFont, textWidth: $textWidth,
+                    backgroundOpacity: $backgroundOpacity,
+                    backgroundColor: $backgroundColor,
+                    selectedFont: $selectedFont,
+                    textWidth: $textWidth,
                     fontSize: $fontSize
                 )
                 .frame(width: textWidth, height: textHeight)
@@ -695,6 +774,7 @@ struct OverlayView: View {
         }
     }
 }
+
 
 struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var text: String
@@ -974,6 +1054,7 @@ struct DraggableDropView: View {
     @Binding var position: CGSize
     @Binding var color: Color
     var onDragEnd: () -> Void
+    var onColorChange: (Color) -> Void  // Yeni closure
 
     @State private var lastDragOffset: CGSize = .zero
 
@@ -998,8 +1079,13 @@ struct DraggableDropView: View {
                         width: lastDragOffset.width + value.translation.width,
                         height: lastDragOffset.height + value.translation.height
                     )
+
+                    // Renk güncelleme sırasında seçilen noktadan renk al
                     let colorSamplePoint = CGPoint(x: position.width, y: position.height - 30)
                     color = getColor(at: colorSamplePoint)
+
+                    // Renk değişimini dışarıya ilet
+                    onColorChange(color)
                 }
                 .onEnded { _ in
                     lastDragOffset = position
@@ -1011,4 +1097,11 @@ struct DraggableDropView: View {
             lastDragOffset = position
         }
     }
+}
+struct DraggableImage {
+    var image: UIImage
+    var position: CGSize
+    var scale: CGFloat
+    var angle: Angle
+    var lastScaleValue: CGFloat = 1.0
 }
