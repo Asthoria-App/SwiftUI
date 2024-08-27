@@ -7,109 +7,194 @@
 
 import SwiftUI
 import UIKit
+import SwiftyGif
+
+
+class GIFViewController: UIViewController {
+    var gifImageView = UIImageView()
+    
+    init(gifName: String, width: CGFloat, height: CGFloat) {
+        super.init(nibName: nil, bundle: nil)
+        setupGIFView(gifName: gifName, width: width, height: height)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupGIFView(gifName: String, width: CGFloat, height: CGFloat) {
+        gifImageView.contentMode = .scaleAspectFit
+        gifImageView.clipsToBounds = true
+        
+        do {
+            let gif = try UIImage(gifName: gifName)
+            gifImageView.setGifImage(gif, loopCount: -1)
+        } catch {
+            print("Failed to load GIF: \(error)")
+        }
+        
+        // Enforce the size of the UIImageView
+        gifImageView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(gifImageView)
+        NSLayoutConstraint.activate([
+            gifImageView.widthAnchor.constraint(equalToConstant: width),
+            gifImageView.heightAnchor.constraint(equalToConstant: height),
+            gifImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            gifImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+}
+
+struct GIFImageView: UIViewControllerRepresentable {
+    let gifName: String
+    let width: CGFloat
+    let height: CGFloat
+    
+    func makeUIViewController(context: Context) -> GIFViewController {
+        return GIFViewController(gifName: gifName, width: width, height: height)
+    }
+    
+    func updateUIViewController(_ uiViewController: GIFViewController, context: Context) {
+        // Nothing to update in this case
+    }
+}
 
 struct DraggableGifView: View {
     @Binding var draggableGif: DraggableGif
     let deleteArea: CGRect
+    @Binding var hideButtons: Bool
+    @Binding var isDraggingOverDelete: Bool
+    
+    @State private var dragOffset: CGSize = .zero
+    @State private var shouldRemove: Bool = false
+    @State private var currentScale: CGFloat = 1.0
+    @State private var currentAngle: Angle = .zero
+    
+    var onDelete: () -> Void
     
     var body: some View {
-        Image(uiImage: draggableGif.image)
-            .resizable()
-            .frame(width: 100 * draggableGif.scale, height: 100 * draggableGif.scale)
-            .rotationEffect(draggableGif.angle)
-            .position(draggableGif.position) // CGPoint is expected here
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        draggableGif.position = value.location // CGPoint is used here
-                        checkForDeletion(location: value.location)
-                    }
-            )
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { value in
-                        draggableGif.scale = value
-                    }
-            )
-            .gesture(
-                RotationGesture()
-                    .onChanged { value in
-                        draggableGif.angle = value
-                    }
-            )
-    }
-    
-    func checkForDeletion(location: CGPoint) {
-        if deleteArea.contains(location) {
-            // Logic to delete the GIF if it is dragged to the delete area
+        ZStack {
+            if !shouldRemove {
+                GIFImageView(gifName: draggableGif.imageName, width: 100, height: 100)
+                    .scaleEffect(draggableGif.scale * currentScale)
+                    .rotationEffect(draggableGif.angle + currentAngle)
+                    .position(x: draggableGif.position.x + dragOffset.width,
+                              y: draggableGif.position.y + dragOffset.height)
+                    .gesture(
+                        SimultaneousGesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    hideButtons = true
+                                    dragOffset = value.translation
+                                    
+                                    let globalLocation = CGPoint(
+                                        x: value.location.x + draggableGif.position.x + dragOffset.width,
+                                        y: value.location.y + draggableGif.position.y + dragOffset.height
+                                    )
+                                    
+                                    if deleteArea.contains(globalLocation) {
+                                        isDraggingOverDelete = true
+                                        print("Over delete area")
+                                    } else {
+                                        isDraggingOverDelete = false
+                                        print("Not over delete area")
+                                    }
+                                }
+                                .onEnded { value in
+                                    if isDraggingOverDelete {
+                                        withAnimation(.easeOut(duration: 0.3)) {
+                                            shouldRemove = true
+                                        }
+                                        print("Removing GIF")
+                                        onDelete()
+                                    } else {
+                                        draggableGif.position.x += dragOffset.width
+                                        draggableGif.position.y += dragOffset.height
+                                    }
+                                    dragOffset = .zero
+                                    hideButtons = false
+                                    isDraggingOverDelete = false
+                                },
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    currentScale = value
+                                }
+                                .onEnded { value in
+                                    draggableGif.scale *= currentScale
+                                    currentScale = 1.0
+                                }
+                        )
+                        .simultaneously(with: RotationGesture()
+                            .onChanged { angle in
+                                currentAngle = angle
+                            }
+                            .onEnded { angle in
+                                draggableGif.angle += currentAngle
+                                currentAngle = .zero
+                            }
+                        )
+                    )
+                   
+                    .frame(width: 100, height: 100)
+                    
+            }
         }
     }
 }
 
+
+
+
+struct BottomSheetGifPickerView: View {
+    @Binding var selectedGifImage: String?
+    @Environment(\.presentationMode) var presentationMode
+    
+    let gifs: [String] = ["gif_1", "gif_2", "gif_3", "gif_1", "gif_2", "gif_3"]
+    
+    // Grid ayarlarını düzenliyoruz
+    let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
+    
+    var body: some View {
+        VStack {
+            Text("Select a GIF")
+                .font(.headline)
+                .padding()
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(gifs.indices, id: \.self) { index in
+                        let gifName = gifs[index]
+                        
+                        GIFImageView(gifName: gifName, width: 100, height: 100)
+                            .frame(width: 100, height: 100)
+                            .background(Color.clear)
+                            .onTapGesture {
+                                selectedGifImage = gifName
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                    }
+                }
+                .padding()
+            }
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(10)
+        .shadow(radius: 5)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
 struct DraggableGif {
-    var image: UIImage
-    var position: CGPoint  // Changed from CGSize to CGPoint
+    var imageName: String
+    var position: CGPoint
     var scale: CGFloat
     var angle: Angle
 }
 
-struct GifPickerView: UIViewControllerRepresentable {
-    var onGifSelected: (UIImage) -> Void
-    
-    func makeUIViewController(context: Context) -> GifPickerViewController {
-        let viewController = GifPickerViewController()
-        viewController.onGifSelected = onGifSelected
-        return viewController
-    }
-    
-    func updateUIViewController(_ uiViewController: GifPickerViewController, context: Context) {
-        // No update needed
-    }
-}
-
-class GifPickerViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
-    var onGifSelected: ((UIImage) -> Void)?
-    var gifs: [UIImage] = [UIImage(named: "gif_1")!, UIImage(named: "gif_2")!, UIImage(named: "gif_3")!, UIImage(named: "gif_4")!]
 
 
-    lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width / 4 - 10, height: UIScreen.main.bounds.width / 4 - 10)
-        layout.minimumInteritemSpacing = 10
-        layout.minimumLineSpacing = 10
-        
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "GifCell")
-        return collectionView
-    }()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.addSubview(collectionView)
-        collectionView.frame = view.bounds
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return gifs.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GifCell", for: indexPath)
-        let imageView = UIImageView(image: gifs[indexPath.item])
-        imageView.contentMode = .scaleAspectFit
-        cell.contentView.addSubview(imageView)
-        imageView.frame = cell.contentView.bounds
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let selectedGif = gifs[indexPath.item]
-        onGifSelected?(selectedGif)
-        dismiss(animated: true)
-    }
-}
 struct StoryEditView: View {
     @State private var showTextEditor: Bool = false
     @State private var userText: String = ""
@@ -145,6 +230,11 @@ struct StoryEditView: View {
     @State private var draggableImages: [DraggableImage] = []
     @State private var selectedImageIndex: Int? = nil
     
+    @State private var showGifPicker: Bool = false
+    @State private var draggableGifs: [DraggableGif] = []
+    @State private var selectedGifImage: String? = nil
+    
+    
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
@@ -165,7 +255,60 @@ struct StoryEditView: View {
                     .resizable()
                     .edgesIgnoringSafeArea(.all)
             }
+       
+            ForEach(draggableImages.indices, id: \.self) { index in
+                DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
+                    .frame(width: 200, height: 200)
+                    .padding(.horizontal, 50)
+                    .aspectRatio(contentMode: .fill)
+            }
+            ForEach(draggableGifs.indices, id: \.self) { index in
+                DraggableGifView(
+                    draggableGif: $draggableGifs[index],
+                    deleteArea: CGRect(x: 0, y: UIScreen.main.bounds.height - 100, width: UIScreen.main.bounds.width, height: 100),
+                    hideButtons: $hideButtons,
+                    isDraggingOverDelete: $showDeleteButton,
+                    onDelete: {
+                        draggableGifs.remove(at: index) // GIF'i diziden kaldır
+                    }
+                )
+                
+                .aspectRatio(contentMode: .fill)
+            }
 
+                                                                                            
+            
+            ForEach(draggableTexts.indices, id: \.self) { index in
+                DraggableTextView(
+                    userText: $draggableTexts[index].text,
+                    textPosition: $draggableTexts[index].position,
+                    scale: $draggableTexts[index].scale,
+                    angle: $draggableTexts[index].angle,
+                    showDeleteButton: $showDeleteButton,
+                    hideButtons: $hideButtons,
+                    showOverlay: $showOverlay,
+                    textColor: $draggableTexts[index].textColor,
+                    backgroundColor: $draggableTexts[index].backgroundColor,
+                    backgroundOpacity: $draggableTexts[index].backgroundOpacity,
+                    selectedFont: $draggableTexts[index].font,
+                    fontSize: $draggableTexts[index].fontSize,
+                    index: index,
+                    selectedTextIndex: $selectedTextIndex
+                )
+            }
+            
+            if showEyedropper {
+                DraggableDropView(position: $eyedropperPosition, color: $textColor, onDragEnd: {
+                    showEyedropper = false
+                    showOverlay = true
+                }, onColorChange: { newColor in
+                    if let selectedIndex = selectedTextIndex {
+                        draggableTexts[selectedIndex].textColor = newColor
+                    }
+                })
+            }
+            
+            
             if !showEyedropper {
                 VStack {
                     if !buttonsHidden && !hideButtons {
@@ -184,7 +327,7 @@ struct StoryEditView: View {
                             Spacer()
                             
                             Button(action: {
-                              
+                                showGifPicker = true
                             }) {
                                 Image(systemName: "face.smiling.inverse")
                                     .resizable()
@@ -192,6 +335,12 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            
+                            
+                            
+                            
+                            
+                            
                             
                             Button(action: {
                                 let newText = DraggableText(
@@ -230,9 +379,9 @@ struct StoryEditView: View {
                         .frame(width: UIScreen.main.bounds.width)
                         .padding(.top, 20)
                     }
-
+                    
                     Spacer()
-
+                    
                     if hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -245,7 +394,7 @@ struct StoryEditView: View {
                         }
                         .frame(height: 150)
                     }
-
+                    
                     if !buttonsHidden && !hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -263,43 +412,6 @@ struct StoryEditView: View {
                         }
                     }
                 }
-            }
-
-            ForEach(draggableImages.indices, id: \.self) { index in
-                DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
-                    .frame(width: 200, height: 200)
-                    .padding(.horizontal, 50)
-                    .aspectRatio(contentMode: .fill)
-            }
-
-            ForEach(draggableTexts.indices, id: \.self) { index in
-                DraggableTextView(
-                    userText: $draggableTexts[index].text,
-                    textPosition: $draggableTexts[index].position,
-                    scale: $draggableTexts[index].scale,
-                    angle: $draggableTexts[index].angle,
-                    showDeleteButton: $showDeleteButton,
-                    hideButtons: $hideButtons,
-                    showOverlay: $showOverlay,
-                    textColor: $draggableTexts[index].textColor,
-                    backgroundColor: $draggableTexts[index].backgroundColor,
-                    backgroundOpacity: $draggableTexts[index].backgroundOpacity,
-                    selectedFont: $draggableTexts[index].font,
-                    fontSize: $draggableTexts[index].fontSize,
-                    index: index,
-                    selectedTextIndex: $selectedTextIndex
-                )
-            }
-
-            if showEyedropper {
-                DraggableDropView(position: $eyedropperPosition, color: $textColor, onDragEnd: {
-                    showEyedropper = false
-                    showOverlay = true
-                }, onColorChange: { newColor in
-                    if let selectedIndex = selectedTextIndex {
-                        draggableTexts[selectedIndex].textColor = newColor
-                    }
-                })
             }
             
             if showOverlay, let selectedIndex = selectedTextIndex {
@@ -324,6 +436,7 @@ struct StoryEditView: View {
                 )
             }
         }
+        
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
@@ -338,6 +451,22 @@ struct StoryEditView: View {
                     }
                 }
         }
+        .sheet(isPresented: $showGifPicker) {
+            BottomSheetGifPickerView(selectedGifImage: $selectedGifImage)
+                .onDisappear {
+                    if let selectedGifName = selectedGifImage {
+                        let newGif = DraggableGif(imageName: selectedGifName,
+                                                  position: CGPoint(x: 50, y: 100),
+                                                  scale: 1.0,
+                                                  angle: .zero)
+                        draggableGifs.append(newGif)
+                        selectedGifImage = nil
+                    }
+                }
+        }
+        
+        
+        
         .sheet(isPresented: $showGeneratedImageView) {
             GeneratedImageView(image: generatedImage)
         }
@@ -345,7 +474,7 @@ struct StoryEditView: View {
             hideButtons = newValue
         }
     }
-
+    
     func generateImage() {
         let window = UIApplication.shared.windows.first { $0.isKeyWindow }
         let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
@@ -368,15 +497,14 @@ struct DraggableText {
     var backgroundOpacity: CGFloat
     var font: CustomFont
     var fontSize: CGFloat
-    var originalTextColor: Color  // Bu property eklenir ve sadece bir kez atanır.
-    
+    var originalTextColor: Color
     init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat) {
         self.text = text
         self.position = position
         self.scale = scale
         self.angle = angle
         self.textColor = textColor
-        self.originalTextColor = textColor  // İlk atamada textColor ile aynı olacak.
+        self.originalTextColor = textColor
         self.backgroundColor = backgroundColor
         self.backgroundOpacity = backgroundOpacity
         self.font = font
@@ -391,7 +519,7 @@ struct DraggableText {
 
 struct GeneratedImageView: View {
     var image: UIImage?
-
+    
     var body: some View {
         if let image = image {
             Image(uiImage: image)
@@ -491,11 +619,11 @@ struct DraggableImageView: View {
     @Binding var selectedImageIndex: Int?
     var index: Int
     @Binding var hideButtons: Bool
-
+    
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
-
+    
     var body: some View {
         ZStack {
             GeometryReader { geometry in
@@ -505,7 +633,7 @@ struct DraggableImageView: View {
                             .resizable()
                             .scaledToFill()
                             .frame(width: 200, height: 200)
-                            .cornerRadius(12)  // Apply corner radius
+                            .cornerRadius(12)
                             .clipped()
                             .scaleEffect(draggableImage.lastScaleValue * draggableImage.scale)
                             .rotationEffect(draggableImage.angle)
@@ -586,11 +714,11 @@ struct DraggableTextView: View {
     @Binding var fontSize: CGFloat
     var index: Int
     @Binding var selectedTextIndex: Int?
-
+    
     @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentDragOffset: CGSize = .zero
     @State private var isDraggingOverDelete: Bool = false
-
+    
     var body: some View {
         ZStack {
             GeometryReader { geometry in
@@ -598,7 +726,7 @@ struct DraggableTextView: View {
                     .font(selectedFont.toSwiftUIFont(size: fontSize))
                     .foregroundColor(textColor)
                     .padding(8)
-                    // `backgroundColor` ve `backgroundOpacity`'nin doğru uygulanması
+                // `backgroundColor` ve `backgroundOpacity`'nin doğru uygulanması
                     .background(backgroundColor.opacity(backgroundOpacity))
                     .cornerRadius(5)
                     .position(positionInBounds(geometry))
@@ -673,14 +801,14 @@ struct DraggableTextView: View {
             }
         }
     }
-
+    
     private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
         let radians = CGFloat(angle.radians)
         let newX = point.width * cos(radians) - point.height * sin(radians)
         let newY = point.width * sin(radians) + point.height * cos(radians)
         return CGSize(width: newX, height: newY)
     }
-
+    
     private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
         let x = geometry.size.width / 2 + textPosition.width
         let y = geometry.size.height / 2 + textPosition.height
@@ -688,7 +816,7 @@ struct DraggableTextView: View {
     }
 }
 
-  
+
 struct OverlayView: View {
     @Binding var showOverlay: Bool
     @Binding var userText: String
@@ -699,11 +827,11 @@ struct OverlayView: View {
     @Binding var originalTextColor: Color
     @Binding var fontSize: CGFloat
     @Binding var showEyedropper: Bool
-    var onChange: () -> Void  // Değişiklikleri yansıtmak için closure
-
+    var onChange: () -> Void
+    
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
-
+    
     @State private var showFontCollection: Bool = false
     @State private var showColorCollection: Bool = true
     
@@ -720,20 +848,20 @@ struct OverlayView: View {
                 HStack {
                     VStack {
                         ZStack(alignment: .bottom) {
-                                             Rectangle()
-                                                 .fill(Color.clear)
-                                                 .contentShape(Rectangle())
-                                                 .frame(width: 60, height: 240)
-                                                 .gesture(DragGesture(minimumDistance: 0).onChanged { value in
-                                                     let percentage = min(max(0, 1 - value.location.y / 200), 1)
-                                                     fontSize = percentage * 70 + 10
-                                                 })
-
-                                             Capsule()
+                            Rectangle()
+                                .fill(Color.clear)
+                                .contentShape(Rectangle())
+                                .frame(width: 60, height: 240)
+                                .gesture(DragGesture(minimumDistance: 0).onChanged { value in
+                                    let percentage = min(max(0, 1 - value.location.y / 200), 1)
+                                    fontSize = percentage * 70 + 10
+                                })
+                            
+                            Capsule()
                                 .fill(LinearGradient(gradient: Gradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.8)]), startPoint: .bottom, endPoint: .top))
                                 .frame(width: 10, height: 200 * CGFloat(fontSize / 80))
                                 .offset(x: 0)
-
+                            
                             Capsule()
                                 .fill(Color.gray.opacity(0.2))
                                 .frame(width: 10, height: 200)
@@ -743,7 +871,7 @@ struct OverlayView: View {
                         .padding(.top, -280)
                         .offset(y: 300)
                     }
-
+                    
                     Spacer()
                     
                     Button(action: {
@@ -889,7 +1017,7 @@ struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var selectedFont: CustomFont
     @Binding var textWidth: CGFloat
     @Binding var fontSize: CGFloat
-
+    
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: DynamicHeightTextView
         
@@ -954,7 +1082,7 @@ struct ColorSelectionView: View {
     @Binding var selectedColor: Color
     @Binding var originalColor: Color
     @Binding var showEyedropper: Bool
-
+    
     let colors: [Color] = [
         .red, .green, .blue, .yellow, .orange, .purple,
         .pink, .cyan, .mint, .teal, .indigo, .brown,
@@ -1075,7 +1203,7 @@ struct EyedropperView: View {
     @Binding var showEyedropper: Bool
     @Binding var textColor: Color
     @Binding var position: CGSize
-
+    
     var body: some View {
         Rectangle()
             .fill(Color.clear)
@@ -1101,7 +1229,7 @@ func getColor(at point: CGPoint) -> Color {
     let keyWindow = UIApplication.shared.windows.first { $0.isKeyWindow }
     
     guard let window = keyWindow else { return Color.white }
-
+    
     let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
     let image = renderer.image { context in
         window.layer.render(in: context.cgContext)
@@ -1110,7 +1238,7 @@ func getColor(at point: CGPoint) -> Color {
     guard let pixelColor = image.getPixelColor(at: point) else {
         return Color.white
     }
-
+    
     return Color(pixelColor)
 }
 
@@ -1119,13 +1247,13 @@ import UIKit
 extension UIImage {
     func getPixelColor(at point: CGPoint) -> UIColor? {
         guard let cgImage = self.cgImage else { return nil }
-
+        
         let width = self.size.width
         let height = self.size.height
-
+        
         guard point.x >= 0 && point.x < width &&
-              point.y >= 0 && point.y < height else { return nil }
-
+                point.y >= 0 && point.y < height else { return nil }
+        
         let pixelData = UnsafeMutablePointer<UInt8>.allocate(capacity: 4)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
@@ -1146,9 +1274,9 @@ extension UIImage {
         let g = CGFloat(pixelData[1]) / 255.0
         let b = CGFloat(pixelData[2]) / 255.0
         let a = CGFloat(pixelData[3]) / 255.0
-
+        
         pixelData.deallocate()
-
+        
         return UIColor(red: r, green: g, blue: b, alpha: a)
     }
 }
@@ -1157,16 +1285,16 @@ struct DraggableDropView: View {
     @Binding var color: Color
     var onDragEnd: () -> Void
     var onColorChange: (Color) -> Void  // Yeni closure
-
+    
     @State private var lastDragOffset: CGSize = .zero
-
+    
     var body: some View {
         ZStack {
             Circle()
                 .fill(color)
                 .frame(width: 15, height: 15)
                 .offset(y: 40)
-
+            
             Image(systemName: "drop.fill")
                 .resizable()
                 .frame(width: 50, height: 60)
@@ -1181,12 +1309,10 @@ struct DraggableDropView: View {
                         width: lastDragOffset.width + value.translation.width,
                         height: lastDragOffset.height + value.translation.height
                     )
-
-                    // Renk güncelleme sırasında seçilen noktadan renk al
+                    
                     let colorSamplePoint = CGPoint(x: position.width, y: position.height - 30)
                     color = getColor(at: colorSamplePoint)
-
-                    // Renk değişimini dışarıya ilet
+                    
                     onColorChange(color)
                 }
                 .onEnded { _ in
