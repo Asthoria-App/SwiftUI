@@ -123,7 +123,7 @@ struct StoryEditView: View {
                 })
             }
             
-            if !showEyedropper {
+            if !showEyedropper && !showDrawingOverlay {
                 VStack {
                     if !buttonsHidden && !hideButtons {
                         HStack {
@@ -177,6 +177,7 @@ struct StoryEditView: View {
                                 draggableTexts.append(newText)
                                 selectedTextIndex = draggableTexts.count - 1
                                 showOverlay = true
+                                textColor = .white
                             }) {
                                 Image(systemName: "textformat")
                                     .resizable()
@@ -280,13 +281,12 @@ struct StoryEditView: View {
             BottomSheetStickerPickerView(selectedStickerImage: $selectedStickerImage)
                 .onDisappear {
                     if let selectedStickerImage = selectedStickerImage {
-                        let newSticker = DraggableSticker(image: selectedStickerImage, position: CGSize(width: 50, height: 100), scale: 1.0, angle: .zero)
+                        let newSticker = DraggableSticker(image: selectedStickerImage, position: .zero, scale: 1.0, angle: .zero)
                         draggableStickers.append(newSticker)
                         self.selectedStickerImage = nil
                     }
                 }
         }
-        
         
         
         .sheet(isPresented: $showGeneratedImageView) {
@@ -355,7 +355,6 @@ struct DraggableStickerView: View {
                                         }
                                         .onEnded { value in
                                             if isDraggingOverDelete {
-                                                // Sürüklenen sticker'ı sil
                                                 withAnimation(.smooth(duration: 0.7)) {
                                                     shouldRemove = true
                                                 }
@@ -363,7 +362,6 @@ struct DraggableStickerView: View {
                                                     onDelete()
                                                 }
                                             } else {
-                                                // Yeni pozisyonu kaydet
                                                 draggableSticker.position.width += dragOffset.width
                                                 draggableSticker.position.height += dragOffset.height
                                             }
@@ -396,8 +394,6 @@ struct DraggableStickerView: View {
 }
 
 
-
-
 struct DraggableText {
     var text: String
     var position: CGSize
@@ -427,7 +423,7 @@ struct BottomSheetStickerPickerView: View {
     @Binding var selectedStickerImage: UIImage?
     @Environment(\.presentationMode) var presentationMode
     
-    let stickers: [String] = ["image", "image", "image", "image", "image"]  // Sticker adları
+    let stickers: [String] = ["image", "image", "image", "image", "image"]
     
     let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
     
@@ -623,7 +619,6 @@ struct DraggableImageView: View {
                                         }
                                         .onEnded { value in
                                             if isDraggingOverDelete {
-                                                // Sürüklenen öğeyi sil, pozisyonu koru
                                                 withAnimation(.smooth(duration: 0.7)) {
                                                     shouldRemove = true
                                                 }
@@ -631,7 +626,6 @@ struct DraggableImageView: View {
                                                     draggableImage = DraggableImage(image: UIImage(), position: draggableImage.position, scale: 1.0, angle: .zero)
                                                 }
                                             } else {
-                                                // Yeni pozisyonu kaydet
                                                 draggableImage.position.width += dragOffset.width
                                                 draggableImage.position.height += dragOffset.height
                                             }
@@ -946,9 +940,9 @@ struct OverlayView: View {
                 
                 ZStack {
                     if showColorCollection {
-                        ColorSelectionView(selectedColor: $textColor, originalColor: $originalTextColor, showEyedropper: $showEyedropper)
+                        ColorSelectionView(selectedColor: $textColor, originalColor: $originalTextColor, showEyedropper: $showEyedropper, showOverlay: $showOverlay)
                             .padding(.horizontal)
-                            .frame(height: 30)
+                            .frame(height: 50)
                             .background(Color.white.opacity(0.0))
                             .cornerRadius(10)
                             .padding(.bottom, 5)
@@ -1049,74 +1043,63 @@ struct ColorSelectionView: View {
     @Binding var selectedColor: Color
     @Binding var originalColor: Color
     @Binding var showEyedropper: Bool
-    
+    @Binding var showOverlay: Bool
+
+    var onColorSelected: ((Color) -> Void)? = nil
+
     let colors: [Color] = [
         .red, .green, .blue, .yellow, .orange, .purple,
         .pink, .cyan, .mint, .teal, .indigo, .brown,
-        .gray, .black, .white,
-        
-        Color(red: 0.75, green: 1.0, blue: 0.0),
-        Color(red: 0.93, green: 0.51, blue: 0.93),
-        Color(red: 0.87, green: 0.63, blue: 0.87),
-        Color(red: 0.5, green: 0.0, blue: 0.0),
-        Color(red: 0.5, green: 0.5, blue: 0.0),
-        Color(red: 0.0, green: 0.0, blue: 0.5),
-        Color(red: 1.0, green: 0.0, blue: 0.5),
-        Color(red: 0.0, green: 1.0, blue: 1.0),
-        
-        Color(red: 0.94, green: 0.90, blue: 0.55),
-        Color(red: 0.75, green: 0.75, blue: 0.75),
-        Color(red: 1.0, green: 0.5, blue: 0.31),
-        Color(red: 1.0, green: 0.75, blue: 0.0),
-        Color(red: 0.25, green: 0.88, blue: 0.82),
-        Color(red: 0.9, green: 0.9, blue: 0.98),
-        Color(red: 1.0, green: 0.64, blue: 0.0),
-        Color(red: 0.5, green: 0.5, blue: 1.0),
-        Color(red: 0.6, green: 0.4, blue: 0.8),
-        Color(red: 0.75, green: 0.85, blue: 0.0)
+        .gray, .black, .white
     ]
-    
+
     var body: some View {
         HStack {
-            
             Button(action: {
                 showEyedropper.toggle()
+                showOverlay = false
             }) {
-                Image(systemName: "eyedropper")
-                    .resizable()
-                    .frame(width: 25, height: 25)
-                    .foregroundColor(.white)
+                ZStack {
+                    Circle()
+                        .fill(selectedColor == .white ? Color.black : selectedColor)
+                        .frame(width: 35, height: 35)
+                        .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 0)
+
+                    Image(systemName: "eyedropper")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.white)
+                }
             }
-            .frame(width: 35, height: 45)
+            .frame(width: 35, height: 35)
+            
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 5) {
+                HStack(spacing: 12) {
                     ForEach(colors, id: \.self) { color in
                         ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 35, height: 35)
-                            
                             Circle()
                                 .fill(color)
-                                .frame(width: 20, height: 20)
+                                .frame(width: 25, height: 25)
                                 .overlay(
                                     Circle()
-                                        .stroke(Color.white, lineWidth: 1.5)
+                                        .stroke(
+                                            color == selectedColor ? Color.white : Color.white.opacity(0.5),
+                                            lineWidth: color == selectedColor ? 3 : 1.5
+                                        )
                                 )
-                                .shadow(color: .black.opacity(0.6), radius: 1, x: 0, y: 0)
+                                .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 0)
                         }
-                        .contentShape(Rectangle())
                         .onTapGesture {
                             withAnimation {
                                 selectedColor = color
                                 originalColor = color
+                                onColorSelected?(color)
                             }
                         }
                     }
-                    
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 20)
             }
         }
     }
@@ -1251,7 +1234,7 @@ struct DraggableDropView: View {
     @Binding var position: CGSize
     @Binding var color: Color
     var onDragEnd: () -> Void
-    var onColorChange: (Color) -> Void  // Yeni closure
+    var onColorChange: (Color) -> Void
     
     @State private var lastDragOffset: CGSize = .zero
     
@@ -1301,93 +1284,210 @@ struct DraggableImage {
     var lastScaleValue: CGFloat = 1.0
 }
 
+import SwiftUI
+import PencilKit
+
+struct DrawingView: UIViewRepresentable {
+    @Binding var tool: PKTool
+
+    func makeUIView(context: Context) -> PKCanvasView {
+        let canvasView = PKCanvasView()
+        canvasView.drawingPolicy = .anyInput
+        canvasView.tool = tool
+        canvasView.isOpaque = false
+        canvasView.backgroundColor = .clear
+        return canvasView
+    }
+
+    func updateUIView(_ uiView: PKCanvasView, context: Context) {
+        uiView.tool = tool
+    }
+}
+
+
+
+import SwiftUI
+import PencilKit
 struct DrawingOverlay: View {
     @Binding var showDrawingOverlay: Bool
-    @State private var currentDrawing: Drawing = Drawing()
-    @State private var drawings: [Drawing] = []
-    @State private var isDrawing: Bool = true
-    
+    @State private var tool: PKTool = PKInkingTool(.pen, color: .black, width: 5)
+    @State private var selectedTool: ToolType = .pen
+    @State private var lineWidth: CGFloat = 5
+    @State private var toolColor: Color = .black
+    @State private var eyedropperPosition: CGSize = .zero
+    @State private var showEyedropper: Bool = false
+
+    enum ToolType {
+        case pen, crayon, marker, watercolor, eraser
+    }
+
     var body: some View {
         ZStack {
-            Color.black.opacity(0.3).edgesIgnoringSafeArea(.all)
-            
-            Canvas { context, size in
-                for drawing in drawings {
-                    var path = Path()
-                    path.addLines(drawing.points)
-                    context.stroke(path, with: .color(drawing.color), lineWidth: drawing.lineWidth)
-                }
-                
-                var path = Path()
-                path.addLines(currentDrawing.points)
-                context.stroke(path, with: .color(currentDrawing.color), lineWidth: currentDrawing.lineWidth)
-            }
-            .gesture(DragGesture(minimumDistance: 0.1)
-                .onChanged { value in
-                    if isDrawing {
-                        currentDrawing.points.append(value.location)
-                    }
-                }
-                .onEnded { _ in
-                    drawings.append(currentDrawing)
-                    currentDrawing = Drawing()
-                }
-            )
-            
+            DrawingView(tool: $tool)
+                .edgesIgnoringSafeArea(.all)
+
             VStack {
                 HStack {
-                    Button(action: {
-                        showDrawingOverlay = false
-                    }) {
-                        Text("Back")
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
+                    ToolButton(
+                        iconName: "pencil.tip.crop.circle",
+                        isSelected: selectedTool == .pen
+                    ) {
+                        selectedTool = .pen
+                        updateTool()
                     }
+
+                    ToolButton(
+                        iconName: "pencil.tip.crop.circle.badge.plus",
+                        isSelected: selectedTool == .crayon
+                    ) {
+                        selectedTool = .crayon
+                        updateTool()
+                    }
+
+                    ToolButton(
+                        iconName: "highlighter",
+                        isSelected: selectedTool == .marker
+                    ) {
+                        selectedTool = .marker
+                        updateTool()
+                    }
+
+                    ToolButton(
+                        iconName: "paintbrush.pointed.fill",
+                        isSelected: selectedTool == .watercolor
+                    ) {
+                        selectedTool = .watercolor
+                        updateTool()
+                    }
+
+                    ToolButton(
+                        iconName: "eraser.fill",
+                        isSelected: selectedTool == .eraser
+                    ) {
+                        selectedTool = .eraser
+                        tool = PKEraserTool(.bitmap)
+                    }
+
                     Spacer()
-                    
-                    Button(action: {
-                        // Bitir işlemi
+
+                    Button("Done") {
                         showDrawingOverlay = false
-                    }) {
-                        Text("Done")
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
                     }
-                    
-                    Button(action: {
-                        isDrawing = true
-                    }) {
-                        Image(systemName: "pencil")
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Button(action: {
-                        isDrawing = false
-                    }) {
-                        Image(systemName: "eraser")
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(8)
-                            .foregroundColor(.white)
-                    }
+                    .padding()
+                    .foregroundColor(.white)
                 }
                 .padding()
-                
+
+                Spacer()
+
+                if !showEyedropper {
+                    ColorSelectionView(
+                        selectedColor: $toolColor,
+                        originalColor: $toolColor,
+                        showEyedropper: $showEyedropper, showOverlay: .constant(false),
+                        onColorSelected: { color in
+                            toolColor = color
+                            updateTool()
+                        }
+                    )
+                    .padding(.horizontal)
+                    .frame(height: 50)
+                    .background(Color.white.opacity(0.0))
+                    .cornerRadius(10)
+                    .padding(.bottom, 20)
+                }
+            }
+
+            if showEyedropper {
+                DraggableDropView(position: $eyedropperPosition, color: $toolColor, onDragEnd: {
+                    showEyedropper = false
+                    updateTool()
+                }, onColorChange: { newColor in
+                    toolColor = newColor
+                    updateTool()
+                })
+            }
+
+            VStack {
+                Spacer()
+                VerticalSlider(value: $lineWidth, range: 5...35)
+                    .onChange(of: lineWidth) { newValue in
+                        updateTool()
+                    }
                 Spacer()
             }
+            .padding(.leading, 6)
+            .padding(.bottom, 200)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func updateTool() {
+        switch selectedTool {
+        case .pen:
+            tool = PKInkingTool(.pen, color: UIColor(toolColor), width: lineWidth)
+        case .crayon:
+            tool = PKInkingTool(.crayon, color: UIColor(toolColor), width: lineWidth)
+        case .marker:
+            tool = PKInkingTool(.marker, color: UIColor(toolColor), width: lineWidth)
+        case .watercolor:
+            tool = PKInkingTool(.watercolor, color: UIColor(toolColor), width: lineWidth)
+        case .eraser:
+            tool = PKEraserTool(.bitmap)
         }
     }
 }
 
-struct Drawing {
-    var points: [CGPoint] = []
-    var color: Color = .white
-    var lineWidth: CGFloat = 3.0
+struct ToolButton: View {
+    var iconName: String
+    var isSelected: Bool
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: iconName)
+                .resizable()
+                .frame(width: 25, height: 25)
+                .padding(8)
+                .background(isSelected ? Color.white : Color.clear)
+                .foregroundColor(isSelected ? Color.black : Color.white)
+                .clipShape(Circle())
+        }
+    }
+}
+
+
+
+
+import SwiftUI
+
+struct VerticalSlider: View {
+    @Binding var value: CGFloat
+    var range: ClosedRange<CGFloat>
+    
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.clear)
+                .contentShape(Rectangle())
+                .frame(width: 60, height: 240)
+                .gesture(DragGesture(minimumDistance: 0).onChanged { value in
+                    let percentage = min(max(0, 1 - value.location.y / 200), 1)
+                    self.value = percentage * (range.upperBound - range.lowerBound) + range.lowerBound
+                })
+            
+            Capsule()
+                .fill(LinearGradient(gradient: Gradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.8)]), startPoint: .bottom, endPoint: .top))
+                .frame(width: 10, height: 200 * CGFloat(value / range.upperBound))
+                .offset(x: 0)
+            
+            Capsule()
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 10, height: 200)
+                .offset(x: 0)
+                .mask(Rectangle().frame(height: 200))
+        }
+        .padding(.top, -280)
+        .offset(y: 300)
+    }
 }
