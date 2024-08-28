@@ -7,6 +7,11 @@
 
 import SwiftUI
 import UIKit
+enum DraggableType {
+    case text, image, sticker
+}
+
+
 
 struct StoryEditView: View {
     @State private var showTextEditor: Bool = false
@@ -47,7 +52,9 @@ struct StoryEditView: View {
     @State private var draggableStickers: [DraggableSticker] = []
     @State private var selectedStickerImage: UIImage? = nil
     
-    
+    @State private var drawingImages: [UIImage] = []
+    @State private var globalIndex: CGFloat = 1
+
     @State private var showDrawingOverlay: Bool = false
 
     let gradientOptions: [LinearGradient] = [
@@ -55,6 +62,11 @@ struct StoryEditView: View {
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
+   
+
+    
+
+
     
     var body: some View {
         ZStack {
@@ -77,20 +89,31 @@ struct StoryEditView: View {
                     .allowsHitTesting(false)
 
             }
+            
+                ForEach(drawingImages, id: \.self) { image in
+                    Image(uiImage: image)
+                        .resizable()
+                                         .aspectRatio(contentMode: .fit)
+                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                         .edgesIgnoringSafeArea(.all)
+                                         .allowsHitTesting(false)
+                }
        
             ForEach(draggableImages.indices, id: \.self) { index in
                 DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
                     .padding(.horizontal, 50)
                     .aspectRatio(contentMode: .fill)
+                    .zIndex(draggableImages[index].zIndex) // Burada zIndex'i öğeye bağlıyoruz
             }
-            
+
             ForEach(draggableStickers.indices, id: \.self) { index in
                 DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200), onDelete: {
                     draggableStickers.remove(at: index)
-                 
                 })
                 .frame(width: 200, height: 200)
+                .zIndex(draggableStickers[index].zIndex) // Burada zIndex'i öğeye bağlıyoruz
             }
 
             ForEach(draggableTexts.indices, id: \.self) { index in
@@ -110,6 +133,7 @@ struct StoryEditView: View {
                     index: index,
                     selectedTextIndex: $selectedTextIndex
                 )
+                .zIndex(draggableTexts[index].zIndex) // Burada zIndex'i öğeye bağlıyoruz
             }
             
             if showEyedropper {
@@ -163,6 +187,7 @@ struct StoryEditView: View {
                             .frame(width: 35, height: 35)
                             
                             Button(action: {
+                                
                                 let newText = DraggableText(
                                     text: "New Text",
                                     position: .zero,
@@ -172,10 +197,13 @@ struct StoryEditView: View {
                                     backgroundColor: textBackgroundColor,
                                     backgroundOpacity: backgroundOpacity,
                                     font: selectedFont,
-                                    fontSize: fontSize
-                                )
+                                    fontSize: fontSize,
+                                    zIndex: globalIndex                                )
+                                globalIndex += 1
+
                                 draggableTexts.append(newText)
                                 selectedTextIndex = draggableTexts.count - 1
+
                                 showOverlay = true
                                 textColor = .white
                             }) {
@@ -233,12 +261,20 @@ struct StoryEditView: View {
                         }
                     }
                 }
+                .zIndex(100)
             }
+
             if showDrawingOverlay {
-                          DrawingOverlay(showDrawingOverlay: $showDrawingOverlay)
-                              .transition(.opacity)
-                              .zIndex(1)
-                      }
+                DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage in
+                    if let image = drawingImage {
+                        globalIndex += 1
+                        drawingImages.append(image)
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(100)
+            }
+
             
             if showOverlay, let selectedIndex = selectedTextIndex {
                 OverlayView(
@@ -260,6 +296,7 @@ struct StoryEditView: View {
                         draggableTexts[selectedIndex].fontSize = fontSize
                     }
                 )
+                .zIndex(100)
             }
         }
         
@@ -270,9 +307,13 @@ struct StoryEditView: View {
             ImagePicker(selectedImage: $selectedDraggableImage)
                 .onDisappear {
                     if let selectedImage = selectedDraggableImage {
-                        let newImage = DraggableImage(image: selectedImage, position: .zero, scale: 1.0, angle: .zero)
-                        draggableImages.append(newImage)
+                        globalIndex += 1
+                        let newImage = DraggableImage(image: selectedImage, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex )
+                                                      draggableImages.append(newImage)
+                      
                         selectedImageIndex = draggableImages.count - 1
+                       
+
                         selectedDraggableImage = nil
                     }
                 }
@@ -281,11 +322,15 @@ struct StoryEditView: View {
             BottomSheetStickerPickerView(selectedStickerImage: $selectedStickerImage)
                 .onDisappear {
                     if let selectedStickerImage = selectedStickerImage {
-                        let newSticker = DraggableSticker(image: selectedStickerImage, position: .zero, scale: 1.0, angle: .zero)
+                        globalIndex += 1
+                        let newSticker = DraggableSticker(image: selectedStickerImage, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
                         draggableStickers.append(newSticker)
+                        
+
                         self.selectedStickerImage = nil
                     }
                 }
+            
         }
         
         
@@ -302,10 +347,30 @@ struct StoryEditView: View {
         let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
         generatedImage = renderer.image { context in
             window?.layer.render(in: context.cgContext)
+            
         }
+
         buttonsHidden = false
         showGeneratedImageView = true
     }
+
+        func mergeImages(background: UIImage?, overlay: [UIImage]) -> UIImage? {
+            guard let background = background else { return nil }
+            
+            let size = background.size
+            UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+            
+            background.draw(in: CGRect(origin: .zero, size: size))
+            
+            for image in overlay {
+                image.draw(in: CGRect(origin: .zero, size: size))
+            }
+            
+            let newImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
+            return newImage
+        }
 }
 
 struct DraggableSticker {
@@ -313,6 +378,8 @@ struct DraggableSticker {
     var position: CGSize
     var scale: CGFloat
     var angle: Angle
+    var zIndex: CGFloat
+
 }
 
 struct DraggableStickerView: View {
@@ -324,6 +391,7 @@ struct DraggableStickerView: View {
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
+    @State private var lastScaleValue: CGFloat = 1.0
 
     var body: some View {
         ZStack {
@@ -335,7 +403,7 @@ struct DraggableStickerView: View {
                             .scaledToFill()
                             .frame(width: 100, height: 100)
                             .clipped()
-                            .scaleEffect(draggableSticker.scale)
+                            .scaleEffect(lastScaleValue * draggableSticker.scale) // Apply the last scale value
                             .rotationEffect(draggableSticker.angle)
                             .position(x: geometry.size.width / 2 + draggableSticker.position.width + dragOffset.width,
                                       y: geometry.size.height / 2 + draggableSticker.position.height + dragOffset.height)
@@ -382,6 +450,7 @@ struct DraggableStickerView: View {
                                         draggableSticker.scale = value
                                     }
                                     .onEnded { _ in
+                                        lastScaleValue *= draggableSticker.scale // Store the final scale value
                                         draggableSticker.scale = 1.0
                                     }
                                 )
@@ -392,6 +461,7 @@ struct DraggableStickerView: View {
         }
     }
 }
+
 
 
 struct DraggableText {
@@ -405,7 +475,9 @@ struct DraggableText {
     var font: CustomFont
     var fontSize: CGFloat
     var originalTextColor: Color
-    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat) {
+    var zIndex: CGFloat
+    
+    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat) {
         self.text = text
         self.position = position
         self.scale = scale
@@ -416,16 +488,24 @@ struct DraggableText {
         self.backgroundOpacity = backgroundOpacity
         self.font = font
         self.fontSize = fontSize
+        self.zIndex = zIndex
     }
 }
+
+
+import Combine
 
 struct BottomSheetStickerPickerView: View {
     @Binding var selectedStickerImage: UIImage?
     @Environment(\.presentationMode) var presentationMode
     
-    let stickers: [String] = ["image", "image", "image", "image", "image"]
+    let stickers: [String] = ["1", "2", "3", "4", "5", "7", "8", "1", "4", "2", "4", "3"]
     
     let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
+    
+    @State private var searchText: String = ""
+    @State private var filteredStickers: [String] = []
+    @State private var searchCancellable: AnyCancellable?
     
     var body: some View {
         ZStack {
@@ -437,20 +517,34 @@ struct BottomSheetStickerPickerView: View {
                     .font(.headline)
                     .padding()
                 
+                TextField("Search stickers", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                    .onChange(of: searchText) { newValue in
+                        filterStickers(with: newValue)
+                    }
+
+                
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(stickers.indices, id: \.self) { index in
-                            let stickerName = stickers[index]
-                            
-                            if let stickerImage = UIImage(named: stickerName) {
-                                Image(uiImage: stickerImage)
-                                    .resizable()
-                                    .frame(width: 100, height: 100)
-                                    .background(Color.clear)
-                                    .onTapGesture {
-                                        selectedStickerImage = stickerImage
-                                        presentationMode.wrappedValue.dismiss()
-                                    }
+                        if filteredStickers.isEmpty {
+                            Text("No stickers found")
+                                .foregroundColor(.gray)
+                                .padding()
+                        } else {
+                            ForEach(filteredStickers.indices, id: \.self) { index in
+                                let stickerName = filteredStickers[index]
+                                
+                                if let stickerImage = UIImage(named: stickerName) {
+                                    Image(uiImage: stickerImage)
+                                        .resizable()
+                                        .frame(width: 100, height: 100)
+                                        .background(Color.clear)
+                                        .onTapGesture {
+                                            selectedStickerImage = stickerImage
+                                            presentationMode.wrappedValue.dismiss()
+                                        }
+                                }
                             }
                         }
                     }
@@ -462,9 +556,24 @@ struct BottomSheetStickerPickerView: View {
             .cornerRadius(10)
             .shadow(radius: 5)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .onAppear {
+                filterStickers(with: searchText)
+                print("Initial filtering done with text: \(searchText)")
+            }
         }
     }
+    private func filterStickers(with text: String) {
+        if text.isEmpty {
+            filteredStickers = stickers
+        } else {
+            filteredStickers = stickers.filter { $0.contains(text) }
+        }
+        print("Filtered stickers: \(filteredStickers)")
+    }
+
 }
+
+
 
 struct BlurBackground: UIViewRepresentable {
     func makeUIView(context: Context) -> UIVisualEffectView {
@@ -623,7 +732,7 @@ struct DraggableImageView: View {
                                                     shouldRemove = true
                                                 }
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                                                    draggableImage = DraggableImage(image: UIImage(), position: draggableImage.position, scale: 1.0, angle: .zero)
+                                                    draggableImage = DraggableImage(image: UIImage(), position: draggableImage.position, scale: 1.0, angle: .zero, zIndex: CGFloat(selectedImageIndex!))
                                                 }
                                             } else {
                                                 draggableImage.position.width += dragOffset.width
@@ -1282,6 +1391,8 @@ struct DraggableImage {
     var scale: CGFloat
     var angle: Angle
     var lastScaleValue: CGFloat = 1.0
+    var zIndex: CGFloat
+
 }
 
 import SwiftUI
@@ -1289,25 +1400,78 @@ import PencilKit
 
 struct DrawingView: UIViewRepresentable {
     @Binding var tool: PKTool
+    @Binding var canvasView: PKCanvasView
+    @Binding var drawings: [PKDrawing]
 
     func makeUIView(context: Context) -> PKCanvasView {
-        let canvasView = PKCanvasView()
-        canvasView.drawingPolicy = .anyInput
         canvasView.tool = tool
+        canvasView.drawingPolicy = .anyInput
         canvasView.isOpaque = false
         canvasView.backgroundColor = .clear
+        canvasView.delegate = context.coordinator
         return canvasView
     }
 
     func updateUIView(_ uiView: PKCanvasView, context: Context) {
         uiView.tool = tool
     }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, PKCanvasViewDelegate {
+        var parent: DrawingView
+        var lastDrawing: PKDrawing?
+
+        init(_ parent: DrawingView) {
+            self.parent = parent
+        }
+
+        func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
+            lastDrawing = canvasView.drawing
+        }
+
+        func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
+            guard let lastDrawing = lastDrawing else { return }
+            let newStrokes = canvasView.drawing.strokes.filter { newStroke in
+                !lastDrawing.strokes.contains(where: { areStrokesEqual($0, newStroke) })
+            }
+            if !newStrokes.isEmpty {
+                let newDrawing = PKDrawing(strokes: newStrokes)
+                parent.drawings.append(newDrawing)
+            }
+            self.lastDrawing = canvasView.drawing
+        }
+
+        private func areStrokesEqual(_ stroke1: PKStroke, _ stroke2: PKStroke) -> Bool {
+            guard stroke1.path.count == stroke2.path.count else {
+                return false
+            }
+
+            for i in 0..<stroke1.path.count {
+                let point1 = stroke1.path[i]
+                let point2 = stroke2.path[i]
+                if !arePointsEqual(point1, point2) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        private func arePointsEqual(_ point1: PKStrokePoint, _ point2: PKStrokePoint) -> Bool {
+            return point1.location == point2.location &&
+                point1.timeOffset == point2.timeOffset &&
+                point1.size == point2.size &&
+                point1.opacity == point2.opacity &&
+                point1.force == point2.force &&
+                point1.azimuth == point2.azimuth &&
+                point1.altitude == point2.altitude
+        }
+    }
 }
 
-
-
-import SwiftUI
-import PencilKit
 struct DrawingOverlay: View {
     @Binding var showDrawingOverlay: Bool
     @State private var tool: PKTool = PKInkingTool(.pen, color: .black, width: 5)
@@ -1316,6 +1480,10 @@ struct DrawingOverlay: View {
     @State private var toolColor: Color = .black
     @State private var eyedropperPosition: CGSize = .zero
     @State private var showEyedropper: Bool = false
+    var onComplete: (UIImage?) -> Void
+    @State private var canvasView = PKCanvasView()
+    @State private var drawings: [PKDrawing] = []
+    @State private var isDraggingEyedropper = false
 
     enum ToolType {
         case pen, crayon, marker, watercolor, eraser
@@ -1323,11 +1491,17 @@ struct DrawingOverlay: View {
 
     var body: some View {
         ZStack {
-            DrawingView(tool: $tool)
+            DrawingView(tool: $tool, canvasView: $canvasView, drawings: $drawings)
                 .edgesIgnoringSafeArea(.all)
+                .allowsHitTesting(!isDraggingEyedropper)
 
             VStack {
                 HStack {
+                    Button("Back") {
+                        undoLastDrawing()
+                    }
+                    .foregroundColor(.white)
+                    
                     ToolButton(
                         iconName: "pencil.tip.crop.circle",
                         isSelected: selectedTool == .pen
@@ -1371,9 +1545,10 @@ struct DrawingOverlay: View {
                     Spacer()
 
                     Button("Done") {
+                        let drawingImage = captureDrawing(from: canvasView)
                         showDrawingOverlay = false
+                        onComplete(drawingImage)
                     }
-                    .padding()
                     .foregroundColor(.white)
                 }
                 .padding()
@@ -1402,10 +1577,17 @@ struct DrawingOverlay: View {
                 DraggableDropView(position: $eyedropperPosition, color: $toolColor, onDragEnd: {
                     showEyedropper = false
                     updateTool()
+                    isDraggingEyedropper = false
                 }, onColorChange: { newColor in
                     toolColor = newColor
                     updateTool()
                 })
+                .zIndex(100)
+                .gesture(DragGesture()
+                    .onChanged { _ in
+                        isDraggingEyedropper = true
+                    }
+                )
             }
 
             VStack {
@@ -1419,6 +1601,11 @@ struct DrawingOverlay: View {
             .padding(.leading, 6)
             .padding(.bottom, 200)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .onAppear {
+            // Frame rate sınırlandırmasını kaldır
+            canvasView.isMultipleTouchEnabled = false
+            canvasView.isUserInteractionEnabled = true
         }
     }
 
@@ -1436,6 +1623,18 @@ struct DrawingOverlay: View {
             tool = PKEraserTool(.bitmap)
         }
     }
+
+    private func undoLastDrawing() {
+        if !drawings.isEmpty {
+            drawings.removeLast()
+            let combinedDrawing = drawings.reduce(PKDrawing()) { partialResult, drawing in
+                var result = partialResult
+                result.strokes.append(contentsOf: drawing.strokes)
+                return result
+            }
+            canvasView.drawing = combinedDrawing
+        }
+    }
 }
 
 struct ToolButton: View {
@@ -1448,18 +1647,15 @@ struct ToolButton: View {
             Image(systemName: iconName)
                 .resizable()
                 .frame(width: 25, height: 25)
-                .padding(8)
+                .padding(2)
                 .background(isSelected ? Color.white : Color.clear)
                 .foregroundColor(isSelected ? Color.black : Color.white)
                 .clipShape(Circle())
         }
+        .padding(3)
     }
 }
 
-
-
-
-import SwiftUI
 
 struct VerticalSlider: View {
     @Binding var value: CGFloat
@@ -1489,5 +1685,12 @@ struct VerticalSlider: View {
         }
         .padding(.top, -280)
         .offset(y: 300)
+    }
+}
+func captureDrawing(from view: PKCanvasView) -> UIImage? {
+    let drawingRect = view.bounds
+    let renderer = UIGraphicsImageRenderer(size: drawingRect.size)
+    return renderer.image { context in
+        view.drawing.image(from: drawingRect, scale: 1.0).draw(in: drawingRect)
     }
 }
