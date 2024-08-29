@@ -1,0 +1,152 @@
+//
+//  DraggableText.swift
+//  story_photo_edit
+//
+//  Created by Aysema Çam on 29.08.2024.
+//
+
+import SwiftUI
+
+struct DraggableText {
+    var text: String
+    var position: CGSize
+    var scale: CGFloat
+    var angle: Angle
+    var textColor: Color
+    var backgroundColor: Color
+    var backgroundOpacity: CGFloat
+    var font: CustomFont
+    var fontSize: CGFloat
+    var originalTextColor: Color
+    var zIndex: CGFloat
+    
+    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat) {
+        self.text = text
+        self.position = position
+        self.scale = scale
+        self.angle = angle
+        self.textColor = textColor
+        self.originalTextColor = textColor
+        self.backgroundColor = backgroundColor
+        self.backgroundOpacity = backgroundOpacity
+        self.font = font
+        self.fontSize = fontSize
+        self.zIndex = zIndex
+    }
+}
+
+struct DraggableTextView: View {
+    @Binding var userText: String
+    @Binding var textPosition: CGSize
+    @Binding var scale: CGFloat
+    @Binding var angle: Angle
+    @Binding var showDeleteButton: Bool
+    @Binding var hideButtons: Bool
+    @Binding var showOverlay: Bool
+    @Binding var textColor: Color
+    @Binding var backgroundColor: Color
+    @Binding var backgroundOpacity: CGFloat
+    @Binding var selectedFont: CustomFont
+    @Binding var fontSize: CGFloat
+    var index: Int
+    @Binding var selectedTextIndex: Int?
+    
+    @State private var lastScaleValue: CGFloat = 1.0
+    @State private var currentDragOffset: CGSize = .zero
+    @State private var isDraggingOverDelete: Bool = false
+    
+    var body: some View {
+        ZStack {
+            GeometryReader { geometry in
+                Text(userText)
+                    .font(selectedFont.toSwiftUIFont(size: fontSize))
+                    .foregroundColor(textColor)
+                    .padding(8)
+                    .background(backgroundColor.opacity(backgroundOpacity))
+                    .cornerRadius(5)
+                    .position(positionInBounds(geometry))
+                    .scaleEffect(lastScaleValue * scale)
+                    .rotationEffect(angle)
+                    .gesture(
+                        SimultaneousGesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    hideButtons = true
+                                    let translation = value.translation
+                                    let inverseTranslation = rotatePoint(point: translation, aroundOriginBy: -angle)
+                                    textPosition = CGSize(
+                                        width: currentDragOffset.width + inverseTranslation.width / lastScaleValue,
+                                        height: currentDragOffset.height + inverseTranslation.height / lastScaleValue
+                                    )
+                                    
+                                    let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                    if deleteAreaFrame.contains(CGPoint(x: value.location.x, y: value.location.y)) {
+                                        isDraggingOverDelete = true
+                                    } else {
+                                        isDraggingOverDelete = false
+                                    }
+                                }
+                                .onEnded { value in
+                                    if isDraggingOverDelete {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            withAnimation(.smooth(duration: 0.7)) {
+                                                scale = 0.4
+                                            }
+                                        }
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                            userText = ""
+                                            textColor = .white
+                                            textPosition = .zero
+                                            backgroundOpacity = 0
+                                            scale = 1.0
+                                        }
+                                    } else {
+                                        print("Text not dropped on delete button!")
+                                    }
+                                    isDraggingOverDelete = false
+                                    hideButtons = false
+                                    currentDragOffset = textPosition
+                                },
+                            RotationGesture()
+                                .onChanged { newAngle in
+                                    angle += newAngle - angle
+                                }
+                                .onEnded { newAngle in
+                                    angle = newAngle
+                                }
+                        )
+                        .simultaneously(with: MagnificationGesture()
+                            .onChanged { value in
+                                scale = value
+                            }
+                            .onEnded { _ in
+                                lastScaleValue *= scale
+                                scale = 1.0
+                            }
+                        )
+                    )
+                    .onTapGesture {
+                        hideButtons = false
+                        showOverlay = true
+                        selectedTextIndex = index
+                    }
+                    .onLongPressGesture {
+                        showDeleteButton = true
+                    }
+            }
+        }
+    }
+    
+    private func rotatePoint(point: CGSize, aroundOriginBy angle: Angle) -> CGSize {
+        let radians = CGFloat(angle.radians)
+        let newX = point.width * cos(radians) - point.height * sin(radians)
+        let newY = point.width * sin(radians) + point.height * cos(radians)
+        return CGSize(width: newX, height: newY)
+    }
+    
+    private func positionInBounds(_ geometry: GeometryProxy) -> CGPoint {
+        let x = geometry.size.width / 2 + textPosition.width
+        let y = geometry.size.height / 2 + textPosition.height
+        return CGPoint(x: x, y: y)
+    }
+}
