@@ -89,11 +89,11 @@ struct DraggableTextView: View {
                                 .onEnded { value in
                                     if isDraggingOverDelete {
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                            withAnimation(.smooth(duration: 0.7)) {
+                                            withAnimation(.smooth(duration: 0.3)) {
                                                 scale = 0.4
                                             }
                                         }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                             userText = ""
                                             textColor = .white
                                             textPosition = .zero

@@ -38,7 +38,6 @@ struct StoryEditView: View {
     @State private var originalTextColor: Color = .clear
     @State private var generatedImage: UIImage? = nil
     @State private var showGeneratedImageView: Bool = false
-    @State private var buttonsHidden: Bool = false
     @State private var fontSize: CGFloat = 34
     @State private var selectedColor: Color = .white
     @State private var draggableTexts: [DraggableText] = []
@@ -52,7 +51,9 @@ struct StoryEditView: View {
     @State private var globalIndex: CGFloat = 1
     @State private var drawingImagesPositions: [CGRect] = []
     @State private var showDrawingOverlay: Bool = false
-
+    @State private var draggableDrawings: [DraggableDrawing] = []
+    @State private var selectedDrawingIndex: Int? = nil
+    
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
@@ -77,19 +78,10 @@ struct StoryEditView: View {
                     .edgesIgnoringSafeArea(.all)
                 
             }
-            ForEach(drawingImages.indices, id: \.self) { index in
-                Image(uiImage: drawingImages[index])
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: drawingImagesPositions[index].width, height: drawingImagesPositions[index].height)
-                    .position(x: drawingImagesPositions[index].midX, y: drawingImagesPositions[index].midY)
-                    .zIndex(globalIndex)
-                    .background(
-                        Color.red
-                            .frame(width: drawingImagesPositions[index].width, height: drawingImagesPositions[index].height)
-                            .position(x: drawingImagesPositions[index].midX, y: drawingImagesPositions[index].midY)
-                    )
-            }
+            ForEach(draggableDrawings.indices, id: \.self) { index in
+                   DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
+                       .zIndex(draggableDrawings[index].zIndex)
+               }
 
 
             
@@ -131,7 +123,7 @@ struct StoryEditView: View {
             
             if !showDrawingOverlay {
                 VStack {
-                    if !buttonsHidden && !hideButtons {
+                    if !hideButtons {
                         HStack {
                             Button(action: {
                                 showBackgroundImagePicker = true
@@ -208,11 +200,10 @@ struct StoryEditView: View {
 
                     Spacer()
 
-                    if !buttonsHidden && !hideButtons && !showOverlay {
+                    if  !hideButtons && !showOverlay {
                         VStack {
                             Spacer()
                             Button("Done") {
-                                buttonsHidden = true
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     generateImage()
                                 }
@@ -224,26 +215,63 @@ struct StoryEditView: View {
                             .padding(.bottom, 20)
                         }
                     }
+                    
+                    
+            
+            
+                          
+                    if hideButtons && !showOverlay {
+                        VStack {
+                            Spacer()
+                            Button(action: {
+                                
+                            }) {
+                                Image(systemName: "trash")
+                                    .resizable()
+                                    .frame(width: 25, height: 25)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 35, height: 35)
+                            .transition(.scale)
+                            .animation(.easeInOut(duration: 0.3), value: showDeleteButton)
+                            .padding(12)
+                            .background(Color.black.opacity(0.4))
+                            .clipShape(Circle())
+                            .padding(.bottom, 20)
+                          
+                         
+                        }
+                    }
+                           
+                      
+                    
                 }
                 .zIndex(100)
             }
             
             if showDrawingOverlay {
-                        GeometryReader { geometry in
-                            DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage, drawingRect in
-                                if let image = drawingImage, let rect = drawingRect {
-                                    globalIndex += 1
-                                    drawingImages.append(image)
-                                    drawingImagesPositions.append(rect)
-                                    
-                                    print("Position: \(rect.origin), Size: \(rect.size)")
-                                }
-                            }
-                            .frame(width: geometry.size.width, height: geometry.size.height)
+                GeometryReader { geometry in
+                    DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage, drawingRect in
+                        if let image = drawingImage, let rect = drawingRect {
+                            globalIndex += 1
+                            
+                            let newDraggableDrawing = DraggableDrawing(
+                                image: image,
+                                position: rect,
+                                scale: 1.0,
+                                angle: .zero,
+                                zIndex: globalIndex
+                            )
+                            
+                            draggableDrawings.append(newDraggableDrawing)
+                            selectedDrawingIndex = draggableDrawings.count - 1
                         }
-                        .zIndex(100)
                     }
-            
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+                .zIndex(100)
+            }
+
             
             if showOverlay, let selectedIndex = selectedTextIndex {
                 OverlayView(
@@ -308,7 +336,7 @@ struct StoryEditView: View {
             window?.layer.render(in: context.cgContext)
         }
         
-        buttonsHidden = false
+      
         showGeneratedImageView = true
     }
 }
@@ -422,11 +450,17 @@ struct DrawingOverlay: View {
 
             VStack {
                 HStack {
-                    Button("Back") {
+                    
+                    Button(action: {
                         undoLastDrawing()
+                    }) {
+                        Text("Back")
+                            .font(Font.system(size: 21, weight: .medium))
+                            .padding(7)
+                            .foregroundColor(.white)
                     }
-                    .foregroundColor(.white)
-
+                    
+            
                     ToolButton(
                         iconName: "pencil.tip.crop.circle",
                         isSelected: selectedTool == .pen
@@ -469,16 +503,23 @@ struct DrawingOverlay: View {
 
                     Spacer()
 
-                    Button("Done") {
+                    Button(action: {
                         let drawingRect = boundingBoxForDrawing(in: canvasView)
                         print("Drawing Rect: \(drawingRect)")
                         let drawingImage = captureDrawing(from: canvasView, in: drawingRect)
                         showDrawingOverlay = false
                         onComplete(drawingImage, drawingRect)
+                    }) {
+                        Text("Done")
+                            .font(Font.system(size: 21, weight: .medium))
+                            .padding(7)
+                            .foregroundColor(.white)
                     }
-                    .foregroundColor(.white)
+                    
+                  
+                   
                 }
-                .padding()
+                .padding(10)
 
                 Spacer()
 
@@ -574,4 +615,6 @@ struct ToolButton: View {
         .padding(3)
     }
 }
+
+
 

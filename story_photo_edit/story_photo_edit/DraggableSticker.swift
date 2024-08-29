@@ -25,6 +25,7 @@ struct DraggableStickerView: View {
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
     @State private var lastScaleValue: CGFloat = 1.0
+    @State private var currentAngle: Angle = .zero
     
     var body: some View {
         ZStack {
@@ -36,8 +37,8 @@ struct DraggableStickerView: View {
                             .scaledToFill()
                             .frame(width: 100, height: 100)
                             .clipped()
-                            .scaleEffect(lastScaleValue * draggableSticker.scale) // Apply the last scale value
-                            .rotationEffect(draggableSticker.angle)
+                            .scaleEffect(lastScaleValue * draggableSticker.scale)
+                            .rotationEffect(draggableSticker.angle + currentAngle)
                             .position(x: geometry.size.width / 2 + draggableSticker.position.width + dragOffset.width,
                                       y: geometry.size.height / 2 + draggableSticker.position.height + dragOffset.height)
                             .gesture(
@@ -56,10 +57,10 @@ struct DraggableStickerView: View {
                                         }
                                         .onEnded { value in
                                             if isDraggingOverDelete {
-                                                withAnimation(.smooth(duration: 0.7)) {
+                                                withAnimation(.smooth(duration: 0.3)) {
                                                     shouldRemove = true
                                                 }
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                                     onDelete()
                                                 }
                                             } else {
@@ -72,10 +73,11 @@ struct DraggableStickerView: View {
                                         },
                                     RotationGesture()
                                         .onChanged { newAngle in
-                                            draggableSticker.angle += newAngle - draggableSticker.angle
+                                            currentAngle = newAngle
                                         }
                                         .onEnded { newAngle in
-                                            draggableSticker.angle = newAngle
+                                            draggableSticker.angle += currentAngle
+                                            currentAngle = .zero
                                         }
                                 )
                                 .simultaneously(with: MagnificationGesture()
@@ -94,10 +96,6 @@ struct DraggableStickerView: View {
         }
     }
 }
-
-
-
-
 
 import Combine
 

@@ -59,10 +59,10 @@ struct DraggableImageView: View {
                                         }
                                         .onEnded { value in
                                             if isDraggingOverDelete {
-                                                withAnimation(.smooth(duration: 0.7)) {
+                                                withAnimation(.smooth(duration: 0.3)) {
                                                     shouldRemove = true
                                                 }
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                                     draggableImage = DraggableImage(image: UIImage(), position: draggableImage.position, scale: 1.0, angle: .zero, zIndex: CGFloat(selectedImageIndex!))
                                                 }
                                             } else {
@@ -101,3 +101,105 @@ struct DraggableImageView: View {
     }
 }
 
+import SwiftUI
+
+struct DraggableDrawing {
+    var image: UIImage
+    var position: CGRect
+    var scale: CGFloat
+    var angle: Angle
+    var lastScaleValue: CGFloat = 1.0
+    var zIndex: CGFloat
+}
+struct DraggableDrawingView: View {
+    @Binding var draggableDrawing: DraggableDrawing
+    @Binding var selectedDrawingIndex: Int?
+    var index: Int
+    @Binding var hideButtons: Bool
+    
+    @State private var isDraggingOverDelete: Bool = false
+    @State private var dragOffset: CGSize = .zero
+    @State private var shouldRemove: Bool = false
+    @State private var currentAngle: Angle = .zero
+
+    var body: some View {
+        ZStack {
+            GeometryReader { geometry in
+                VStack {
+                    if !shouldRemove {
+                        ZStack {
+                            Color.clear
+                                .frame(width: draggableDrawing.position.width, height: draggableDrawing.position.height)
+                                .position(x: draggableDrawing.position.midX + dragOffset.width,
+                                          y: draggableDrawing.position.midY + dragOffset.height)
+
+                            Image(uiImage: draggableDrawing.image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: draggableDrawing.position.width, height: draggableDrawing.position.height)
+                                .clipped()
+                                .scaleEffect(draggableDrawing.lastScaleValue * draggableDrawing.scale)
+                                .rotationEffect(draggableDrawing.angle + currentAngle)
+                                .position(x: draggableDrawing.position.midX + dragOffset.width,
+                                          y: draggableDrawing.position.midY + dragOffset.height)
+                        }
+                        .gesture(
+                            SimultaneousGesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        hideButtons = true
+                                        dragOffset = value.translation
+                                        
+                                        let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                        if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
+                                            isDraggingOverDelete = true
+                                        } else {
+                                            isDraggingOverDelete = false
+                                        }
+                                    }
+                                    .onEnded { value in
+                                        if isDraggingOverDelete {
+                                            withAnimation(.smooth(duration: 0.3)) {
+                                                shouldRemove = true
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                draggableDrawing = DraggableDrawing(image: UIImage(), position: draggableDrawing.position, scale: 1.0, angle: .zero, zIndex: CGFloat(selectedDrawingIndex!))
+                                            }
+                                        } else {
+                                            draggableDrawing.position = CGRect(x: draggableDrawing.position.origin.x + dragOffset.width,
+                                                                               y: draggableDrawing.position.origin.y + dragOffset.height,
+                                                                               width: draggableDrawing.position.width,
+                                                                               height: draggableDrawing.position.height)
+                                        }
+                                        dragOffset = .zero
+                                        hideButtons = false
+                                        isDraggingOverDelete = false
+                                    },
+                                RotationGesture()
+                                    .onChanged { newAngle in
+                                        currentAngle = newAngle
+                                    }
+                                    .onEnded { newAngle in
+                                        draggableDrawing.angle += currentAngle 
+                                        currentAngle = .zero 
+                                    }
+                            )
+                            .simultaneously(with: MagnificationGesture()
+                                .onChanged { value in
+                                    draggableDrawing.scale = value
+                                }
+                                .onEnded { _ in
+                                    draggableDrawing.lastScaleValue *= draggableDrawing.scale
+                                    draggableDrawing.scale = 1.0
+                                }
+                            )
+                        )
+                        .onTapGesture {
+                            selectedDrawingIndex = index
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
