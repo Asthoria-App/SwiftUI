@@ -50,15 +50,15 @@ struct StoryEditView: View {
     @State private var selectedStickerImage: UIImage? = nil
     @State private var drawingImages: [UIImage] = []
     @State private var globalIndex: CGFloat = 1
-    
+    @State private var drawingImagesPositions: [CGRect] = []
     @State private var showDrawingOverlay: Bool = false
-    
+
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
-    
+
     var body: some View {
         ZStack {
             if let backgroundImage = backgroundImage {
@@ -77,21 +77,26 @@ struct StoryEditView: View {
                     .edgesIgnoringSafeArea(.all)
                 
             }
-            
-            ForEach(drawingImages, id: \.self) { image in
-                Image(uiImage: image)
+            ForEach(drawingImages.indices, id: \.self) { index in
+                Image(uiImage: drawingImages[index])
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
-                    .edgesIgnoringSafeArea(.all)
-                    .allowsHitTesting(false)
+                    .frame(width: drawingImagesPositions[index].width, height: drawingImagesPositions[index].height)
+                    .position(x: drawingImagesPositions[index].midX, y: drawingImagesPositions[index].midY)
+                    .zIndex(globalIndex)
+                    .background(
+                        Color.red
+                            .frame(width: drawingImagesPositions[index].width, height: drawingImagesPositions[index].height)
+                            .position(x: drawingImagesPositions[index].midX, y: drawingImagesPositions[index].midY)
+                    )
             }
+
+
             
             ForEach(draggableImages.indices, id: \.self) { index in
                 DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
-                    .padding(.horizontal, 50)
+                    .padding(5)
                     .aspectRatio(contentMode: .fill)
                     .zIndex(draggableImages[index].zIndex)
             }
@@ -128,8 +133,6 @@ struct StoryEditView: View {
                 VStack {
                     if !buttonsHidden && !hideButtons {
                         HStack {
-                            
-                            
                             Button(action: {
                                 showBackgroundImagePicker = true
                             }) {
@@ -164,7 +167,6 @@ struct StoryEditView: View {
                             .frame(width: 35, height: 35)
                             
                             Button(action: {
-                                
                                 let newText = DraggableText(
                                     text: "New Text",
                                     position: .zero,
@@ -177,10 +179,8 @@ struct StoryEditView: View {
                                     fontSize: fontSize,
                                     zIndex: globalIndex                                )
                                 globalIndex += 1
-                                
                                 draggableTexts.append(newText)
                                 selectedTextIndex = draggableTexts.count - 1
-                                
                                 showOverlay = true
                                 textColor = .white
                             }) {
@@ -205,22 +205,9 @@ struct StoryEditView: View {
                         .frame(width: UIScreen.main.bounds.width)
                         .padding(.top, 20)
                     }
-                    
+
                     Spacer()
-                    
-                    if hideButtons && !showOverlay {
-                        VStack {
-                            Spacer()
-                            Image(systemName: "trash.fill")
-                                .padding()
-                                .background(Color.black.opacity(0.5))
-                                .foregroundColor(.white)
-                                .cornerRadius(50)
-                                .frame(width: 100, height: 100)
-                        }
-                        .frame(height: 150)
-                    }
-                    
+
                     if !buttonsHidden && !hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -242,15 +229,20 @@ struct StoryEditView: View {
             }
             
             if showDrawingOverlay {
-                DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage in
-                    if let image = drawingImage {
-                        globalIndex += 1
-                        drawingImages.append(image)
+                        GeometryReader { geometry in
+                            DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage, drawingRect in
+                                if let image = drawingImage, let rect = drawingRect {
+                                    globalIndex += 1
+                                    drawingImages.append(image)
+                                    drawingImagesPositions.append(rect)
+                                    
+                                    print("Position: \(rect.origin), Size: \(rect.size)")
+                                }
+                            }
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+                        .zIndex(100)
                     }
-                }
-                .transition(.opacity)
-                .zIndex(100)
-            }
             
             
             if showOverlay, let selectedIndex = selectedTextIndex {
@@ -275,7 +267,6 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
         }
-        
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
@@ -284,7 +275,7 @@ struct StoryEditView: View {
                 .onDisappear {
                     if let selectedImage = selectedDraggableImage {
                         globalIndex += 1
-                        let newImage = DraggableImage(image: selectedImage, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex )
+                        let newImage = DraggableImage(image: selectedImage, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
                         draggableImages.append(newImage)
                         selectedImageIndex = draggableImages.count - 1
                         selectedDraggableImage = nil
@@ -302,8 +293,6 @@ struct StoryEditView: View {
                     }
                 }
         }
-        
-        
         .sheet(isPresented: $showGeneratedImageView) {
             GeneratedImageView(image: generatedImage)
         }
@@ -339,12 +328,11 @@ struct GeneratedImageView: View {
     }
 }
 
-
 struct DrawingView: UIViewRepresentable {
     @Binding var tool: PKTool
     @Binding var canvasView: PKCanvasView
     @Binding var drawings: [PKDrawing]
-    
+
     func makeUIView(context: Context) -> PKCanvasView {
         canvasView.tool = tool
         canvasView.drawingPolicy = .anyInput
@@ -353,27 +341,27 @@ struct DrawingView: UIViewRepresentable {
         canvasView.delegate = context.coordinator
         return canvasView
     }
-    
+
     func updateUIView(_ uiView: PKCanvasView, context: Context) {
         uiView.tool = tool
     }
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject, PKCanvasViewDelegate {
         var parent: DrawingView
         var lastDrawing: PKDrawing?
-        
+
         init(_ parent: DrawingView) {
             self.parent = parent
         }
-        
+
         func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
             lastDrawing = canvasView.drawing
         }
-        
+
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             guard let lastDrawing = lastDrawing else { return }
             let newStrokes = canvasView.drawing.strokes.filter { newStroke in
@@ -385,12 +373,12 @@ struct DrawingView: UIViewRepresentable {
             }
             self.lastDrawing = canvasView.drawing
         }
-        
+
         private func areStrokesEqual(_ stroke1: PKStroke, _ stroke2: PKStroke) -> Bool {
             guard stroke1.path.count == stroke2.path.count else {
                 return false
             }
-            
+
             for i in 0..<stroke1.path.count {
                 let point1 = stroke1.path[i]
                 let point2 = stroke2.path[i]
@@ -398,10 +386,10 @@ struct DrawingView: UIViewRepresentable {
                     return false
                 }
             }
-            
+
             return true
         }
-        
+
         private func arePointsEqual(_ point1: PKStrokePoint, _ point2: PKStrokePoint) -> Bool {
             return point1.location == point2.location &&
             point1.timeOffset == point2.timeOffset &&
@@ -420,26 +408,25 @@ struct DrawingOverlay: View {
     @State private var selectedTool: ToolType = .pen
     @State private var lineWidth: CGFloat = 5
     @State private var toolColor: Color = .black
-    var onComplete: (UIImage?) -> Void
+    var onComplete: (UIImage?, CGRect?) -> Void
     @State private var canvasView = PKCanvasView()
     @State private var drawings: [PKDrawing] = []
-    
+
     enum ToolType {
         case pen, crayon, marker, watercolor, eraser
     }
-    
+
     var body: some View {
         ZStack {
             DrawingView(tool: $tool, canvasView: $canvasView, drawings: $drawings)
-                .edgesIgnoringSafeArea(.all)
-            
+
             VStack {
                 HStack {
                     Button("Back") {
                         undoLastDrawing()
                     }
                     .foregroundColor(.white)
-                    
+
                     ToolButton(
                         iconName: "pencil.tip.crop.circle",
                         isSelected: selectedTool == .pen
@@ -447,7 +434,7 @@ struct DrawingOverlay: View {
                         selectedTool = .pen
                         updateTool()
                     }
-                    
+
                     ToolButton(
                         iconName: "pencil.tip.crop.circle.badge.plus",
                         isSelected: selectedTool == .crayon
@@ -455,7 +442,7 @@ struct DrawingOverlay: View {
                         selectedTool = .crayon
                         updateTool()
                     }
-                    
+
                     ToolButton(
                         iconName: "highlighter",
                         isSelected: selectedTool == .marker
@@ -463,7 +450,7 @@ struct DrawingOverlay: View {
                         selectedTool = .marker
                         updateTool()
                     }
-                    
+
                     ToolButton(
                         iconName: "paintbrush.pointed.fill",
                         isSelected: selectedTool == .watercolor
@@ -471,7 +458,7 @@ struct DrawingOverlay: View {
                         selectedTool = .watercolor
                         updateTool()
                     }
-                    
+
                     ToolButton(
                         iconName: "eraser.fill",
                         isSelected: selectedTool == .eraser
@@ -479,32 +466,32 @@ struct DrawingOverlay: View {
                         selectedTool = .eraser
                         tool = PKEraserTool(.bitmap)
                     }
-                    
+
                     Spacer()
-                    
+
                     Button("Done") {
-                        let drawingImage = captureDrawing(from: canvasView)
+                        let drawingRect = boundingBoxForDrawing(in: canvasView)
+                        print("Drawing Rect: \(drawingRect)")
+                        let drawingImage = captureDrawing(from: canvasView, in: drawingRect)
                         showDrawingOverlay = false
-                        onComplete(drawingImage)
+                        onComplete(drawingImage, drawingRect)
                     }
                     .foregroundColor(.white)
                 }
                 .padding()
-                
+
                 Spacer()
-                
-                
+
                 ColorSelectionView(
                     selectedColor: $toolColor,
                     originalColor: $toolColor,
-                    
                     onColorSelected: { color in
                         toolColor = color
                         updateTool()
                     }
                 )
             }
-            
+
             VStack {
                 Spacer()
                 VerticalSlider(value: $lineWidth, range: 5...35)
@@ -522,7 +509,7 @@ struct DrawingOverlay: View {
             canvasView.isUserInteractionEnabled = true
         }
     }
-    
+
     private func updateTool() {
         switch selectedTool {
         case .pen:
@@ -537,7 +524,7 @@ struct DrawingOverlay: View {
             tool = PKEraserTool(.bitmap)
         }
     }
-    
+
     private func undoLastDrawing() {
         if !drawings.isEmpty {
             drawings.removeLast()
@@ -550,12 +537,30 @@ struct DrawingOverlay: View {
         }
     }
 }
+func boundingBoxForDrawing(in view: PKCanvasView) -> CGRect {
+    let drawing = view.drawing
+    let bounds = drawing.bounds
+    
+    let adjustedBounds = view.bounds.intersection(bounds)
+    return adjustedBounds
+}
+
+func captureDrawing(from view: PKCanvasView, in rect: CGRect) -> UIImage? {
+    let adjustedRect = rect.intersection(view.bounds)
+    let renderer = UIGraphicsImageRenderer(size: adjustedRect.size)
+    return renderer.image { context in
+        view.drawing.image(from: adjustedRect, scale: 1.0).draw(in: CGRect(origin: .zero, size: adjustedRect.size))
+    }
+}
+
+
+
 
 struct ToolButton: View {
     var iconName: String
     var isSelected: Bool
     var action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: iconName)
@@ -570,10 +575,3 @@ struct ToolButton: View {
     }
 }
 
-func captureDrawing(from view: PKCanvasView) -> UIImage? {
-    let drawingRect = view.bounds
-    let renderer = UIGraphicsImageRenderer(size: drawingRect.size)
-    return renderer.image { context in
-        view.drawing.image(from: drawingRect, scale: 1.0).draw(in: drawingRect)
-    }
-}
