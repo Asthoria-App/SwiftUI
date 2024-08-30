@@ -93,7 +93,7 @@ struct DraggableTextView: View {
                                                 scale = 0.4
                                             }
                                         }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                             userText = ""
                                             textColor = .white
                                             textPosition = .zero

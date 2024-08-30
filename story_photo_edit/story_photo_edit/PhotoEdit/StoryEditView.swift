@@ -6,19 +6,20 @@
 //
 
 import SwiftUI
+import AVKit
 import UIKit
 import PencilKit
+import AVFoundation
 
 enum DraggableType {
     case text, image, sticker, drawing
 }
+enum BackgroundType {
+    case photo
+    case video
+}
 
 struct StoryEditView: View {
-    @State private var showTextEditor: Bool = false
-    @State private var userText: String = ""
-    @State private var textPosition: CGSize = .zero
-    @State private var scale: CGFloat = 1.0
-    @State private var angle: Angle = .zero
     @State private var showDeleteButton: Bool = false
     @State private var showOverlay: Bool = false
     @State private var hideButtons: Bool = false
@@ -29,17 +30,12 @@ struct StoryEditView: View {
     @State private var showDraggableImagePicker: Bool = false
     @State private var backgroundImage: UIImage? = nil
     @State private var selectedDraggableImage: UIImage? = nil
-    @State private var imagePosition: CGSize = .zero
-    @State private var imageScale: CGFloat = 1.0
-    @State private var imageAngle: Angle = .zero
-    @State private var imageShowDeleteButton: Bool = false
     @State private var selectedGradient: LinearGradient? = nil
     @State private var textBackgroundColor: Color = .clear
     @State private var originalTextColor: Color = .clear
     @State private var generatedImage: UIImage? = nil
     @State private var showGeneratedImageView: Bool = false
     @State private var fontSize: CGFloat = 34
-    @State private var selectedColor: Color = .white
     @State private var draggableTexts: [DraggableText] = []
     @State private var selectedTextIndex: Int? = nil
     @State private var draggableImages: [DraggableImage] = []
@@ -47,43 +43,47 @@ struct StoryEditView: View {
     @State private var showStickerPicker: Bool = false
     @State private var draggableStickers: [DraggableSticker] = []
     @State private var selectedStickerImage: UIImage? = nil
-    @State private var drawingImages: [UIImage] = []
     @State private var globalIndex: CGFloat = 1
-    @State private var drawingImagesPositions: [CGRect] = []
     @State private var showDrawingOverlay: Bool = false
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
+    @State private var backgroundType: BackgroundType = .video
+    @State private var exportedVideoURL: URL? = nil
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
-
+    
     var body: some View {
         ZStack {
-            if let backgroundImage = backgroundImage {
-                Image(uiImage: backgroundImage)
-                    .resizable()
-                    .edgesIgnoringSafeArea(.all)
-                
-            } else if let selectedGradient = selectedGradient {
-                selectedGradient
-                    .edgesIgnoringSafeArea(.all)
-                
-            } else {
-                
-                Image("image")
-                    .resizable()
-                    .edgesIgnoringSafeArea(.all)
-                
+            switch backgroundType {
+            case .photo:
+                if let backgroundImage = backgroundImage {
+                    Image(uiImage: backgroundImage)
+                        .resizable()
+                        .edgesIgnoringSafeArea(.all)
+                } else if let selectedGradient = selectedGradient {
+                    selectedGradient
+                        .edgesIgnoringSafeArea(.all)
+                } else {
+                    Image("image")
+                        .resizable()
+                        .edgesIgnoringSafeArea(.all)
+                }
+            case .video:
+                if let exportedVideoURL = exportedVideoURL {
+                    FullScreenVideoPlayerView(videoURL: exportedVideoURL)
+                } else {
+                    FullScreenVideoPlayerView(videoURL: URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")!)
+                }
             }
+            
             ForEach(draggableDrawings.indices, id: \.self) { index in
-                   DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
-                       .zIndex(draggableDrawings[index].zIndex)
-               }
-
-
+                DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
+                    .zIndex(draggableDrawings[index].zIndex)
+            }
             
             ForEach(draggableImages.indices, id: \.self) { index in
                 DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
@@ -197,9 +197,9 @@ struct StoryEditView: View {
                         .frame(width: UIScreen.main.bounds.width)
                         .padding(.top, 20)
                     }
-
+                    
                     Spacer()
-
+                    
                     if  !hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -216,10 +216,6 @@ struct StoryEditView: View {
                         }
                     }
                     
-                    
-            
-            
-                          
                     if hideButtons && !showOverlay {
                         VStack {
                             Spacer()
@@ -238,13 +234,8 @@ struct StoryEditView: View {
                             .background(Color.black.opacity(0.4))
                             .clipShape(Circle())
                             .padding(.bottom, 20)
-                          
-                         
                         }
                     }
-                           
-                      
-                    
                 }
                 .zIndex(100)
             }
@@ -271,7 +262,6 @@ struct StoryEditView: View {
                 }
                 .zIndex(100)
             }
-
             
             if showOverlay, let selectedIndex = selectedTextIndex {
                 OverlayView(
@@ -330,15 +320,25 @@ struct StoryEditView: View {
     }
     
     func generateImage() {
+        if backgroundType == .photo {
+            generateImageFromPhoto()
+        } else if backgroundType == .video {
+//            generateVideoWithOverlays()
+        }
+    }
+    
+    private func generateImageFromPhoto() {
         let window = UIApplication.shared.windows.first { $0.isKeyWindow }
         let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
         generatedImage = renderer.image { context in
             window?.layer.render(in: context.cgContext)
         }
         
-      
         showGeneratedImageView = true
     }
+
+
+
 }
 
 struct GeneratedImageView: View {
@@ -356,265 +356,53 @@ struct GeneratedImageView: View {
     }
 }
 
-struct DrawingView: UIViewRepresentable {
-    @Binding var tool: PKTool
-    @Binding var canvasView: PKCanvasView
-    @Binding var drawings: [PKDrawing]
-
-    func makeUIView(context: Context) -> PKCanvasView {
-        canvasView.tool = tool
-        canvasView.drawingPolicy = .anyInput
-        canvasView.isOpaque = false
-        canvasView.backgroundColor = .clear
-        canvasView.delegate = context.coordinator
-        return canvasView
-    }
-
-    func updateUIView(_ uiView: PKCanvasView, context: Context) {
-        uiView.tool = tool
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, PKCanvasViewDelegate {
-        var parent: DrawingView
-        var lastDrawing: PKDrawing?
-
-        init(_ parent: DrawingView) {
-            self.parent = parent
-        }
-
-        func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
-            lastDrawing = canvasView.drawing
-        }
-
-        func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
-            guard let lastDrawing = lastDrawing else { return }
-            let newStrokes = canvasView.drawing.strokes.filter { newStroke in
-                !lastDrawing.strokes.contains(where: { areStrokesEqual($0, newStroke) })
-            }
-            if !newStrokes.isEmpty {
-                let newDrawing = PKDrawing(strokes: newStrokes)
-                parent.drawings.append(newDrawing)
-            }
-            self.lastDrawing = canvasView.drawing
-        }
-
-        private func areStrokesEqual(_ stroke1: PKStroke, _ stroke2: PKStroke) -> Bool {
-            guard stroke1.path.count == stroke2.path.count else {
-                return false
-            }
-
-            for i in 0..<stroke1.path.count {
-                let point1 = stroke1.path[i]
-                let point2 = stroke2.path[i]
-                if !arePointsEqual(point1, point2) {
-                    return false
-                }
-            }
-
-            return true
-        }
-
-        private func arePointsEqual(_ point1: PKStrokePoint, _ point2: PKStrokePoint) -> Bool {
-            return point1.location == point2.location &&
-            point1.timeOffset == point2.timeOffset &&
-            point1.size == point2.size &&
-            point1.opacity == point2.opacity &&
-            point1.force == point2.force &&
-            point1.azimuth == point2.azimuth &&
-            point1.altitude == point2.altitude
-        }
-    }
-}
-
-struct DrawingOverlay: View {
-    @Binding var showDrawingOverlay: Bool
-    @State private var tool: PKTool = PKInkingTool(.pen, color: .black, width: 5)
-    @State private var selectedTool: ToolType = .pen
-    @State private var lineWidth: CGFloat = 5
-    @State private var toolColor: Color = .black
-    var onComplete: (UIImage?, CGRect?) -> Void
-    @State private var canvasView = PKCanvasView()
-    @State private var drawings: [PKDrawing] = []
-
-    enum ToolType {
-        case pen, crayon, marker, watercolor, eraser
-    }
-
-    var body: some View {
-        ZStack {
-            DrawingView(tool: $tool, canvasView: $canvasView, drawings: $drawings)
-
-            VStack {
-                HStack {
-                    
-                    Button(action: {
-                        undoLastDrawing()
-                    }) {
-                        Text("Back")
-                            .font(Font.system(size: 21, weight: .medium))
-                            .padding(7)
-                            .foregroundColor(.white)
-                    }
-                    
-            
-                    ToolButton(
-                        iconName: "pencil.tip.crop.circle",
-                        isSelected: selectedTool == .pen
-                    ) {
-                        selectedTool = .pen
-                        updateTool()
-                    }
-
-                    ToolButton(
-                        iconName: "pencil.tip.crop.circle.badge.plus",
-                        isSelected: selectedTool == .crayon
-                    ) {
-                        selectedTool = .crayon
-                        updateTool()
-                    }
-
-                    ToolButton(
-                        iconName: "highlighter",
-                        isSelected: selectedTool == .marker
-                    ) {
-                        selectedTool = .marker
-                        updateTool()
-                    }
-
-                    ToolButton(
-                        iconName: "paintbrush.pointed.fill",
-                        isSelected: selectedTool == .watercolor
-                    ) {
-                        selectedTool = .watercolor
-                        updateTool()
-                    }
-
-                    ToolButton(
-                        iconName: "eraser.fill",
-                        isSelected: selectedTool == .eraser
-                    ) {
-                        selectedTool = .eraser
-                        tool = PKEraserTool(.bitmap)
-                    }
-
-                    Spacer()
-
-                    Button(action: {
-                        let drawingRect = boundingBoxForDrawing(in: canvasView)
-                        print("Drawing Rect: \(drawingRect)")
-                        let drawingImage = captureDrawing(from: canvasView, in: drawingRect)
-                        showDrawingOverlay = false
-                        onComplete(drawingImage, drawingRect)
-                    }) {
-                        Text("Done")
-                            .font(Font.system(size: 21, weight: .medium))
-                            .padding(7)
-                            .foregroundColor(.white)
-                    }
-                    
-                  
-                   
-                }
-                .padding(10)
-
-                Spacer()
-
-                ColorSelectionView(
-                    selectedColor: $toolColor,
-                    originalColor: $toolColor,
-                    onColorSelected: { color in
-                        toolColor = color
-                        updateTool()
-                    }
-                )
-            }
-
-            VStack {
-                Spacer()
-                VerticalSlider(value: $lineWidth, range: 5...35)
-                    .onChange(of: lineWidth) { newValue in
-                        updateTool()
-                    }
-                Spacer()
-            }
-            .padding(.leading, 6)
-            .padding(.bottom, 200)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .onAppear {
-            canvasView.isMultipleTouchEnabled = false
-            canvasView.isUserInteractionEnabled = true
-        }
-    }
-
-    private func updateTool() {
-        switch selectedTool {
-        case .pen:
-            tool = PKInkingTool(.pen, color: UIColor(toolColor), width: lineWidth)
-        case .crayon:
-            tool = PKInkingTool(.crayon, color: UIColor(toolColor), width: lineWidth)
-        case .marker:
-            tool = PKInkingTool(.marker, color: UIColor(toolColor), width: lineWidth)
-        case .watercolor:
-            tool = PKInkingTool(.watercolor, color: UIColor(toolColor), width: lineWidth)
-        case .eraser:
-            tool = PKEraserTool(.bitmap)
-        }
-    }
-
-    private func undoLastDrawing() {
-        if !drawings.isEmpty {
-            drawings.removeLast()
-            let combinedDrawing = drawings.reduce(PKDrawing()) { partialResult, drawing in
-                var result = partialResult
-                result.strokes.append(contentsOf: drawing.strokes)
-                return result
-            }
-            canvasView.drawing = combinedDrawing
-        }
-    }
-}
-func boundingBoxForDrawing(in view: PKCanvasView) -> CGRect {
-    let drawing = view.drawing
-    let bounds = drawing.bounds
+struct FullScreenVideoPlayerView: View {
+    var videoURL: URL
     
-    let adjustedBounds = view.bounds.intersection(bounds)
-    return adjustedBounds
-}
-
-func captureDrawing(from view: PKCanvasView, in rect: CGRect) -> UIImage? {
-    let adjustedRect = rect.intersection(view.bounds)
-    let renderer = UIGraphicsImageRenderer(size: adjustedRect.size)
-    return renderer.image { context in
-        view.drawing.image(from: adjustedRect, scale: 1.0).draw(in: CGRect(origin: .zero, size: adjustedRect.size))
-    }
-}
-
-
-
-
-struct ToolButton: View {
-    var iconName: String
-    var isSelected: Bool
-    var action: () -> Void
-
+    @State private var player = AVPlayer()
+    
     var body: some View {
-        Button(action: action) {
-            Image(systemName: iconName)
-                .resizable()
-                .frame(width: 25, height: 25)
-                .padding(2)
-                .background(isSelected ? Color.white : Color.clear)
-                .foregroundColor(isSelected ? Color.black : Color.white)
-                .clipShape(Circle())
+        VideoPlayerContainer(player: player)
+            .onAppear {
+                setupPlayer()
+                player.play()
+            }
+            .onDisappear {
+                player.pause()
+                NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+            }
+            .edgesIgnoringSafeArea(.all)
+    }
+    
+    private func setupPlayer() {
+        let playerItem = AVPlayerItem(url: videoURL)
+        player.replaceCurrentItem(with: playerItem)
+        
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
+            player.seek(to: .zero)
+            player.play()
         }
-        .padding(3)
     }
 }
 
-
-
+struct VideoPlayerContainer: UIViewControllerRepresentable {
+    var player: AVPlayer
+    
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = UIViewController()
+        let playerLayer = AVPlayerLayer(player: player)
+        
+        playerLayer.videoGravity = .resizeAspectFill
+        playerLayer.frame = UIScreen.main.bounds
+        controller.view.layer.addSublayer(playerLayer)
+        
+        
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
+            playerLayer.frame = UIScreen.main.bounds
+        }
+    }
+}
