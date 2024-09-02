@@ -1,10 +1,3 @@
-//
-//  StoryEditView.swift
-//  story_photo_edit
-//
-//  Created by Aysema Çam on 19.08.2024.
-//
-
 import SwiftUI
 import AVKit
 import UIKit
@@ -48,13 +41,48 @@ struct StoryEditView: View {
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-    @State private var exportedVideoURL: URL? = nil
+    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+    @State private var processedVideoURL: URL? = nil
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
+    private func getVideoFrame() -> CGRect? {
+        guard let videoURL = exportedVideoURL else {
+            print("Video URL not found")
+            return nil
+        }
+        
+        let asset = AVAsset(url: videoURL)
+        guard let track = asset.tracks(withMediaType: .video).first else {
+            print("No video track found")
+            return nil
+        }
+        
+        let videoSize = track.naturalSize
+        let transform = track.preferredTransform
+        
+        let isPortrait = transform.a == 0 && transform.d == 0 && (transform.b == 1.0 || transform.b == -1.0)
+        
+        let correctedVideoSize = isPortrait ? CGSize(width: videoSize.height, height: videoSize.width) : videoSize
+        
+        let screenSize = UIScreen.main.bounds.size
+        let videoFrame: CGRect
+        
+        if correctedVideoSize.width / correctedVideoSize.height > screenSize.width / screenSize.height {
+            let height = screenSize.width * correctedVideoSize.height / correctedVideoSize.width
+            videoFrame = CGRect(x: 0, y: (screenSize.height - height) / 2, width: screenSize.width, height: height)
+        } else {
+            let width = screenSize.height * correctedVideoSize.width / correctedVideoSize.height
+            videoFrame = CGRect(x: (screenSize.width - width) / 2, y: 0, width: width, height: screenSize.height)
+        }
+        
+        return videoFrame
+    }
+
+
     
     var body: some View {
         ZStack {
@@ -73,10 +101,10 @@ struct StoryEditView: View {
                         .edgesIgnoringSafeArea(.all)
                 }
             case .video:
-                if let exportedVideoURL = exportedVideoURL {
+                if let processedVideoURL = processedVideoURL {
+                    FullScreenVideoPlayerView(videoURL: processedVideoURL)
+                } else if let exportedVideoURL = exportedVideoURL {
                     FullScreenVideoPlayerView(videoURL: exportedVideoURL)
-                } else {
-                    FullScreenVideoPlayerView(videoURL: URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")!)
                 }
             }
             
@@ -88,16 +116,15 @@ struct StoryEditView: View {
             ForEach(draggableImages.indices, id: \.self) { index in
                 DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
-                    .padding(5)
                     .aspectRatio(contentMode: .fill)
                     .zIndex(draggableImages[index].zIndex)
             }
             
             ForEach(draggableStickers.indices, id: \.self) { index in
-                DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200), onDelete: {
+                DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100), onDelete: {
                     draggableStickers.remove(at: index)
                 })
-                .frame(width: 200, height: 200)
+                .frame(width: 100, height: 100)
                 .zIndex(draggableStickers[index].zIndex)
             }
             
@@ -169,7 +196,8 @@ struct StoryEditView: View {
                                     backgroundOpacity: backgroundOpacity,
                                     font: selectedFont,
                                     fontSize: fontSize,
-                                    zIndex: globalIndex                                )
+                                    zIndex: globalIndex
+                                )
                                 globalIndex += 1
                                 draggableTexts.append(newText)
                                 selectedTextIndex = draggableTexts.count - 1
@@ -204,8 +232,21 @@ struct StoryEditView: View {
                         VStack {
                             Spacer()
                             Button("Done") {
+                                //                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                //                                    generateImageFromPhoto()
+                                //                                }
+                                //                            }
+                                //                            .font(.title)
+                                //                            .padding()
+                                //                            .foregroundColor(.white)
+                                //                            .cornerRadius(10)
+                                //                            .padding(.bottom, 20)
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    generateImage()
+                                    if let videoFrame = getVideoFrame() {
+                                        processVideo(videoFrame: videoFrame)
+                                    } else {
+                                        print("Video frame could not be determined")
+                                    }
                                 }
                             }
                             .font(.title)
@@ -213,6 +254,7 @@ struct StoryEditView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                             .padding(.bottom, 20)
+                            
                         }
                     }
                     
@@ -319,13 +361,7 @@ struct StoryEditView: View {
         }
     }
     
-    func generateImage() {
-        if backgroundType == .photo {
-            generateImageFromPhoto()
-        } else if backgroundType == .video {
-//            generateVideoWithOverlays()
-        }
-    }
+    
     
     private func generateImageFromPhoto() {
         let window = UIApplication.shared.windows.first { $0.isKeyWindow }
@@ -336,9 +372,99 @@ struct StoryEditView: View {
         
         showGeneratedImageView = true
     }
-
-
-
+    
+    private func processVideo(videoFrame: CGRect) {
+        guard let videoURL = exportedVideoURL else {
+            print("Video URL not found")
+            return
+        }
+        
+        // Overlay görüntüsünü video çerçevesine göre oluştur
+        let overlayImage = generateOverlayImage(videoFrame: videoFrame)
+        
+        let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+        videoProcessor.processVideo { url in
+            DispatchQueue.main.async {
+                self.processedVideoURL = url
+                print(url, "Processed video URL")
+                // İşlenmiş videoyu göster
+                if let processedURL = url {
+                    self.showProcessedVideo(processedURL: processedURL)
+                }
+            }
+        }
+    }
+    
+    private func showProcessedVideo(processedURL: URL) {
+        // İşlenmiş videoyu oynatmak için processedVideoURL ayarlanır
+        self.processedVideoURL = processedURL
+    }
+    
+    private func generateOverlayImage(videoFrame: CGRect) -> UIImage {
+        let size = videoFrame.size
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        
+        
+        
+        // Draggable texts
+        // Uncomment this block if you want to include draggable texts in the overlay
+        // for text in draggableTexts {
+        //     let attributes: [NSAttributedString.Key: Any] = [
+        //         .font: UIFont(name: text.font.rawValue, size: text.fontSize) ?? UIFont.systemFont(ofSize: text.fontSize),
+        //         .foregroundColor: UIColor(text.textColor)
+        //     ]
+        //     let attributedString = NSAttributedString(string: text.text, attributes: attributes)
+        //     let adjustedPosition = CGPoint(
+        //         x: text.position.x - videoFrame.origin.x,
+        //         y: text.position.y - videoFrame.origin.y
+        //     )
+        //     attributedString.draw(at: adjustedPosition)
+        // }
+        
+        
+        // Draggable images
+        for image in draggableImages {
+            let adjustedPosition = CGPoint(
+                x: image.position.width - videoFrame.origin.x,
+                y: image.position.height - videoFrame.origin.y
+            )
+            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: image.image.size.width , height: image.image.size.height))
+            image.image.draw(in: rect)
+        }
+        
+        
+        // Draggable stickers
+        for sticker in draggableStickers {
+            let adjustedPosition = CGPoint(
+                x: (sticker.position.width - videoFrame.origin.x) * (size.width / UIScreen.main.bounds.width),
+                y: (sticker.position.height - videoFrame.origin.y) * (size.height / UIScreen.main.bounds.height)
+            )
+            let rect = CGRect(
+                origin: adjustedPosition,
+                size: CGSize(
+                    width: sticker.image.size.width * (size.width / UIScreen.main.bounds.width),
+                    height: sticker.image.size.height * (size.height / UIScreen.main.bounds.height)
+                )
+            )
+            sticker.image.draw(in: rect)
+        }
+        // Draggable drawings
+        for drawing in draggableDrawings {
+            let adjustedPosition = CGPoint(
+                x: drawing.position.origin.x - videoFrame.origin.x,
+                y: drawing.position.origin.y - videoFrame.origin.y
+            )
+            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: drawing.image.size.width , height: drawing.image.size.height))
+            drawing.image.draw(in: rect)
+            print(drawing.position.size, "drawing.position.size")
+        }
+        
+        
+        let composedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return composedImage ?? UIImage()
+    }
 }
 
 struct GeneratedImageView: View {
@@ -347,6 +473,7 @@ struct GeneratedImageView: View {
     var body: some View {
         if let image = image {
             Image(uiImage: image)
+            
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .edgesIgnoringSafeArea(.all)
@@ -392,10 +519,9 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         let controller = UIViewController()
         let playerLayer = AVPlayerLayer(player: player)
         
-        playerLayer.videoGravity = .resizeAspectFill
+        
         playerLayer.frame = UIScreen.main.bounds
         controller.view.layer.addSublayer(playerLayer)
-        
         
         return controller
     }
@@ -404,5 +530,18 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
             playerLayer.frame = UIScreen.main.bounds
         }
+    }
+}
+import UIKit
+
+extension UIView {
+    func getTransformedRect() -> CGRect {
+        let transformedPath = CGPath(rect: self.bounds, transform: &self.transform)
+        let boundingBox = transformedPath.boundingBox
+        let adjustedPosition = CGPoint(
+            x: self.frame.origin.x + (self.frame.size.width - boundingBox.size.width) / 2,
+            y: self.frame.origin.y + (self.frame.size.height - boundingBox.size.height) / 2
+        )
+        return CGRect(origin: adjustedPosition, size: boundingBox.size)
     }
 }

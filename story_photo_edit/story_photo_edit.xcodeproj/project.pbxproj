@@ -22,6 +22,7 @@
 		563B94FE2C80783C00649B68 /* DrawingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94FD2C80783C00649B68 /* DrawingView.swift */; };
 		563B95012C80789200649B68 /* DrawingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95002C80789200649B68 /* DrawingOverlayView.swift */; };
 		563B95032C8078B800649B68 /* ToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95022C8078B800649B68 /* ToolButton.swift */; };
+		564D72CC2C81B1C400EF71FC /* MetalPetal in Frameworks */ = {isa = PBXBuildFile; productRef = 564D72CB2C81B1C400EF71FC /* MetalPetal */; };
 		568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */; };
 		568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */; };
 		568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */; };
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				564D72CC2C81B1C400EF71FC /* MetalPetal in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,6 +194,7 @@
 			);
 			name = story_photo_edit;
 			packageProductDependencies = (
+				564D72CB2C81B1C400EF71FC /* MetalPetal */,
 			);
 			productName = story_photo_edit;
 			productReference = 561BAE042C7332C400C0991E /* story_photo_edit.app */;
@@ -222,6 +225,7 @@
 			);
 			mainGroup = 561BADFB2C7332C400C0991E;
 			packageReferences = (
+				564D72CA2C81B1C400EF71FC /* XCRemoteSwiftPackageReference "MetalPetal" */,
 			);
 			productRefGroup = 561BAE052C7332C400C0991E /* Products */;
 			projectDirPath = "";
@@ -480,6 +484,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		564D72CA2C81B1C400EF71FC /* XCRemoteSwiftPackageReference "MetalPetal" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MetalPetal/MetalPetal.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.25.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		564D72CB2C81B1C400EF71FC /* MetalPetal */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 564D72CA2C81B1C400EF71FC /* XCRemoteSwiftPackageReference "MetalPetal" */;
+			productName = MetalPetal;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 561BADFC2C7332C400C0991E /* Project object */;
 }

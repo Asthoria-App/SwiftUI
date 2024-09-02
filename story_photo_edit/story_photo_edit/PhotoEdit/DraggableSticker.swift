@@ -113,7 +113,7 @@ struct BottomSheetStickerPickerView: View {
     
     var body: some View {
         ZStack {
-          
+            
             
             VStack {
                 Text("Select a Sticker")
@@ -127,7 +127,7 @@ struct BottomSheetStickerPickerView: View {
                         filterStickers(with: newValue)
                     }
                 
-            
+                
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
                         if filteredStickers.isEmpty {
@@ -161,7 +161,6 @@ struct BottomSheetStickerPickerView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .onAppear {
                 filterStickers(with: searchText)
-                print("Initial filtering done with text: \(searchText)")
             }
         }
     }
@@ -171,7 +170,6 @@ struct BottomSheetStickerPickerView: View {
         } else {
             filteredStickers = stickers.filter { $0.contains(text) }
         }
-        print("Filtered stickers: \(filteredStickers)")
     }
     
 }
