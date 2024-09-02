@@ -111,6 +111,7 @@ struct StoryEditView: View {
             ForEach(draggableDrawings.indices, id: \.self) { index in
                 DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
                     .zIndex(draggableDrawings[index].zIndex)
+//                    .background(Color.red)
             }
             
             ForEach(draggableImages.indices, id: \.self) { index in
@@ -118,6 +119,9 @@ struct StoryEditView: View {
                     .frame(width: 200, height: 200)
                     .aspectRatio(contentMode: .fill)
                     .zIndex(draggableImages[index].zIndex)
+                    .onAppear {
+                        print("Image Position: \(draggableImages[index].position), Image Size: \(draggableImages[index].image.size)")
+                    }
             }
             
             ForEach(draggableStickers.indices, id: \.self) { index in
@@ -126,6 +130,7 @@ struct StoryEditView: View {
                 })
                 .frame(width: 100, height: 100)
                 .zIndex(draggableStickers[index].zIndex)
+           
             }
             
             ForEach(draggableTexts.indices, id: \.self) { index in
@@ -146,6 +151,9 @@ struct StoryEditView: View {
                     selectedTextIndex: $selectedTextIndex
                 )
                 .zIndex(draggableTexts[index].zIndex)
+                .onAppear {
+                    print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
+                }
             }
             
             if !showDrawingOverlay {
@@ -232,15 +240,6 @@ struct StoryEditView: View {
                         VStack {
                             Spacer()
                             Button("Done") {
-                                //                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                //                                    generateImageFromPhoto()
-                                //                                }
-                                //                            }
-                                //                            .font(.title)
-                                //                            .padding()
-                                //                            .foregroundColor(.white)
-                                //                            .cornerRadius(10)
-                                //                            .padding(.bottom, 20)
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     if let videoFrame = getVideoFrame() {
                                         processVideo(videoFrame: videoFrame)
@@ -360,6 +359,7 @@ struct StoryEditView: View {
             hideButtons = newValue
         }
     }
+
     
     
     
@@ -379,7 +379,6 @@ struct StoryEditView: View {
             return
         }
         
-        // Overlay görüntüsünü video çerçevesine göre oluştur
         let overlayImage = generateOverlayImage(videoFrame: videoFrame)
         
         let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
@@ -396,68 +395,96 @@ struct StoryEditView: View {
     }
     
     private func showProcessedVideo(processedURL: URL) {
-        // İşlenmiş videoyu oynatmak için processedVideoURL ayarlanır
         self.processedVideoURL = processedURL
     }
     
     private func generateOverlayImage(videoFrame: CGRect) -> UIImage {
         let size = videoFrame.size
         UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        
-        
-        
-        // Draggable texts
-        // Uncomment this block if you want to include draggable texts in the overlay
-        // for text in draggableTexts {
-        //     let attributes: [NSAttributedString.Key: Any] = [
-        //         .font: UIFont(name: text.font.rawValue, size: text.fontSize) ?? UIFont.systemFont(ofSize: text.fontSize),
-        //         .foregroundColor: UIColor(text.textColor)
-        //     ]
-        //     let attributedString = NSAttributedString(string: text.text, attributes: attributes)
-        //     let adjustedPosition = CGPoint(
-        //         x: text.position.x - videoFrame.origin.x,
-        //         y: text.position.y - videoFrame.origin.y
-        //     )
-        //     attributedString.draw(at: adjustedPosition)
-        // }
-        
-        
-        // Draggable images
+
+        print("Video Frame: \(videoFrame)")
+
         for image in draggableImages {
             let adjustedPosition = CGPoint(
-                x: image.position.width - videoFrame.origin.x,
-                y: image.position.height - videoFrame.origin.y
+                x: image.globalFrame.origin.x - videoFrame.origin.x,
+                y: image.globalFrame.origin.y - videoFrame.origin.y
             )
-            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: image.image.size.width , height: image.image.size.height))
+            
+            let rect = CGRect(origin: adjustedPosition, size: image.globalFrame.size)
+
+            let context = UIGraphicsGetCurrentContext()
+            context?.saveGState()
+            context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.rotate(by: CGFloat(image.angle.radians))
+            context?.translateBy(x: -rect.midX, y: -rect.midY)
+            
+            let bezierPath = UIBezierPath(roundedRect: rect, cornerRadius: 7)
+            bezierPath.addClip()
             image.image.draw(in: rect)
+            
+            context?.restoreGState()
         }
-        
-        
-        // Draggable stickers
+
         for sticker in draggableStickers {
             let adjustedPosition = CGPoint(
-                x: (sticker.position.width - videoFrame.origin.x) * (size.width / UIScreen.main.bounds.width),
-                y: (sticker.position.height - videoFrame.origin.y) * (size.height / UIScreen.main.bounds.height)
+                x: sticker.globalFrame.origin.x - videoFrame.origin.x,
+                y: sticker.globalFrame.origin.y - videoFrame.origin.y
             )
-            let rect = CGRect(
-                origin: adjustedPosition,
-                size: CGSize(
-                    width: sticker.image.size.width * (size.width / UIScreen.main.bounds.width),
-                    height: sticker.image.size.height * (size.height / UIScreen.main.bounds.height)
-                )
-            )
+
+            let rect = CGRect(origin: adjustedPosition, size: sticker.globalFrame.size)
+
+            let context = UIGraphicsGetCurrentContext()
+            context?.saveGState()
+            
+            context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.rotate(by: CGFloat(sticker.angle.radians))
+            context?.translateBy(x: -rect.midX, y: -rect.midY)
+            
             sticker.image.draw(in: rect)
+
+            context?.restoreGState()
+      
         }
-        // Draggable drawings
+
+         
+//        
+//        // Draggable drawings
+//        for drawing in draggableDrawings {
+//            let adjustedPosition = CGPoint(
+//                x: drawing.position.origin.x - videoFrame.origin.x,
+//                y: drawing.position.origin.y - videoFrame.origin.y
+//            )
+//            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: drawing.image.size.width, height: drawing.image.size.height))
+//            
+//            // Drawing boyutunu ve pozisyonunu kontrol etmek için
+//            print("Drawing Position: \(adjustedPosition), Drawing Size: \(rect.size), Drawing Frame: \(rect)")
+//            
+//            drawing.image.draw(in: rect)
+//        }
+        
+        
+    
         for drawing in draggableDrawings {
             let adjustedPosition = CGPoint(
-                x: drawing.position.origin.x - videoFrame.origin.x,
-                y: drawing.position.origin.y - videoFrame.origin.y
+                x: drawing.globalFrame.midX - videoFrame.origin.x,
+                y: drawing.globalFrame.midY - videoFrame.origin.y
             )
-            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: drawing.image.size.width , height: drawing.image.size.height))
+            
+
+            let rect = CGRect(origin: adjustedPosition, size: drawing.globalFrame.size)
+
+            let context = UIGraphicsGetCurrentContext()
+            context?.saveGState()
+
+            context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.rotate(by: CGFloat(drawing.angle.radians))
+            context?.translateBy(x: -rect.midX, y: -rect.midY)
+
             drawing.image.draw(in: rect)
-            print(drawing.position.size, "drawing.position.size")
+
+            context?.restoreGState()
         }
+
         
         
         let composedImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -465,6 +492,7 @@ struct StoryEditView: View {
         
         return composedImage ?? UIImage()
     }
+
 }
 
 struct GeneratedImageView: View {

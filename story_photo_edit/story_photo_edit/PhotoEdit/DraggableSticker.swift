@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+
 struct DraggableSticker {
     var image: UIImage
     var position: CGSize
     var scale: CGFloat
     var angle: Angle
     var zIndex: CGFloat
-    
+    var globalFrame: CGRect = .zero
 }
 
 struct DraggableStickerView: View {
@@ -41,6 +42,20 @@ struct DraggableStickerView: View {
                             .rotationEffect(draggableSticker.angle + currentAngle)
                             .position(x: geometry.size.width / 2 + draggableSticker.position.width + dragOffset.width,
                                       y: geometry.size.height / 2 + draggableSticker.position.height + dragOffset.height)
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear
+                                        .onAppear {
+                                            let scale = lastScaleValue * draggableSticker.scale
+                                            let globalFrame = geo.frame(in: .global)
+                                            draggableSticker.globalFrame = CGRect(
+                                                origin: globalFrame.origin,
+                                                size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
+                                            )
+                                            print("Sticker Global Frame: \(draggableSticker.globalFrame)")
+                                        }
+                                }
+                            )
                             .gesture(
                                 SimultaneousGesture(
                                     DragGesture()
@@ -66,6 +81,8 @@ struct DraggableStickerView: View {
                                             } else {
                                                 draggableSticker.position.width += dragOffset.width
                                                 draggableSticker.position.height += dragOffset.height
+                                                dragOffset = .zero
+                                                updateStickerState(geo: geometry)
                                             }
                                             dragOffset = .zero
                                             hideButtons = false
@@ -78,6 +95,7 @@ struct DraggableStickerView: View {
                                         .onEnded { newAngle in
                                             draggableSticker.angle += currentAngle
                                             currentAngle = .zero
+                                            updateStickerState(geo: geometry)
                                         }
                                 )
                                 .simultaneously(with: MagnificationGesture()
@@ -87,6 +105,7 @@ struct DraggableStickerView: View {
                                     .onEnded { _ in
                                         lastScaleValue *= draggableSticker.scale
                                         draggableSticker.scale = 1.0
+                                        updateStickerState(geo: geometry)
                                     }
                                 )
                             )
@@ -95,6 +114,25 @@ struct DraggableStickerView: View {
             }
         }
     }
+    
+    private func updateStickerState(geo: GeometryProxy) {
+        let scale = lastScaleValue * draggableSticker.scale
+        
+        let transformedSize = CGSize(width: geo.size.width * scale, height: geo.size.height * scale)
+        
+        let offsetX = (geo.size.width * scale - geo.size.width) / 2
+        let offsetY = (geo.size.height * scale - geo.size.height) / 2
+
+        draggableSticker.globalFrame = CGRect(
+            origin: CGPoint(
+                x: geo.frame(in: .global).origin.x + dragOffset.width + draggableSticker.position.width - offsetX,
+                y: geo.frame(in: .global).origin.y + dragOffset.height + draggableSticker.position.height - offsetY
+            ),
+            size: transformedSize
+        )
+    }
+
+
 }
 
 import Combine
@@ -104,7 +142,6 @@ struct BottomSheetStickerPickerView: View {
     @Environment(\.presentationMode) var presentationMode
     
     let stickers: [String] = ["1", "2", "3", "4", "5", "7", "8", "1", "4", "2", "4", "3"]
-    
     let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
     
     @State private var searchText: String = ""
@@ -113,8 +150,6 @@ struct BottomSheetStickerPickerView: View {
     
     var body: some View {
         ZStack {
-            
-            
             VStack {
                 Text("Select a Sticker")
                     .font(.headline)
@@ -126,7 +161,6 @@ struct BottomSheetStickerPickerView: View {
                     .onChange(of: searchText) { newValue in
                         filterStickers(with: newValue)
                     }
-                
                 
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
@@ -164,6 +198,7 @@ struct BottomSheetStickerPickerView: View {
             }
         }
     }
+    
     private func filterStickers(with text: String) {
         if text.isEmpty {
             filteredStickers = stickers
@@ -171,6 +206,4 @@ struct BottomSheetStickerPickerView: View {
             filteredStickers = stickers.filter { $0.contains(text) }
         }
     }
-    
 }
-
