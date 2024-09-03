@@ -34,7 +34,6 @@ public class VideoProcessor: ObservableObject {
             }
         }
     }
-
     private func createOverlayComposition(for videoTrack: AVAssetTrack, originalDuration: CMTime, in composition: AVMutableComposition) async throws -> AVMutableVideoComposition {
         let videoComposition = AVMutableVideoComposition()
         let timeRange = CMTimeRange(start: .zero, duration: originalDuration)
@@ -49,22 +48,24 @@ public class VideoProcessor: ObservableObject {
         instruction.layerInstructions = [layerInstruction]
         videoComposition.instructions = [instruction]
 
-        videoComposition.renderSize = try await videoTrack.load(.naturalSize)
-        videoComposition.frameDuration = CMTime(value: 1, timescale: 10)
-
-        // Overlay image layer
+        let renderSize = try await videoTrack.load(.naturalSize)
+        videoComposition.renderSize = renderSize
+        videoComposition.frameDuration = CMTime(value: 1, timescale: 10) // 30fps olarak ayarlandı
+        
+        print("Video Natural Size: \(renderSize)")
+        
         let overlayLayer = CALayer()
         overlayLayer.contents = overlayImage.cgImage
-        overlayLayer.frame = await CGRect(origin: .zero, size: try videoTrack.load(.naturalSize))
+        overlayLayer.contentsGravity = .resizeAspect
+
+        overlayLayer.frame = CGRect(origin: .zero, size: renderSize)
         overlayLayer.opacity = 1.0
 
-        // Video layer
         let videoLayer = CALayer()
-        videoLayer.frame = await CGRect(origin: .zero, size: try videoTrack.load(.naturalSize))
+        videoLayer.frame = CGRect(origin: .zero, size: renderSize)
 
-        // Parent layer to hold video and overlay layers
         let parentLayer = CALayer()
-        parentLayer.frame = await CGRect(origin: .zero, size: try videoTrack.load(.naturalSize))
+        parentLayer.frame = CGRect(origin: .zero, size: renderSize)
         parentLayer.addSublayer(videoLayer)
         parentLayer.addSublayer(overlayLayer)
 
@@ -72,6 +73,8 @@ public class VideoProcessor: ObservableObject {
 
         return videoComposition
     }
+
+
 
     private func export(composition: AVMutableComposition, videoComposition: AVVideoComposition, completion: @escaping (URL?) -> Void) {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")

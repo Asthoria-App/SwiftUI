@@ -19,6 +19,8 @@ struct DraggableText {
     var fontSize: CGFloat
     var originalTextColor: Color
     var zIndex: CGFloat
+    var globalFrame: CGRect = .zero // Yeni eklenen property
+
     
     init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat) {
         self.text = text
@@ -67,6 +69,14 @@ struct DraggableTextView: View {
                     .position(positionInBounds(geometry))
                     .scaleEffect(lastScaleValue * scale)
                     .rotationEffect(angle)
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    updateTextState(geo: geo) // Global çerçeveyi güncelle
+                                }
+                        }
+                    )
                     .gesture(
                         SimultaneousGesture(
                             DragGesture()
@@ -122,6 +132,7 @@ struct DraggableTextView: View {
                             .onEnded { _ in
                                 lastScaleValue *= scale
                                 scale = 1.0
+                                updateTextState(geo: geometry)
                             }
                         )
                     )
@@ -149,4 +160,28 @@ struct DraggableTextView: View {
         let y = geometry.size.height / 2 + textPosition.height
         return CGPoint(x: x, y: y)
     }
+
+    private func updateTextState(geo: GeometryProxy) {
+        let scale = lastScaleValue * self.scale
+        
+        let transformedSize = CGSize(width: geo.size.width * scale, height: geo.size.height * scale)
+        
+        let offsetX = (geo.size.width * scale - geo.size.width) / 2
+        let offsetY = (geo.size.height * scale - geo.size.height) / 2
+
+        let globalFrame = CGRect(
+            origin: CGPoint(
+                x: geo.frame(in: .global).origin.x + textPosition.width - offsetX,
+                y: geo.frame(in: .global).origin.y + textPosition.height - offsetY
+            ),
+            size: transformedSize
+        )
+        
+        print("Updated Text Global Frame: \(globalFrame)")
+        
+        // Burada `globalFrame` değerini `draggableText`'in ilgili özelliğine atayabilirsiniz.
+        // Ancak `draggableText` yerine `globalFrame` değerini `DraggableTextView`'in dışına
+        // nasıl aktaracağınızı düşünmelisiniz.
+    }
+
 }

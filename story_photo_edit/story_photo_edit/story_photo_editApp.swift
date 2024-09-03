@@ -7,7 +7,7 @@ import Vision
 struct story_photo_editApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            StoryEditView()
         }
     }
 }
@@ -104,7 +104,6 @@ class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBuff
             var x = faceBoundingBox.origin.x + point.x * faceBoundingBox.width
             var y = faceBoundingBox.origin.y + point.y * faceBoundingBox.height
 
-            // Aynalama düzeltmesi sadece dikey modda yapılır
             if orientation == .portrait || orientation == .portraitUpsideDown {
                 x = 1 - x
             }

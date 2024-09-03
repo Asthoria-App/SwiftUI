@@ -46,13 +46,7 @@ struct DraggableStickerView: View {
                                 GeometryReader { geo in
                                     Color.clear
                                         .onAppear {
-                                            let scale = lastScaleValue * draggableSticker.scale
-                                            let globalFrame = geo.frame(in: .global)
-                                            draggableSticker.globalFrame = CGRect(
-                                                origin: globalFrame.origin,
-                                                size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
-                                            )
-                                            print("Sticker Global Frame: \(draggableSticker.globalFrame)")
+                                            updateStickerState(geo: geo)
                                         }
                                 }
                             )
@@ -111,6 +105,10 @@ struct DraggableStickerView: View {
                             )
                     }
                 }
+                .onAppear {
+                    print("Sticker's Geometry Size: \(geometry.size)")
+                    print("Sticker's Initial Global Frame: \(geometry.frame(in: .global))")
+                }
             }
         }
     }
@@ -130,6 +128,8 @@ struct DraggableStickerView: View {
             ),
             size: transformedSize
         )
+        
+        print("Updated Sticker Global Frame: \(draggableSticker.globalFrame)")
     }
 
 

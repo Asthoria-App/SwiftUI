@@ -165,13 +165,11 @@ struct DraggableDrawingView: View {
         GeometryReader { geometry in
             if !shouldRemove {
                 ZStack {
-                    // Arka plan rengini sadece çizimin boyutları kadar ayarlayın
-                    Color.red
+                    Color.clear
                         .frame(width: draggableDrawing.position.width, height: draggableDrawing.position.height)
                         .position(x: draggableDrawing.position.midX + dragOffset.width,
                                   y: draggableDrawing.position.midY + dragOffset.height)
 
-                    // Çizim
                     Image(uiImage: draggableDrawing.image)
                         .resizable()
                         .scaledToFill()
@@ -255,19 +253,16 @@ struct DraggableDrawingView: View {
     private func updateDrawingState(geo: GeometryProxy) {
         let scale = draggableDrawing.lastScaleValue * draggableDrawing.scale
 
-        // Drawing'in boyutlarını scale sonrası hesaplayın
         let transformedSize = CGSize(
             width: draggableDrawing.position.width * scale,
             height: draggableDrawing.position.height * scale
         )
 
-        // Drawing'in global pozisyonunu hesaplarken scale ve offset'i dikkate alın
         let globalOrigin = CGPoint(
             x: geo.frame(in: .global).origin.x + dragOffset.width + (draggableDrawing.position.width - transformedSize.width) / 2,
             y: geo.frame(in: .global).origin.y + dragOffset.height + (draggableDrawing.position.height - transformedSize.height) / 2
         )
 
-        // Global frame'i hesaplayın
         draggableDrawing.globalFrame = CGRect(
             origin: globalOrigin,
             size: transformedSize

@@ -111,7 +111,7 @@ struct StoryEditView: View {
             ForEach(draggableDrawings.indices, id: \.self) { index in
                 DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
                     .zIndex(draggableDrawings[index].zIndex)
-//                    .background(Color.red)
+                
             }
             
             ForEach(draggableImages.indices, id: \.self) { index in
@@ -130,6 +130,10 @@ struct StoryEditView: View {
                 })
                 .frame(width: 100, height: 100)
                 .zIndex(draggableStickers[index].zIndex)
+                .onAppear {
+                    print(draggableStickers[index].globalFrame, "frame in editview")
+
+                }
            
             }
             
@@ -286,23 +290,32 @@ struct StoryEditView: View {
                     DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage, drawingRect in
                         if let image = drawingImage, let rect = drawingRect {
                             globalIndex += 1
-                            
+
+                            let adjustedRect = CGRect(
+                                x: rect.origin.x + geometry.frame(in: .global).origin.x,
+                                y: rect.origin.y + geometry.frame(in: .global).origin.y,
+                                width: rect.width,
+                                height: rect.height
+                            )
+
                             let newDraggableDrawing = DraggableDrawing(
                                 image: image,
-                                position: rect,
+                                position: adjustedRect,
                                 scale: 1.0,
                                 angle: .zero,
                                 zIndex: globalIndex
                             )
-                            
+
                             draggableDrawings.append(newDraggableDrawing)
                             selectedDrawingIndex = draggableDrawings.count - 1
                         }
                     }
+                    .edgesIgnoringSafeArea(.all)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                 }
                 .zIndex(100)
             }
+
             
             if showOverlay, let selectedIndex = selectedTextIndex {
                 OverlayView(
@@ -326,6 +339,7 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
         }
+        .edgesIgnoringSafeArea(.all)
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
@@ -372,7 +386,6 @@ struct StoryEditView: View {
         
         showGeneratedImageView = true
     }
-    
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = exportedVideoURL else {
             print("Video URL not found")
@@ -386,52 +399,25 @@ struct StoryEditView: View {
             DispatchQueue.main.async {
                 self.processedVideoURL = url
                 print(url, "Processed video URL")
-                // İşlenmiş videoyu göster
                 if let processedURL = url {
                     self.showProcessedVideo(processedURL: processedURL)
                 }
             }
         }
     }
+
     
     private func showProcessedVideo(processedURL: URL) {
         self.processedVideoURL = processedURL
     }
-    
     private func generateOverlayImage(videoFrame: CGRect) -> UIImage {
-        let size = videoFrame.size
-        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        let screenSize = UIScreen.main.bounds.size
+        UIGraphicsBeginImageContextWithOptions(screenSize, false, 0)
 
-        print("Video Frame: \(videoFrame)")
-
-        for image in draggableImages {
-            let adjustedPosition = CGPoint(
-                x: image.globalFrame.origin.x - videoFrame.origin.x,
-                y: image.globalFrame.origin.y - videoFrame.origin.y
-            )
-            
-            let rect = CGRect(origin: adjustedPosition, size: image.globalFrame.size)
-
-            let context = UIGraphicsGetCurrentContext()
-            context?.saveGState()
-            context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.rotate(by: CGFloat(image.angle.radians))
-            context?.translateBy(x: -rect.midX, y: -rect.midY)
-            
-            let bezierPath = UIBezierPath(roundedRect: rect, cornerRadius: 7)
-            bezierPath.addClip()
-            image.image.draw(in: rect)
-            
-            context?.restoreGState()
-        }
+        print("Screen Size: \(screenSize)")
 
         for sticker in draggableStickers {
-            let adjustedPosition = CGPoint(
-                x: sticker.globalFrame.origin.x - videoFrame.origin.x,
-                y: sticker.globalFrame.origin.y - videoFrame.origin.y
-            )
-
-            let rect = CGRect(origin: adjustedPosition, size: sticker.globalFrame.size)
+            let rect = sticker.globalFrame
 
             let context = UIGraphicsGetCurrentContext()
             context?.saveGState()
@@ -443,56 +429,96 @@ struct StoryEditView: View {
             sticker.image.draw(in: rect)
 
             context?.restoreGState()
-      
         }
 
-         
-//        
-//        // Draggable drawings
-//        for drawing in draggableDrawings {
-//            let adjustedPosition = CGPoint(
-//                x: drawing.position.origin.x - videoFrame.origin.x,
-//                y: drawing.position.origin.y - videoFrame.origin.y
-//            )
-//            let rect = CGRect(origin: adjustedPosition, size: CGSize(width: drawing.image.size.width, height: drawing.image.size.height))
-//            
-//            // Drawing boyutunu ve pozisyonunu kontrol etmek için
-//            print("Drawing Position: \(adjustedPosition), Drawing Size: \(rect.size), Drawing Frame: \(rect)")
-//            
-//            drawing.image.draw(in: rect)
-//        }
         
         
-    
-        for drawing in draggableDrawings {
-            let adjustedPosition = CGPoint(
-                x: drawing.globalFrame.midX - videoFrame.origin.x,
-                y: drawing.globalFrame.midY - videoFrame.origin.y
-            )
-            
-
-            let rect = CGRect(origin: adjustedPosition, size: drawing.globalFrame.size)
+        for image in draggableImages {
+        
+            let rect = image.globalFrame
 
             let context = UIGraphicsGetCurrentContext()
             context?.saveGState()
+            
+            context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.rotate(by: CGFloat(image.angle.radians))
+            context?.translateBy(x: -rect.midX, y: -rect.midY)
+            
+            image.image.draw(in: rect)
 
+            context?.restoreGState()
+        }
+        
+        
+        for drawing in draggableDrawings {
+            
+            let rect = drawing.position
+
+            let context = UIGraphicsGetCurrentContext()
+            context?.saveGState()
+            
             context?.translateBy(x: rect.midX, y: rect.midY)
             context?.rotate(by: CGFloat(drawing.angle.radians))
             context?.translateBy(x: -rect.midX, y: -rect.midY)
-
+            
             drawing.image.draw(in: rect)
 
             context?.restoreGState()
         }
-
         
+        // Draw Texts
+           for text in draggableTexts {
+               let context = UIGraphicsGetCurrentContext()
+               context?.saveGState()
+
+               // Scale the font size
+               let scaledFontSize = text.fontSize * text.scale
+               
+               // Create the attributed string
+               let textAttributes: [NSAttributedString.Key: Any] = [
+                .font: text.font.toUIFont(size: text.fontSize),
+                   .foregroundColor: UIColor(text.textColor)
+               ]
+               let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
+
+               // Calculate the size of the text
+               let textSize = attributedString.size()
+
+               // Apply the same position calculation as in DraggableTextView
+               let position = CGPoint(
+                   x: text.position.width + screenSize.width / 2,
+                   y: text.position.height + screenSize.height / 2
+               )
+               
+               // Translate the context to the text position, apply rotation, and then translate back
+               context?.translateBy(x: position.x, y: position.y)
+               context?.rotate(by: CGFloat(text.angle.radians))
+               context?.translateBy(x: -position.x, y: -position.y)
+               context?.scaleBy(x: text.scale, y: text.scale)
+
+               let backgroundRect = CGRect(
+                   origin: CGPoint(x: position.x - textSize.width * text.scale, y: position.y - textSize.height * text.scale),
+                   size: CGSize(width: text.position.width * text.scale, height: text.position.height *  text.scale)
+               )
+               UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).setFill()
+               UIBezierPath(roundedRect: backgroundRect, cornerRadius: 5 * text.scale).fill()
+
+               // Draw the text at the correct position
+               let textRect = CGRect(
+                   origin: CGPoint(x: position.x - textSize.width / 2, y: position.y - textSize.height / 2),
+                   size: textSize
+               )
+               attributedString.draw(in: textRect)
+
+               context?.restoreGState()
+           }
+
         
         let composedImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         
         return composedImage ?? UIImage()
     }
-
 }
 
 struct GeneratedImageView: View {
@@ -526,6 +552,7 @@ struct FullScreenVideoPlayerView: View {
                 player.pause()
                 NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
             }
+           
             .edgesIgnoringSafeArea(.all)
     }
     
@@ -547,7 +574,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         let controller = UIViewController()
         let playerLayer = AVPlayerLayer(player: player)
         
-        
+        playerLayer.videoGravity = .resizeAspectFill
         playerLayer.frame = UIScreen.main.bounds
         controller.view.layer.addSublayer(playerLayer)
         
