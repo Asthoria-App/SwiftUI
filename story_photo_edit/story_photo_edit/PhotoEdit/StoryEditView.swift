@@ -339,7 +339,7 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
         }
-        .edgesIgnoringSafeArea(.all)
+        .edgesIgnoringSafeArea(.top)
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
@@ -393,12 +393,10 @@ struct StoryEditView: View {
         }
         
         let overlayImage = generateOverlayImage(videoFrame: videoFrame)
-        
         let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
         videoProcessor.processVideo { url in
             DispatchQueue.main.async {
                 self.processedVideoURL = url
-                print(url, "Processed video URL")
                 if let processedURL = url {
                     self.showProcessedVideo(processedURL: processedURL)
                 }
@@ -436,7 +434,6 @@ struct StoryEditView: View {
         for image in draggableImages {
         
             let rect = image.globalFrame
-
             let context = UIGraphicsGetCurrentContext()
             context?.saveGState()
             
@@ -481,16 +478,13 @@ struct StoryEditView: View {
                ]
                let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
 
-               // Calculate the size of the text
                let textSize = attributedString.size()
 
-               // Apply the same position calculation as in DraggableTextView
                let position = CGPoint(
                    x: text.position.width + screenSize.width / 2,
                    y: text.position.height + screenSize.height / 2
                )
                
-               // Translate the context to the text position, apply rotation, and then translate back
                context?.translateBy(x: position.x, y: position.y)
                context?.rotate(by: CGFloat(text.angle.radians))
                context?.translateBy(x: -position.x, y: -position.y)
@@ -503,7 +497,6 @@ struct StoryEditView: View {
                UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).setFill()
                UIBezierPath(roundedRect: backgroundRect, cornerRadius: 5 * text.scale).fill()
 
-               // Draw the text at the correct position
                let textRect = CGRect(
                    origin: CGPoint(x: position.x - textSize.width / 2, y: position.y - textSize.height / 2),
                    size: textSize

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct OverlayView: View {
     @Binding var showOverlay: Bool
@@ -20,6 +21,7 @@ struct OverlayView: View {
     
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
+    @State private var keyboardHeight: CGFloat = 0
     
     @State private var showFontCollection: Bool = false
     @State private var showColorCollection: Bool = true
