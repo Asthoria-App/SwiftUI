@@ -30,6 +30,7 @@
 		568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAC2C7625D300A4D361 /* Righteous-Regular.ttf */; };
 		568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */; };
 		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
+		56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56901BC82C8748DA00F611E9 /* VideoProcessor.swift */; };
 		56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */; };
 		56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */; };
 		56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */; };
@@ -61,6 +62,7 @@
 		568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-VariableFont_wght.ttf"; sourceTree = "<group>"; };
 		568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "story-photo-edit-Info.plist"; sourceTree = SOURCE_ROOT; };
 		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
+		56901BC82C8748DA00F611E9 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
 		56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_1.gif; sourceTree = "<group>"; };
 		56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_3.gif; sourceTree = "<group>"; };
 		56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_4.gif; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 				563B94F02C804D6F00649B68 /* DraggableSticker.swift */,
 				563B94FA2C8050C400649B68 /* VerticalSliderView.swift */,
 				563B94EE2C804CB000649B68 /* DraggableText.swift */,
+				56901BC82C8748DA00F611E9 /* VideoProcessor.swift */,
 			);
 			path = PhotoEdit;
 			sourceTree = "<group>";
@@ -263,6 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */,
 				561BAE162C73335200C0991E /* StoryEditView.swift in Sources */,
 				563B94F32C804E0D00649B68 /* TextOverlayView.swift in Sources */,
 				563B94F52C804E9800649B68 /* GradientImagePickerView.swift in Sources */,

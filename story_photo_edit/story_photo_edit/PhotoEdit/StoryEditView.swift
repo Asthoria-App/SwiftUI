@@ -3,10 +3,9 @@ import AVKit
 import UIKit
 import PencilKit
 import AVFoundation
+import AVKit
 
-enum DraggableType {
-    case text, image, sticker, drawing
-}
+
 enum BackgroundType {
     case photo
     case video
@@ -43,6 +42,10 @@ struct StoryEditView: View {
     @State private var backgroundType: BackgroundType = .video
     @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     @State private var processedVideoURL: URL? = nil
+    @State private var selectedEffect: EffectType? = nil
+    
+    
+    @State private var showFullScreenPlayer: Bool = false
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
@@ -51,13 +54,11 @@ struct StoryEditView: View {
     ]
     private func getVideoFrame() -> CGRect? {
         guard let videoURL = exportedVideoURL else {
-            print("Video URL not found")
             return nil
         }
         
         let asset = AVAsset(url: videoURL)
         guard let track = asset.tracks(withMediaType: .video).first else {
-            print("No video track found")
             return nil
         }
         
@@ -81,8 +82,6 @@ struct StoryEditView: View {
         
         return videoFrame
     }
-
-
     
     var body: some View {
         ZStack {
@@ -102,16 +101,18 @@ struct StoryEditView: View {
                 }
             case .video:
                 if let processedVideoURL = processedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: processedVideoURL)
-                } else if let exportedVideoURL = exportedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: exportedVideoURL)
+                    FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons)
+                        .edgesIgnoringSafeArea(.all)
+                }
+                else if let exportedVideoURL = exportedVideoURL {
+                    FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons)
+                        .edgesIgnoringSafeArea(.all)
                 }
             }
             
             ForEach(draggableDrawings.indices, id: \.self) { index in
                 DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
                     .zIndex(draggableDrawings[index].zIndex)
-                
             }
             
             ForEach(draggableImages.indices, id: \.self) { index in
@@ -132,9 +133,7 @@ struct StoryEditView: View {
                 .zIndex(draggableStickers[index].zIndex)
                 .onAppear {
                     print(draggableStickers[index].globalFrame, "frame in editview")
-
                 }
-           
             }
             
             ForEach(draggableTexts.indices, id: \.self) { index in
@@ -188,6 +187,7 @@ struct StoryEditView: View {
                             .frame(width: 35, height: 35)
                             
                             Button(action: {
+                                hideButtons = true
                                 showDrawingOverlay = true
                             }) {
                                 Image(systemName: "pencil.and.scribble")
@@ -287,17 +287,17 @@ struct StoryEditView: View {
             
             if showDrawingOverlay {
                 GeometryReader { geometry in
-                    DrawingOverlay(showDrawingOverlay: $showDrawingOverlay) { drawingImage, drawingRect in
+                    DrawingOverlay(showDrawingOverlay: $showDrawingOverlay, hideButtons: $hideButtons) { drawingImage, drawingRect in
                         if let image = drawingImage, let rect = drawingRect {
                             globalIndex += 1
-
+                            
                             let adjustedRect = CGRect(
                                 x: rect.origin.x + geometry.frame(in: .global).origin.x,
                                 y: rect.origin.y + geometry.frame(in: .global).origin.y,
                                 width: rect.width,
                                 height: rect.height
                             )
-
+                            
                             let newDraggableDrawing = DraggableDrawing(
                                 image: image,
                                 position: adjustedRect,
@@ -305,7 +305,7 @@ struct StoryEditView: View {
                                 angle: .zero,
                                 zIndex: globalIndex
                             )
-
+                            
                             draggableDrawings.append(newDraggableDrawing)
                             selectedDrawingIndex = draggableDrawings.count - 1
                         }
@@ -315,7 +315,6 @@ struct StoryEditView: View {
                 }
                 .zIndex(100)
             }
-
             
             if showOverlay, let selectedIndex = selectedTextIndex {
                 OverlayView(
@@ -343,6 +342,13 @@ struct StoryEditView: View {
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
+        
+        .fullScreenCover(isPresented: $showFullScreenPlayer) {
+            SimpleVideoPlayerView(videoURL: processedVideoURL!)
+                .edgesIgnoringSafeArea(.all)
+            
+        }
+        
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
                 .onDisappear {
@@ -355,6 +361,7 @@ struct StoryEditView: View {
                     }
                 }
         }
+        
         .sheet(isPresented: $showStickerPicker) {
             BottomSheetStickerPickerView(selectedStickerImage: $selectedStickerImage)
                 .onDisappear {
@@ -373,9 +380,6 @@ struct StoryEditView: View {
             hideButtons = newValue
         }
     }
-
-    
-    
     
     private func generateImageFromPhoto() {
         let window = UIApplication.shared.windows.first { $0.isKeyWindow }
@@ -383,129 +387,114 @@ struct StoryEditView: View {
         generatedImage = renderer.image { context in
             window?.layer.render(in: context.cgContext)
         }
-        
         showGeneratedImageView = true
     }
+    
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = exportedVideoURL else {
             print("Video URL not found")
             return
         }
         
-        let overlayImage = generateOverlayImage(videoFrame: videoFrame)
+        let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
         let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+        
         videoProcessor.processVideo { url in
             DispatchQueue.main.async {
                 self.processedVideoURL = url
                 if let processedURL = url {
                     self.showProcessedVideo(processedURL: processedURL)
+                    self.showFullScreenPlayer = true
                 }
             }
         }
     }
-
     
     private func showProcessedVideo(processedURL: URL) {
         self.processedVideoURL = processedURL
     }
-    private func generateOverlayImage(videoFrame: CGRect) -> UIImage {
+    
+    private func generateOverlayImage(videoFrame: CGRect, selectedEffect: EffectType?) -> UIImage {
         let screenSize = UIScreen.main.bounds.size
         UIGraphicsBeginImageContextWithOptions(screenSize, false, 0)
-
-        print("Screen Size: \(screenSize)")
-
-        for sticker in draggableStickers {
-            let rect = sticker.globalFrame
-
-            let context = UIGraphicsGetCurrentContext()
-            context?.saveGState()
-            
-            context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.rotate(by: CGFloat(sticker.angle.radians))
-            context?.translateBy(x: -rect.midX, y: -rect.midY)
-            
-            sticker.image.draw(in: rect)
-
-            context?.restoreGState()
-        }
-
         
+        let context = UIGraphicsGetCurrentContext()
+        
+        var allElements: [(image: UIImage?, text: NSAttributedString?, rect: CGRect, angle: CGFloat, zIndex: CGFloat)] = []
+        
+        for sticker in draggableStickers {
+            allElements.append((image: sticker.image, text: nil, rect: sticker.globalFrame, angle: sticker.angle.radians, zIndex: sticker.zIndex))
+        }
         
         for image in draggableImages {
-        
-            let rect = image.globalFrame
-            let context = UIGraphicsGetCurrentContext()
-            context?.saveGState()
-            
-            context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.rotate(by: CGFloat(image.angle.radians))
-            context?.translateBy(x: -rect.midX, y: -rect.midY)
-            
-            image.image.draw(in: rect)
-
-            context?.restoreGState()
+            allElements.append((image: image.image, text: nil, rect: image.globalFrame, angle: image.angle.radians, zIndex: image.zIndex))
         }
-        
         
         for drawing in draggableDrawings {
-            
-            let rect = drawing.position
-
-            let context = UIGraphicsGetCurrentContext()
+            allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
+        }
+        
+        for text in draggableTexts {
+            let scaledFontSize = text.fontSize * text.scale
+            let textAttributes: [NSAttributedString.Key: Any] = [
+                .font: text.font.toUIFont(size: scaledFontSize)!,
+                .foregroundColor: UIColor(text.textColor)
+            ]
+            let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
+            let textSize = attributedString.size()
+            let rect = CGRect(
+                origin: CGPoint(x: text.position.width + screenSize.width / 2 - textSize.width / 2,
+                                y: text.position.height + screenSize.height / 2 - textSize.height / 2),
+                size: textSize
+            )
+            allElements.append((image: nil, text: attributedString, rect: rect, angle: text.angle.radians, zIndex: text.zIndex))
+        }
+        
+        allElements.sort { $0.zIndex < $1.zIndex }
+        
+        if let selectedEffect = selectedEffect {
+            if case .color(let colorOverlay) = selectedEffect {
+                context?.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
+                context?.fill(CGRect(origin: .zero, size: screenSize))
+            }
+        }
+        
+        for element in allElements {
+            let rect = element.rect
             context?.saveGState()
             
             context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.rotate(by: CGFloat(drawing.angle.radians))
+            context?.rotate(by: element.angle)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
             
-            drawing.image.draw(in: rect)
-
+            if let image = element.image {
+                let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
+                path.addClip()
+                
+                let imageSize = image.size
+                let aspectWidth = rect.width / imageSize.width
+                let aspectHeight = rect.height / imageSize.height
+                let aspectRatio = max(aspectWidth, aspectHeight)
+                
+                let newWidth = imageSize.width * aspectRatio
+                let newHeight = imageSize.height * aspectRatio
+                let drawRect = CGRect(
+                    x: rect.midX - newWidth / 2,
+                    y: rect.midY - newHeight / 2,
+                    width: newWidth,
+                    height: newHeight
+                )
+                
+                image.draw(in: drawRect)
+            }
+            
+            if let text = element.text {
+                UIColor.clear.setFill()
+                text.draw(in: rect)
+            }
+            
             context?.restoreGState()
         }
-        
-        // Draw Texts
-           for text in draggableTexts {
-               let context = UIGraphicsGetCurrentContext()
-               context?.saveGState()
-
-               // Scale the font size
-               let scaledFontSize = text.fontSize * text.scale
-               
-               // Create the attributed string
-               let textAttributes: [NSAttributedString.Key: Any] = [
-                .font: text.font.toUIFont(size: text.fontSize),
-                   .foregroundColor: UIColor(text.textColor)
-               ]
-               let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
-
-               let textSize = attributedString.size()
-
-               let position = CGPoint(
-                   x: text.position.width + screenSize.width / 2,
-                   y: text.position.height + screenSize.height / 2
-               )
-               
-               context?.translateBy(x: position.x, y: position.y)
-               context?.rotate(by: CGFloat(text.angle.radians))
-               context?.translateBy(x: -position.x, y: -position.y)
-               context?.scaleBy(x: text.scale, y: text.scale)
-
-               let backgroundRect = CGRect(
-                   origin: CGPoint(x: position.x - textSize.width * text.scale, y: position.y - textSize.height * text.scale),
-                   size: CGSize(width: text.position.width * text.scale, height: text.position.height *  text.scale)
-               )
-               UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).setFill()
-               UIBezierPath(roundedRect: backgroundRect, cornerRadius: 5 * text.scale).fill()
-
-               let textRect = CGRect(
-                   origin: CGPoint(x: position.x - textSize.width / 2, y: position.y - textSize.height / 2),
-                   size: textSize
-               )
-               attributedString.draw(in: textRect)
-
-               context?.restoreGState()
-           }
-
         
         let composedImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -534,19 +523,27 @@ struct FullScreenVideoPlayerView: View {
     var videoURL: URL
     
     @State private var player = AVPlayer()
+    @Binding var selectedEffect: EffectType?
+    @Binding var hideButtons: Bool
     
     var body: some View {
-        VideoPlayerContainer(player: player)
-            .onAppear {
-                setupPlayer()
-                player.play()
+        VStack {
+            VideoPlayerContainer(player: player, selectedEffect: $selectedEffect)
+                .onAppear {
+                    setupPlayer()
+                    player.play()
+                }
+                .onDisappear {
+                    player.pause()
+                    NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+                }
+                .edgesIgnoringSafeArea(.all)
+            
+            if !hideButtons {
+                EffectSelectionView(selectedEffect: $selectedEffect)
+                    .frame(height: 100)
             }
-            .onDisappear {
-                player.pause()
-                NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
-            }
-           
-            .edgesIgnoringSafeArea(.all)
+        }
     }
     
     private func setupPlayer() {
@@ -562,15 +559,18 @@ struct FullScreenVideoPlayerView: View {
 
 struct VideoPlayerContainer: UIViewControllerRepresentable {
     var player: AVPlayer
+    @Binding var selectedEffect: EffectType?
     
     func makeUIViewController(context: Context) -> UIViewController {
         let controller = UIViewController()
         let playerLayer = AVPlayerLayer(player: player)
-        
         playerLayer.videoGravity = .resizeAspectFill
         playerLayer.frame = UIScreen.main.bounds
-        controller.view.layer.addSublayer(playerLayer)
         
+        let containerView = UIView(frame: UIScreen.main.bounds)
+        containerView.layer.addSublayer(playerLayer)
+        
+        controller.view = containerView
         return controller
     }
     
@@ -578,18 +578,173 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
             playerLayer.frame = UIScreen.main.bounds
         }
+        
+        uiViewController.view.subviews.forEach { $0.removeFromSuperview() }
+        
+        if let selectedEffect = selectedEffect, case .color(let color) = selectedEffect {
+            let overlayView = UIView(frame: UIScreen.main.bounds)
+            overlayView.backgroundColor = UIColor(color)
+            overlayView.alpha = 0.1
+            uiViewController.view.addSubview(overlayView)
+        }
+    }
+    
+    
+}
+
+struct EffectSelectionView: View {
+    @Binding var selectedEffect: EffectType?
+    let effects: [EffectType] = [.color(.red), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan)]
+    
+    @State private var currentIndex: Int = 0
+    @State private var scrollOffset: CGFloat = 0.0
+    @State private var dragOffset: CGFloat = 0.0
+    
+    let buttonWidth: CGFloat = 86 // 56 buton boyutu + 30 aralık
+    
+    var body: some View {
+        VStack {
+            GeometryReader { geometry in
+                ScrollViewReader { scrollViewProxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 30) {
+                            ForEach(effects.indices, id: \.self) { index in
+                                GeometryReader { innerGeometry in
+                                    let scale = scaleFactor(for: innerGeometry, in: geometry)
+                                    
+                                    EffectButton(effectType: effects[index], selectedEffect: $selectedEffect)
+                                        .frame(width: 56 * scale, height: 56 * scale)
+                                        .cornerRadius(28 * scale)
+                                        .background(Color.green )
+                                }
+                                .frame(width: 56, height: 56)
+                            }
+                        }
+                        .padding(.horizontal, (geometry.size.width - buttonWidth) / 2)
+                        .offset(x: scrollOffset + dragOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    dragOffset = value.translation.width
+                                }
+                                .onEnded { value in
+                                    dragOffset = 0
+                                    
+                                    // Kaydırma işlemi bittiğinde en yakın butonu ortalayacak şekilde hesapla
+                                    let totalOffset = scrollOffset + value.translation.width
+                                    let snapIndex = Int(round(totalOffset / buttonWidth)) // En yakın butonun indexini hesapla
+                                    let nearestIndex = min(max(currentIndex - snapIndex, 0), effects.count - 1)
+                                    
+                                    currentIndex = nearestIndex
+                                    withAnimation(.easeOut) {
+                                        scrollOffset = -CGFloat(currentIndex) * 56
+                                    }
+                                }
+                        )
+                    }
+                    .onAppear {
+                        // İlk başta ortadaki butonu halkanın ortasında göster
+                        withAnimation(.easeOut) {
+                            scrollOffset = -CGFloat(currentIndex) * buttonWidth
+                        }
+                    }
+                }
+            }
+            .frame(height: 150)
+            
+            // Halkanın altında bir açıklama metni
+            Text(selectedEffect?.description ?? "Select an effect")
+                .foregroundColor(.white)
+                .padding(.top, 10)
+        }
+        .background(Color.black.opacity(0.7))
+    }
+    
+    // Ortaya yaklaşınca butonlar büyüsün
+    private func scaleFactor(for geometry: GeometryProxy, in fullGeometry: GeometryProxy) -> CGFloat {
+        let midX = geometry.frame(in: .global).midX
+        let screenMidX = fullGeometry.size.width / 2
+        let distance = abs(screenMidX - midX)
+        let maxDistance = fullGeometry.size.width / 2
+        let scale = max(0.6, 1 - (distance / maxDistance))
+        return scale
     }
 }
-import UIKit
 
-extension UIView {
-    func getTransformedRect() -> CGRect {
-        let transformedPath = CGPath(rect: self.bounds, transform: &self.transform)
-        let boundingBox = transformedPath.boundingBox
-        let adjustedPosition = CGPoint(
-            x: self.frame.origin.x + (self.frame.size.width - boundingBox.size.width) / 2,
-            y: self.frame.origin.y + (self.frame.size.height - boundingBox.size.height) / 2
-        )
-        return CGRect(origin: adjustedPosition, size: boundingBox.size)
+enum EffectType: Hashable, Equatable {
+    case color(Color)
+    
+    var description: String {
+        switch self {
+        case .color(let color):
+            return "Color: \(color.description.capitalized)"
+        }
+    }
+}
+
+struct EffectButton: View {
+    var effectType: EffectType
+    @Binding var selectedEffect: EffectType?
+    
+    var body: some View {
+        Button(action: {
+            selectedEffect = effectType
+        }) {
+            Circle()
+                .fill(color(for: effectType))
+                .overlay(
+                    Circle()
+                        .stroke(selectedEffect == effectType ? Color.blue : Color.clear, lineWidth: 4)
+                )
+        }
+    }
+    
+    private func color(for effect: EffectType) -> Color {
+        switch effect {
+        case .color(let color):
+            return color
+        }
+    }
+}
+
+extension EffectType {
+    var name: String {
+        switch self {
+        case .color(.red): return "Red"
+        case .color(.blue): return "Blue"
+        case .color(.purple): return "Purple"
+        case .color(.brown): return "Brown"
+        case .color(.cyan): return "Cyan"
+        default: return "None"
+        }
+    }
+}
+
+
+struct SimpleVideoPlayerView: UIViewControllerRepresentable {
+    var videoURL: URL
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let playerViewController = AVPlayerViewController()
+        let player = AVPlayer(url: videoURL)
+        
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
+            player.seek(to: .zero)
+            player.play()
+        }
+        
+        playerViewController.player = player
+        playerViewController.videoGravity = .resizeAspectFill
+        
+        playerViewController.showsPlaybackControls = false
+        player.play()
+        return playerViewController
+    }
+    
+    func updateUIViewController(_ playerViewController: AVPlayerViewController, context: Context) {
+    }
+    
+    static func dismantleUIViewController(_ playerViewController: AVPlayerViewController, coordinator: ()) {
+        NotificationCenter.default.removeObserver(playerViewController, name: .AVPlayerItemDidPlayToEndTime, object: nil)
     }
 }

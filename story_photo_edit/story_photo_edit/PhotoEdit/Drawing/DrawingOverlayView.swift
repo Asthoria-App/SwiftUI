@@ -11,6 +11,7 @@ import PencilKit
 
 struct DrawingOverlay: View {
     @Binding var showDrawingOverlay: Bool
+    @Binding var hideButtons: Bool
     @State private var tool: PKTool = PKInkingTool(.pen, color: .black, width: 5)
     @State private var selectedTool: ToolType = .pen
     @State private var lineWidth: CGFloat = 5
@@ -87,6 +88,7 @@ struct DrawingOverlay: View {
                         print("Drawing Rect: \(drawingRect)")
                         let drawingImage = captureDrawing(from: canvasView, in: drawingRect)
                         showDrawingOverlay = false
+                        hideButtons = false
                         onComplete(drawingImage, drawingRect)
                     }) {
                         Text("Done")
