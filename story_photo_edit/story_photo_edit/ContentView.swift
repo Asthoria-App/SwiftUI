@@ -50,7 +50,7 @@ public class VideoProcessor: ObservableObject {
 
         let renderSize = try await videoTrack.load(.naturalSize)
         videoComposition.renderSize = renderSize
-        videoComposition.frameDuration = CMTime(value: 1, timescale: 10) // 30fps olarak ayarlandı
+        videoComposition.frameDuration = CMTime(value: 1, timescale: 10)
         
         print("Video Natural Size: \(renderSize)")
         

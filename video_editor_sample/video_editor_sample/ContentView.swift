@@ -1,6 +1,6 @@
 import SwiftUI
 import AVKit
-import VideoProcessorSDK // Assuming this is your custom SDK
+import VideoProcessorSDK 
 
 struct ContentView: View {
     @StateObject private var videoProcessor = VideoProcessor(videoURL: Bundle.main.url(forResource: "1", withExtension: "mp4")!)

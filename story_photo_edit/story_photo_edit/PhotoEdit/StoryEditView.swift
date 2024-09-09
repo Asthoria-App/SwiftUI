@@ -40,7 +40,13 @@ struct StoryEditView: View {
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+//    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+    
+    @State private var originalVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+    @State private var monochromeVideoURL: URL? = nil
+    @State private var currentProcessedVideoURL: URL? = nil
+
     @State private var processedVideoURL: URL? = nil
     @State private var selectedEffect: EffectType? = nil
     
@@ -252,11 +258,11 @@ struct StoryEditView: View {
                                     }
                                 }
                             }
-                            .font(.title)
+                            .font(.title2)
                             .padding()
                             .foregroundColor(.white)
                             .cornerRadius(10)
-                            .padding(.bottom, 20)
+                           
                             
                         }
                     }
@@ -395,21 +401,220 @@ struct StoryEditView: View {
             print("Video URL not found")
             return
         }
-        
+
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
-        let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
         
-        videoProcessor.processVideo { url in
-            DispatchQueue.main.async {
-                self.processedVideoURL = url
-                if let processedURL = url {
-                    self.showProcessedVideo(processedURL: processedURL)
-                    self.showFullScreenPlayer = true
+        if let effect = selectedEffect {
+            switch effect {
+            case .monochrome:
+                processMonochromeVideo(videoURL: videoURL) { url in
+                    DispatchQueue.main.async {
+                        self.processedVideoURL = url
+                        if let processedURL = url {
+                            
+                            self.showProcessedVideo(processedURL: processedURL)
+                            self.showFullScreenPlayer = true
+                        }
+                    }
+                }
+                
+            case .color:
+                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+                videoProcessor.processVideo { url in
+                    DispatchQueue.main.async {
+                        self.processedVideoURL = url
+                        if let processedURL = url {
+                            self.showProcessedVideo(processedURL: processedURL)
+                            self.showFullScreenPlayer = true
+                        }
+                    }
+                }
+            }
+        } else {
+            let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+            videoProcessor.processVideo { url in
+                DispatchQueue.main.async {
+                    self.processedVideoURL = url
+                    if let processedURL = url {
+                        self.showProcessedVideo(processedURL: processedURL)
+                        self.showFullScreenPlayer = true
+                    }
                 }
             }
         }
     }
-    
+
+    private func processMonochromeVideo(videoURL: URL, completion: @escaping (URL?) -> Void) {
+        let asset = AVAsset(url: videoURL)
+
+        // List all the properties you need to load
+        let keys = ["tracks", "preferredTransform", "naturalSize", "nominalFrameRate"]
+
+        // Load the asset's properties asynchronously to avoid blocking the main thread
+        asset.loadValuesAsynchronously(forKeys: keys) {
+            var error: NSError? = nil
+
+            // Check if all the required properties were loaded successfully
+            for key in keys {
+                let status = asset.statusOfValue(forKey: key, error: &error)
+                if status != .loaded {
+                    print("Failed to load \(key): \(error?.localizedDescription ?? "Unknown error")")
+                    completion(nil)
+                    return
+                }
+            }
+
+            // Now that the asset is loaded, proceed with AVAssetReader setup
+            self.createAVAssetReader(from: asset, completion: completion)
+        }
+    }
+    private func createAVAssetReader(from asset: AVAsset, completion: @escaping (URL?) -> Void) {
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
+
+        do {
+            let reader = try AVAssetReader(asset: asset)
+            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+                print("Failed to find video track in asset")
+                completion(nil)
+                return
+            }
+
+            // Set up reader output
+            let readerOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ])
+            reader.add(readerOutput)
+
+            // Proceed with setting up the writer and processing the video
+            self.processVideoFrames(reader: reader, videoTrack: videoTrack, outputURL: outputURL, completion: completion)
+
+        } catch {
+            print("Failed to create AVAssetReader: \(error.localizedDescription)")
+            if let nsError = error as NSError? {
+                print("Underlying error code: \(nsError.code)")
+                if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+                    print("Underlying error: \(underlyingError.localizedDescription)")
+                }
+            }
+            completion(nil)
+        }
+    }
+
+    private func processVideoFrames(reader: AVAssetReader, videoTrack: AVAssetTrack, outputURL: URL, completion: @escaping (URL?) -> Void) {
+        guard let writer = try? AVAssetWriter(outputURL: outputURL, fileType: .mp4) else {
+            print("Failed to create AVAssetWriter")
+            completion(nil)
+            return
+        }
+
+        let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: videoTrack.naturalSize.width,
+            AVVideoHeightKey: videoTrack.naturalSize.height
+        ])
+        writer.add(writerInput)
+
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: nil)
+
+        let ciContext = CIContext()
+        let filter = CIFilter(name: "CIColorMonochrome")
+        filter?.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
+        filter?.setValue(1.0, forKey: kCIInputIntensityKey)
+
+        reader.startReading()
+        writer.startWriting()
+        writer.startSession(atSourceTime: .zero)
+
+        var frameCount: Int64 = 0
+        let frameDuration = CMTime(value: 1, timescale: Int32(videoTrack.nominalFrameRate))
+
+        // Process each frame
+        while reader.status == .reading, let sampleBuffer = reader.outputs.first?.copyNextSampleBuffer(),
+              let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+
+            let presentationTime = CMTime(value: frameCount, timescale: Int32(videoTrack.nominalFrameRate))
+
+            // Apply the monochrome filter
+            let ciImage = CIImage(cvImageBuffer: imageBuffer)
+            filter?.setValue(ciImage, forKey: kCIInputImageKey)
+            guard let outputImage = filter?.outputImage else {
+                print("Failed to apply filter to frame")
+                continue
+            }
+
+            // Create a pixel buffer for the output
+            var pixelBuffer: CVPixelBuffer?
+            let status = CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pixelBuffer)
+            guard status == kCVReturnSuccess, let finalPixelBuffer = pixelBuffer else {
+                print("Failed to create pixel buffer")
+                continue
+            }
+
+            // Render the filtered image to the pixel buffer
+            ciContext.render(outputImage, to: finalPixelBuffer)
+
+            // Append the frame to the writer
+            while !writerInput.isReadyForMoreMediaData { /* Wait */ }
+            adaptor.append(finalPixelBuffer, withPresentationTime: presentationTime)
+
+            frameCount += 1
+        }
+
+        // Finish writing
+        writerInput.markAsFinished()
+        writer.finishWriting {
+            if writer.status == .completed {
+                print("Video export completed successfully")
+                completion(outputURL)
+            } else {
+                print("Video export failed: \(writer.error?.localizedDescription ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
+
+
+    private func exportVideoWithComposition(asset: AVAsset, videoComposition: AVVideoComposition, completion: @escaping (URL?) -> Void) {
+        // Ensure output directory is writable
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
+        
+        // Try using a passthrough preset to avoid re-encoding the video
+        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
+            print("Failed to create export session")
+            completion(nil)
+            return
+        }
+        
+        // Set up the export session settings
+        exportSession.outputURL = outputURL
+        exportSession.outputFileType = .mp4
+        exportSession.videoComposition = videoComposition
+        exportSession.shouldOptimizeForNetworkUse = true
+
+        // Start the export process
+        exportSession.exportAsynchronously {
+            switch exportSession.status {
+            case .completed:
+                print("Export completed successfully at \(outputURL.path)")
+                completion(outputURL)
+            case .failed:
+                if let error = exportSession.error {
+                    print("Export failed with error: \(error.localizedDescription)")
+                    if let underlyingError = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError {
+                        print("Underlying error: \(underlyingError.localizedDescription)")
+                    }
+                }
+                completion(nil)
+            case .cancelled:
+                print("Export cancelled")
+                completion(nil)
+            default:
+                print("Export failed with unknown error")
+                completion(nil)
+            }
+        }
+    }
+
     private func showProcessedVideo(processedURL: URL) {
         self.processedVideoURL = processedURL
     }
@@ -559,8 +764,9 @@ struct FullScreenVideoPlayerView: View {
 
 struct VideoPlayerContainer: UIViewControllerRepresentable {
     var player: AVPlayer
-    @Binding var selectedEffect: EffectType?
     
+    @Binding var selectedEffect: EffectType?
+
     func makeUIViewController(context: Context) -> UIViewController {
         let controller = UIViewController()
         let playerLayer = AVPlayerLayer(player: player)
@@ -573,35 +779,106 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         controller.view = containerView
         return controller
     }
-    
+
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
             playerLayer.frame = UIScreen.main.bounds
         }
-        
+
+        // Remove existing subviews (previous overlays)
         uiViewController.view.subviews.forEach { $0.removeFromSuperview() }
-        
-        if let selectedEffect = selectedEffect, case .color(let color) = selectedEffect {
-            let overlayView = UIView(frame: UIScreen.main.bounds)
-            overlayView.backgroundColor = UIColor(color)
-            overlayView.alpha = 0.1
-            uiViewController.view.addSubview(overlayView)
+
+        // Apply the selected effect
+        if let selectedEffect = selectedEffect {
+            switch selectedEffect {
+            case .color(let color):
+                // Ensure the original video is shown (reset any previous compositions)
+                resetVideoCompositionIfNeeded()
+
+                // Add color overlay view if the selected effect is a color
+                let overlayView = UIView(frame: UIScreen.main.bounds)
+                overlayView.backgroundColor = UIColor(color)
+                overlayView.alpha = 0.1  // Adjust the opacity as needed
+                uiViewController.view.addSubview(overlayView)
+
+            case .monochrome:
+                // Apply monochrome filter by adding a CIFilter to the playerLayer
+                if let currentPlayerItem = player.currentItem {
+                    let filter = CIFilter(name: "CIColorMonochrome")
+                    filter?.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
+                    filter?.setValue(1.0, forKey: kCIInputIntensityKey)
+
+                    let videoComposition = AVVideoComposition(asset: currentPlayerItem.asset) { request in
+                        let source = request.sourceImage.clampedToExtent()
+                        filter?.setValue(source, forKey: kCIInputImageKey)
+
+                        if let output = filter?.outputImage {
+                            let croppedOutput = output.cropped(to: request.sourceImage.extent)
+                            request.finish(with: croppedOutput, context: nil)
+                        } else {
+                            request.finish(with: request.sourceImage, context: nil)
+                        }
+                    }
+                    currentPlayerItem.videoComposition = videoComposition
+                }
+            }
         }
     }
-    
-    
+
+    private func resetVideoCompositionIfNeeded() {
+        // Reset any video composition to ensure the original video plays for color overlays
+        if let currentPlayerItem = player.currentItem {
+            currentPlayerItem.videoComposition = nil
+        }
+    }
+}
+
+
+struct EffectButton: View {
+    var effectType: EffectType
+    @Binding var selectedEffect: EffectType?
+
+    var body: some View {
+        Button(action: {
+            selectedEffect = effectType
+        }) {
+            ZStack {
+                // The image that fills the button
+                Image(imageName(for: effectType))
+                    .resizable()
+                    .scaledToFill()
+                    .clipShape(Circle())
+
+               
+                Circle()
+                    .stroke(selectedEffect == effectType ? Color.blue : Color.white, lineWidth: 2)
+            }
+            .frame(width: 56, height: 56)
+        }
+    }
+
+    private func imageName(for effect: EffectType) -> String {
+        switch effect {
+        case .color(.red): return "view"
+        case .color(.blue): return "view2"
+        case .color(.purple): return "view3"
+        case .color(.brown): return "view4"
+        case .color(.cyan): return "view"
+        default: return "view2"
+        }
+    }
 }
 
 struct EffectSelectionView: View {
     @Binding var selectedEffect: EffectType?
-    let effects: [EffectType] = [.color(.red), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .color(.blue), .color(.purple), .color(.brown), .color(.cyan)]
-    
+    let effects: [EffectType] = [.color(.red), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .monochrome]
+
     @State private var currentIndex: Int = 0
     @State private var scrollOffset: CGFloat = 0.0
     @State private var dragOffset: CGFloat = 0.0
     
-    let buttonWidth: CGFloat = 86 // 56 buton boyutu + 30 aralık
-    
+    let buttonWidth: CGFloat = 86
+
     var body: some View {
         VStack {
             GeometryReader { geometry in
@@ -609,15 +886,15 @@ struct EffectSelectionView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 30) {
                             ForEach(effects.indices, id: \.self) { index in
-                                GeometryReader { innerGeometry in
-                                    let scale = scaleFactor(for: innerGeometry, in: geometry)
-                                    
+                                VStack {
                                     EffectButton(effectType: effects[index], selectedEffect: $selectedEffect)
-                                        .frame(width: 56 * scale, height: 56 * scale)
-                                        .cornerRadius(28 * scale)
-                                        .background(Color.green )
+                                        .frame(width: 56, height: 56)
+                                        .padding(.top, 10)
+                                    
+                                    Text(effects[index].name)
+                                        .font(.caption)
+                                        .foregroundColor(selectedEffect == effects[index] ? Color.blue : Color.white)
                                 }
-                                .frame(width: 56, height: 56)
                             }
                         }
                         .padding(.horizontal, (geometry.size.width - buttonWidth) / 2)
@@ -629,12 +906,9 @@ struct EffectSelectionView: View {
                                 }
                                 .onEnded { value in
                                     dragOffset = 0
-                                    
-                                    // Kaydırma işlemi bittiğinde en yakın butonu ortalayacak şekilde hesapla
                                     let totalOffset = scrollOffset + value.translation.width
-                                    let snapIndex = Int(round(totalOffset / buttonWidth)) // En yakın butonun indexini hesapla
+                                    let snapIndex = Int(round(totalOffset / buttonWidth))
                                     let nearestIndex = min(max(currentIndex - snapIndex, 0), effects.count - 1)
-                                    
                                     currentIndex = nearestIndex
                                     withAnimation(.easeOut) {
                                         scrollOffset = -CGFloat(currentIndex) * 56
@@ -642,72 +916,35 @@ struct EffectSelectionView: View {
                                 }
                         )
                     }
+                   
                     .onAppear {
-                        // İlk başta ortadaki butonu halkanın ortasında göster
                         withAnimation(.easeOut) {
                             scrollOffset = -CGFloat(currentIndex) * buttonWidth
                         }
                     }
                 }
             }
-            .frame(height: 150)
+            .frame(height: 190)
             
-            // Halkanın altında bir açıklama metni
-            Text(selectedEffect?.description ?? "Select an effect")
-                .foregroundColor(.white)
-                .padding(.top, 10)
+         
         }
-        .background(Color.black.opacity(0.7))
-    }
-    
-    // Ortaya yaklaşınca butonlar büyüsün
-    private func scaleFactor(for geometry: GeometryProxy, in fullGeometry: GeometryProxy) -> CGFloat {
-        let midX = geometry.frame(in: .global).midX
-        let screenMidX = fullGeometry.size.width / 2
-        let distance = abs(screenMidX - midX)
-        let maxDistance = fullGeometry.size.width / 2
-        let scale = max(0.6, 1 - (distance / maxDistance))
-        return scale
+        .background(Color.black.opacity(0.5))
     }
 }
 
 enum EffectType: Hashable, Equatable {
     case color(Color)
+    case monochrome
     
     var description: String {
         switch self {
         case .color(let color):
             return "Color: \(color.description.capitalized)"
+        case .monochrome:
+            return "Monochrome"
         }
     }
-}
 
-struct EffectButton: View {
-    var effectType: EffectType
-    @Binding var selectedEffect: EffectType?
-    
-    var body: some View {
-        Button(action: {
-            selectedEffect = effectType
-        }) {
-            Circle()
-                .fill(color(for: effectType))
-                .overlay(
-                    Circle()
-                        .stroke(selectedEffect == effectType ? Color.blue : Color.clear, lineWidth: 4)
-                )
-        }
-    }
-    
-    private func color(for effect: EffectType) -> Color {
-        switch effect {
-        case .color(let color):
-            return color
-        }
-    }
-}
-
-extension EffectType {
     var name: String {
         switch self {
         case .color(.red): return "Red"
@@ -715,10 +952,13 @@ extension EffectType {
         case .color(.purple): return "Purple"
         case .color(.brown): return "Brown"
         case .color(.cyan): return "Cyan"
+        case .monochrome: return "Monochrome"
         default: return "None"
         }
     }
 }
+
+
 
 
 struct SimpleVideoPlayerView: UIViewControllerRepresentable {
