@@ -12,6 +12,7 @@ enum BackgroundType {
 }
 
 struct StoryEditView: View {
+    
     @State private var showDeleteButton: Bool = false
     @State private var showOverlay: Bool = false
     @State private var hideButtons: Bool = false
@@ -34,14 +35,23 @@ struct StoryEditView: View {
     @State private var selectedImageIndex: Int? = nil
     @State private var showStickerPicker: Bool = false
     @State private var draggableStickers: [DraggableSticker] = []
+    @State private var draggableTimes: [DraggableTime] = []
+    @State private var selectedTimeIndex: Int? = nil
+    @State private var draggableLocations: [DraggableLocation] = []
+    @State private var selectedLocationIndex: Int? = nil
+
+    @State private var showTagOverlay: Bool = false
+    @State private var tagText: String = ""
+    
+    
     @State private var selectedStickerImage: UIImage? = nil
     @State private var globalIndex: CGFloat = 1
     @State private var showDrawingOverlay: Bool = false
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-        @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
-//    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+    //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     
     
     @State private var processedVideoURL: URL? = nil
@@ -128,6 +138,26 @@ struct StoryEditView: View {
                     }
             }
             
+            ForEach(draggableTimes.indices, id: \.self) { index in
+                DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
+                    .frame(width: 200, height: 80)
+                    .aspectRatio(contentMode: .fit)
+                    .zIndex(draggableTimes[index].zIndex)
+                    .onAppear {
+                        print(" time Image Position: \(draggableTimes[index].position), time Image Size: \(draggableTimes[index].image.size)")
+                    }
+            }
+            ForEach(draggableLocations.indices, id: \.self) { index in
+                DraggableLocationView(
+                    draggableLocation: $draggableLocations[index],
+                    selectedLocationIndex: $selectedLocationIndex,
+                    index: index,
+                    hideButtons: $hideButtons
+                )
+                .frame(width: 200, height: 60)
+                .zIndex(draggableLocations[index].zIndex)
+            }
+
             ForEach(draggableStickers.indices, id: \.self) { index in
                 DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100), onDelete: {
                     draggableStickers.remove(at: index)
@@ -163,14 +193,24 @@ struct StoryEditView: View {
             }
             if !showDrawingOverlay && !hideButtons {
                 GeometryReader { geometry in
-                    AdditionalButtonsView(addTimeImage: addTimeImageToView)
-                        .frame(width: 100)
-                        .position(x: geometry.size.width - 30,
-                                  y: geometry.size.height / 2)
+                    AdditionalButtonsView(addTimeImage: {
+                        let newDraggableTime = DraggableTime(image: UIImage(), position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
+                        globalIndex += 1
+                        draggableTimes.append(newDraggableTime)
+                        selectedTimeIndex = draggableTimes.count - 1
+                    }, addLocationImage: {
+                        let newDraggableLocation = DraggableLocation(image: UIImage(), position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
+                        globalIndex += 1
+                        draggableLocations.append(newDraggableLocation)
+                        selectedLocationIndex = draggableLocations.count - 1
+                    })
+                    .frame(width: 100)
+                    .position(x: geometry.size.width - 30, y: geometry.size.height / 2)
                 }
                 .zIndex(100)
             }
-
+            
+            
             
             
             if !showDrawingOverlay {
@@ -187,7 +227,7 @@ struct StoryEditView: View {
                             }
                             .frame(width: 35, height: 35)
                             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+                            
                             .padding(.leading, 15)
                             
                             Spacer()
@@ -202,7 +242,7 @@ struct StoryEditView: View {
                             }
                             .frame(width: 35, height: 35)
                             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+                            
                             
                             Button(action: {
                                 hideButtons = true
@@ -215,7 +255,7 @@ struct StoryEditView: View {
                             }
                             .frame(width: 35, height: 35)
                             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+                            
                             
                             Button(action: {
                                 let newText = DraggableText(
@@ -258,7 +298,6 @@ struct StoryEditView: View {
                         }
                         
                         .frame(width: UIScreen.main.bounds.width)
-                        
                         .padding(.top, 20)
                     }
                     
@@ -280,7 +319,6 @@ struct StoryEditView: View {
                             .padding()
                             .foregroundColor(.white)
                             .cornerRadius(10)
-                            
                             
                         }
                     }
@@ -420,6 +458,9 @@ struct StoryEditView: View {
             return
         }
         
+        for draggableTime in draggableTimes {
+              print("DraggableTime Position: \(draggableTime.position)")
+          }
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
         
         if let effect = selectedEffect {
@@ -561,6 +602,7 @@ import SwiftUI
 
 struct AdditionalButtonsView: View {
     var addTimeImage: () -> Void
+    var addLocationImage: () -> Void
     
     var body: some View {
         HStack(spacing: 20) {
@@ -578,7 +620,7 @@ struct AdditionalButtonsView: View {
                 .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
                 
                 Button(action: {
-                    addTimeImage() // Time butonuna basılınca image ekle
+                    addTimeImage()
                 }) {
                     Image(systemName: "clock")
                         .resizable()
@@ -590,7 +632,7 @@ struct AdditionalButtonsView: View {
                 .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
                 
                 Button(action: {
-                    print("Location Button clicked")
+           addLocationImage()
                 }) {
                     Image(systemName: "location")
                         .resizable()
@@ -600,42 +642,10 @@ struct AdditionalButtonsView: View {
                         .padding(10)
                 }
                 .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
             }
         }
         .padding()
-    }
-}
-
-extension StoryEditView {
-    private func addTimeImageToView() {
-        let currentTime = getCurrentTimeAsImage()
-        
-        let newDraggableImage = DraggableImage(image: currentTime, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
-        globalIndex += 1
-        draggableImages.append(newDraggableImage)
-        selectedImageIndex = draggableImages.count - 1
-    }
-
-    private func getCurrentTimeAsImage() -> UIImage {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "HH:mm"
-        let currentTimeString = dateFormatter.string(from: Date())
-        
-        let label = UILabel()
-        label.text = currentTimeString
-        label.font = UIFont.systemFont(ofSize: 20)
-        label.textColor = .white
-        label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-        label.textAlignment = .center
-        label.sizeToFit()
-        label.frame = CGRect(x: 0, y: 0, width: label.frame.width + 20, height: label.frame.height + 10)
-        
-        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
-        label.layer.render(in: UIGraphicsGetCurrentContext()!)
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        return image ?? UIImage()
     }
 }
 
@@ -815,10 +825,10 @@ struct EffectButton: View {
                     .resizable()
                     .scaledToFill()
                     .clipShape(Circle())
-                
-                
+
                 Circle()
                     .stroke(selectedEffect == effectType ? Color.blue : Color.white, lineWidth: 2)
+                    .shadow(color: .black.opacity(0.5), radius: 5, x: 3, y: 3)
             }
             .frame(width: 56, height: 56)
         }
@@ -861,6 +871,8 @@ struct EffectSelectionView: View {
                                     Text(effects[index].name)
                                         .font(.caption)
                                         .foregroundColor(selectedEffect == effects[index] ? Color.blue : Color.white)
+                                        .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
+
                                 }
                             }
                         }
@@ -895,7 +907,7 @@ struct EffectSelectionView: View {
             
             
         }
-        .background(Color.black.opacity(0.5))
+        .background(Color.black.opacity(0.3))
     }
 }
 

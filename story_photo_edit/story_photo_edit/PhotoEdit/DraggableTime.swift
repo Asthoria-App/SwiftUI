@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct DraggableTime {
     var image: UIImage
     var position: CGSize
@@ -15,7 +16,14 @@ struct DraggableTime {
     var lastScaleValue: CGFloat = 1.0
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
+    var currentTimeStyle: TimeStyle = .normal
 }
+
+enum TimeStyle {
+    case normal
+    case analogClock
+}
+
 struct DraggableTimeView: View {
     @Binding var draggableTime: DraggableTime
     @Binding var selectedTimeIndex: Int?
@@ -31,10 +39,13 @@ struct DraggableTimeView: View {
             GeometryReader { geometry in
                 VStack {
                     if !shouldRemove {
-                        Image(uiImage: draggableTime.image)
+                        Image(uiImage: getTimeImage(for: draggableTime.currentTimeStyle))
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 150, height: 60) // Customized size for time
+                            .frame(
+                                width: 200,
+                                height: draggableTime.currentTimeStyle == .normal ? 80 : 200
+                            )
                             .cornerRadius(5)
                             .clipped()
                             .scaleEffect(draggableTime.lastScaleValue * draggableTime.scale)
@@ -55,6 +66,7 @@ struct DraggableTimeView: View {
                                         }
                                 }
                             )
+
                             .gesture(
                                 SimultaneousGesture(
                                     DragGesture()
@@ -108,13 +120,91 @@ struct DraggableTimeView: View {
                                 )
                             )
                             .onTapGesture {
-                                selectedTimeIndex = index
+                                switch draggableTime.currentTimeStyle {
+                                case .normal:
+                                    draggableTime.currentTimeStyle = .analogClock
+                                case .analogClock:
+                                    draggableTime.currentTimeStyle = .normal
+                                }
                             }
                     }
                 }
             }
         }
     }
+    
+    private func getTimeImage(for style: TimeStyle) -> UIImage {
+        switch style {
+        case .normal:
+            return getCurrentTimeAsImage()
+        case .analogClock:
+            return getAnalogClockImage()
+        }
+    }
+    
+    private func getCurrentTimeAsImage() -> UIImage {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        let currentTimeString = dateFormatter.string(from: Date())
+        
+        let label = UILabel()
+        label.text = currentTimeString
+        label.font = UIFont.systemFont(ofSize: 100)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.frame = CGRect(x: 0, y: 0, width: label.frame.width + 20, height: label.frame.height + 10)
+        label.layer.shadowColor = UIColor.black.withAlphaComponent(0.6).cgColor
+        label.layer.shadowOpacity = 0.7
+        label.layer.shadowOffset = CGSize(width: 3, height: 3)
+        label.layer.shadowRadius = 5
+        label.layer.masksToBounds = false
+        
+        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
+        label.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image ?? UIImage()
+    }
+    
+
+    private func getAnalogClockImage() -> UIImage {
+        let containerView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        
+        let clockFace = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        clockFace.layer.cornerRadius = 100
+        clockFace.layer.borderWidth = 4
+        clockFace.layer.borderColor = UIColor.black.cgColor
+        containerView.addSubview(clockFace)
+        
+        let date = Date()
+        let calendar = Calendar.current
+        let hour = CGFloat(calendar.component(.hour, from: date) % 12)
+        let minute = CGFloat(calendar.component(.minute, from: date))
+        
+        let hourHand = UIView(frame: CGRect(x: 98, y: 100, width: 4, height: 50))
+        hourHand.backgroundColor = .black
+        hourHand.layer.anchorPoint = CGPoint(x: 0.5, y: 0)
+        hourHand.transform = CGAffineTransform(rotationAngle: (hour / 12.0) * .pi * 2)
+        containerView.addSubview(hourHand)
+        
+       
+        let minuteHand = UIView(frame: CGRect(x: 98.5, y: 100, width: 3, height: 70))
+        minuteHand.backgroundColor = .black
+        minuteHand.layer.anchorPoint = CGPoint(x: 0.5, y: 0)
+        minuteHand.transform = CGAffineTransform(rotationAngle: (minute / 60.0) * .pi * 2)
+        containerView.addSubview(minuteHand)
+        
+      
+        UIGraphicsBeginImageContextWithOptions(containerView.bounds.size, false, 0)
+        containerView.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image ?? UIImage()
+    }
+
     
     private func updateTimeState(geo: GeometryProxy) {
         let scale = draggableTime.lastScaleValue * draggableTime.scale

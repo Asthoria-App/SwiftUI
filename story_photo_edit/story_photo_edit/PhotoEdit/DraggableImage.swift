@@ -248,6 +248,7 @@ struct DraggableDrawingView: View {
                 }
             }
         }
+        
     }
     
     private func updateDrawingState(geo: GeometryProxy) {
