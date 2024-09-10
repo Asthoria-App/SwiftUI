@@ -40,13 +40,10 @@ struct StoryEditView: View {
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-//    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
-    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+        @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+//    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     
-    @State private var originalVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
-    @State private var monochromeVideoURL: URL? = nil
-    @State private var currentProcessedVideoURL: URL? = nil
-
+    
     @State private var processedVideoURL: URL? = nil
     @State private var selectedEffect: EffectType? = nil
     
@@ -164,6 +161,17 @@ struct StoryEditView: View {
                     print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
                 }
             }
+            if !showDrawingOverlay && !hideButtons {
+                GeometryReader { geometry in
+                    AdditionalButtonsView(addTimeImage: addTimeImageToView)
+                        .frame(width: 100)
+                        .position(x: geometry.size.width - 30,
+                                  y: geometry.size.height / 2)
+                }
+                .zIndex(100)
+            }
+
+            
             
             if !showDrawingOverlay {
                 VStack {
@@ -178,6 +186,8 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
                             .padding(.leading, 15)
                             
                             Spacer()
@@ -191,6 +201,8 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
                             
                             Button(action: {
                                 hideButtons = true
@@ -202,6 +214,8 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
                             
                             Button(action: {
                                 let newText = DraggableText(
@@ -228,6 +242,7 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
                             
                             Button(action: {
                                 showDraggableImagePicker = true
@@ -238,9 +253,12 @@ struct StoryEditView: View {
                                     .foregroundColor(.white)
                             }
                             .frame(width: 35, height: 35)
+                            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
                             .padding(.trailing, 15)
                         }
+                        
                         .frame(width: UIScreen.main.bounds.width)
+                        
                         .padding(.top, 20)
                     }
                     
@@ -262,7 +280,7 @@ struct StoryEditView: View {
                             .padding()
                             .foregroundColor(.white)
                             .cornerRadius(10)
-                           
+                            
                             
                         }
                     }
@@ -401,23 +419,23 @@ struct StoryEditView: View {
             print("Video URL not found")
             return
         }
-
+        
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
         
         if let effect = selectedEffect {
             switch effect {
             case .monochrome:
-                processMonochromeVideo(videoURL: videoURL) { url in
+                
+                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+                videoProcessor.processVideo { url in
                     DispatchQueue.main.async {
                         self.processedVideoURL = url
                         if let processedURL = url {
-                            
                             self.showProcessedVideo(processedURL: processedURL)
                             self.showFullScreenPlayer = true
                         }
                     }
                 }
-                
             case .color:
                 let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
                 videoProcessor.processVideo { url in
@@ -443,178 +461,9 @@ struct StoryEditView: View {
             }
         }
     }
-
-    private func processMonochromeVideo(videoURL: URL, completion: @escaping (URL?) -> Void) {
-        let asset = AVAsset(url: videoURL)
-
-        // List all the properties you need to load
-        let keys = ["tracks", "preferredTransform", "naturalSize", "nominalFrameRate"]
-
-        // Load the asset's properties asynchronously to avoid blocking the main thread
-        asset.loadValuesAsynchronously(forKeys: keys) {
-            var error: NSError? = nil
-
-            // Check if all the required properties were loaded successfully
-            for key in keys {
-                let status = asset.statusOfValue(forKey: key, error: &error)
-                if status != .loaded {
-                    print("Failed to load \(key): \(error?.localizedDescription ?? "Unknown error")")
-                    completion(nil)
-                    return
-                }
-            }
-
-            // Now that the asset is loaded, proceed with AVAssetReader setup
-            self.createAVAssetReader(from: asset, completion: completion)
-        }
-    }
-    private func createAVAssetReader(from asset: AVAsset, completion: @escaping (URL?) -> Void) {
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
-
-        do {
-            let reader = try AVAssetReader(asset: asset)
-            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-                print("Failed to find video track in asset")
-                completion(nil)
-                return
-            }
-
-            // Set up reader output
-            let readerOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-            ])
-            reader.add(readerOutput)
-
-            // Proceed with setting up the writer and processing the video
-            self.processVideoFrames(reader: reader, videoTrack: videoTrack, outputURL: outputURL, completion: completion)
-
-        } catch {
-            print("Failed to create AVAssetReader: \(error.localizedDescription)")
-            if let nsError = error as NSError? {
-                print("Underlying error code: \(nsError.code)")
-                if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
-                    print("Underlying error: \(underlyingError.localizedDescription)")
-                }
-            }
-            completion(nil)
-        }
-    }
-
-    private func processVideoFrames(reader: AVAssetReader, videoTrack: AVAssetTrack, outputURL: URL, completion: @escaping (URL?) -> Void) {
-        guard let writer = try? AVAssetWriter(outputURL: outputURL, fileType: .mp4) else {
-            print("Failed to create AVAssetWriter")
-            completion(nil)
-            return
-        }
-
-        let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: videoTrack.naturalSize.width,
-            AVVideoHeightKey: videoTrack.naturalSize.height
-        ])
-        writer.add(writerInput)
-
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: nil)
-
-        let ciContext = CIContext()
-        let filter = CIFilter(name: "CIColorMonochrome")
-        filter?.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
-        filter?.setValue(1.0, forKey: kCIInputIntensityKey)
-
-        reader.startReading()
-        writer.startWriting()
-        writer.startSession(atSourceTime: .zero)
-
-        var frameCount: Int64 = 0
-        let frameDuration = CMTime(value: 1, timescale: Int32(videoTrack.nominalFrameRate))
-
-        // Process each frame
-        while reader.status == .reading, let sampleBuffer = reader.outputs.first?.copyNextSampleBuffer(),
-              let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-
-            let presentationTime = CMTime(value: frameCount, timescale: Int32(videoTrack.nominalFrameRate))
-
-            // Apply the monochrome filter
-            let ciImage = CIImage(cvImageBuffer: imageBuffer)
-            filter?.setValue(ciImage, forKey: kCIInputImageKey)
-            guard let outputImage = filter?.outputImage else {
-                print("Failed to apply filter to frame")
-                continue
-            }
-
-            // Create a pixel buffer for the output
-            var pixelBuffer: CVPixelBuffer?
-            let status = CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pixelBuffer)
-            guard status == kCVReturnSuccess, let finalPixelBuffer = pixelBuffer else {
-                print("Failed to create pixel buffer")
-                continue
-            }
-
-            // Render the filtered image to the pixel buffer
-            ciContext.render(outputImage, to: finalPixelBuffer)
-
-            // Append the frame to the writer
-            while !writerInput.isReadyForMoreMediaData { /* Wait */ }
-            adaptor.append(finalPixelBuffer, withPresentationTime: presentationTime)
-
-            frameCount += 1
-        }
-
-        // Finish writing
-        writerInput.markAsFinished()
-        writer.finishWriting {
-            if writer.status == .completed {
-                print("Video export completed successfully")
-                completion(outputURL)
-            } else {
-                print("Video export failed: \(writer.error?.localizedDescription ?? "Unknown error")")
-                completion(nil)
-            }
-        }
-    }
-
-
-    private func exportVideoWithComposition(asset: AVAsset, videoComposition: AVVideoComposition, completion: @escaping (URL?) -> Void) {
-        // Ensure output directory is writable
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mp4")
-        
-        // Try using a passthrough preset to avoid re-encoding the video
-        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
-            print("Failed to create export session")
-            completion(nil)
-            return
-        }
-        
-        // Set up the export session settings
-        exportSession.outputURL = outputURL
-        exportSession.outputFileType = .mp4
-        exportSession.videoComposition = videoComposition
-        exportSession.shouldOptimizeForNetworkUse = true
-
-        // Start the export process
-        exportSession.exportAsynchronously {
-            switch exportSession.status {
-            case .completed:
-                print("Export completed successfully at \(outputURL.path)")
-                completion(outputURL)
-            case .failed:
-                if let error = exportSession.error {
-                    print("Export failed with error: \(error.localizedDescription)")
-                    if let underlyingError = (error as NSError).userInfo[NSUnderlyingErrorKey] as? NSError {
-                        print("Underlying error: \(underlyingError.localizedDescription)")
-                    }
-                }
-                completion(nil)
-            case .cancelled:
-                print("Export cancelled")
-                completion(nil)
-            default:
-                print("Export failed with unknown error")
-                completion(nil)
-            }
-        }
-    }
-
+    
+    
+    
     private func showProcessedVideo(processedURL: URL) {
         self.processedVideoURL = processedURL
     }
@@ -708,6 +557,131 @@ struct StoryEditView: View {
     }
 }
 
+import SwiftUI
+
+struct AdditionalButtonsView: View {
+    var addTimeImage: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            VStack(spacing: 12) {
+                Button(action: {
+                    print("Tag Button clicked")
+                }) {
+                    Image(systemName: "tag")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.white)
+                        .padding(10)
+                }
+                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+                
+                Button(action: {
+                    addTimeImage() // Time butonuna basılınca image ekle
+                }) {
+                    Image(systemName: "clock")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.white)
+                        .padding(10)
+                }
+                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+                
+                Button(action: {
+                    print("Location Button clicked")
+                }) {
+                    Image(systemName: "location")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.white)
+                        .padding(10)
+                }
+                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+            }
+        }
+        .padding()
+    }
+}
+
+extension StoryEditView {
+    private func addTimeImageToView() {
+        let currentTime = getCurrentTimeAsImage()
+        
+        let newDraggableImage = DraggableImage(image: currentTime, position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
+        globalIndex += 1
+        draggableImages.append(newDraggableImage)
+        selectedImageIndex = draggableImages.count - 1
+    }
+
+    private func getCurrentTimeAsImage() -> UIImage {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        let currentTimeString = dateFormatter.string(from: Date())
+        
+        let label = UILabel()
+        label.text = currentTimeString
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.textColor = .white
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.frame = CGRect(x: 0, y: 0, width: label.frame.width + 20, height: label.frame.height + 10)
+        
+        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
+        label.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image ?? UIImage()
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 struct GeneratedImageView: View {
     var image: UIImage?
     
@@ -766,7 +740,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
     var player: AVPlayer
     
     @Binding var selectedEffect: EffectType?
-
+    
     func makeUIViewController(context: Context) -> UIViewController {
         let controller = UIViewController()
         let playerLayer = AVPlayerLayer(player: player)
@@ -779,39 +753,34 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         controller.view = containerView
         return controller
     }
-
+    
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
             playerLayer.frame = UIScreen.main.bounds
         }
-
-        // Remove existing subviews (previous overlays)
+        
         uiViewController.view.subviews.forEach { $0.removeFromSuperview() }
-
-        // Apply the selected effect
+        
         if let selectedEffect = selectedEffect {
             switch selectedEffect {
             case .color(let color):
-                // Ensure the original video is shown (reset any previous compositions)
                 resetVideoCompositionIfNeeded()
-
-                // Add color overlay view if the selected effect is a color
+                
                 let overlayView = UIView(frame: UIScreen.main.bounds)
                 overlayView.backgroundColor = UIColor(color)
-                overlayView.alpha = 0.1  // Adjust the opacity as needed
+                overlayView.alpha = 0.1
                 uiViewController.view.addSubview(overlayView)
-
+                
             case .monochrome:
-                // Apply monochrome filter by adding a CIFilter to the playerLayer
                 if let currentPlayerItem = player.currentItem {
                     let filter = CIFilter(name: "CIColorMonochrome")
                     filter?.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
                     filter?.setValue(1.0, forKey: kCIInputIntensityKey)
-
+                    
                     let videoComposition = AVVideoComposition(asset: currentPlayerItem.asset) { request in
                         let source = request.sourceImage.clampedToExtent()
                         filter?.setValue(source, forKey: kCIInputImageKey)
-
+                        
                         if let output = filter?.outputImage {
                             let croppedOutput = output.cropped(to: request.sourceImage.extent)
                             request.finish(with: croppedOutput, context: nil)
@@ -824,9 +793,8 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
             }
         }
     }
-
+    
     private func resetVideoCompositionIfNeeded() {
-        // Reset any video composition to ensure the original video plays for color overlays
         if let currentPlayerItem = player.currentItem {
             currentPlayerItem.videoComposition = nil
         }
@@ -837,26 +805,25 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
 struct EffectButton: View {
     var effectType: EffectType
     @Binding var selectedEffect: EffectType?
-
+    
     var body: some View {
         Button(action: {
             selectedEffect = effectType
         }) {
             ZStack {
-                // The image that fills the button
                 Image(imageName(for: effectType))
                     .resizable()
                     .scaledToFill()
                     .clipShape(Circle())
-
-               
+                
+                
                 Circle()
                     .stroke(selectedEffect == effectType ? Color.blue : Color.white, lineWidth: 2)
             }
             .frame(width: 56, height: 56)
         }
     }
-
+    
     private func imageName(for effect: EffectType) -> String {
         switch effect {
         case .color(.red): return "view"
@@ -872,13 +839,13 @@ struct EffectButton: View {
 struct EffectSelectionView: View {
     @Binding var selectedEffect: EffectType?
     let effects: [EffectType] = [.color(.red), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .monochrome]
-
+    
     @State private var currentIndex: Int = 0
     @State private var scrollOffset: CGFloat = 0.0
     @State private var dragOffset: CGFloat = 0.0
     
     let buttonWidth: CGFloat = 86
-
+    
     var body: some View {
         VStack {
             GeometryReader { geometry in
@@ -916,7 +883,7 @@ struct EffectSelectionView: View {
                                 }
                         )
                     }
-                   
+                    
                     .onAppear {
                         withAnimation(.easeOut) {
                             scrollOffset = -CGFloat(currentIndex) * buttonWidth
@@ -926,7 +893,7 @@ struct EffectSelectionView: View {
             }
             .frame(height: 190)
             
-         
+            
         }
         .background(Color.black.opacity(0.5))
     }
@@ -944,7 +911,7 @@ enum EffectType: Hashable, Equatable {
             return "Monochrome"
         }
     }
-
+    
     var name: String {
         switch self {
         case .color(.red): return "Red"

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		560272092C903098002194F8 /* DraggableTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560272082C903098002194F8 /* DraggableTime.swift */; };
 		561BAE082C7332C400C0991E /* story_photo_editApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561BAE072C7332C400C0991E /* story_photo_editApp.swift */; };
 		561BAE0A2C7332C400C0991E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561BAE092C7332C400C0991E /* ContentView.swift */; };
 		561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 561BAE0B2C7332C600C0991E /* Assets.xcassets */; };
@@ -38,6 +39,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		560272082C903098002194F8 /* DraggableTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableTime.swift; sourceTree = "<group>"; };
 		561BAE042C7332C400C0991E /* story_photo_edit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = story_photo_edit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		561BAE072C7332C400C0991E /* story_photo_editApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = story_photo_editApp.swift; sourceTree = "<group>"; };
 		561BAE092C7332C400C0991E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 				563B94FA2C8050C400649B68 /* VerticalSliderView.swift */,
 				563B94EE2C804CB000649B68 /* DraggableText.swift */,
 				56901BC82C8748DA00F611E9 /* VideoProcessor.swift */,
+				560272082C903098002194F8 /* DraggableTime.swift */,
 			);
 			path = PhotoEdit;
 			sourceTree = "<group>";
@@ -272,6 +275,7 @@
 				563B94F52C804E9800649B68 /* GradientImagePickerView.swift in Sources */,
 				563B94FE2C80783C00649B68 /* DrawingView.swift in Sources */,
 				563B94F92C80506B00649B68 /* DraggableImage.swift in Sources */,
+				560272092C903098002194F8 /* DraggableTime.swift in Sources */,
 				563B94F72C804EC400649B68 /* ImagePicker.swift in Sources */,
 				563B94FB2C8050C400649B68 /* VerticalSliderView.swift in Sources */,
 				563B95032C8078B800649B68 /* ToolButton.swift in Sources */,
