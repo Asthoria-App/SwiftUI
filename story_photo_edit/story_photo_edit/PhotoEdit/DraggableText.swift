@@ -19,7 +19,7 @@ struct DraggableText {
     var fontSize: CGFloat
     var originalTextColor: Color
     var zIndex: CGFloat
-    var globalFrame: CGRect = .zero // Yeni eklenen property
+    var globalFrame: CGRect = .zero
 
     
     init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat) {
@@ -73,7 +73,7 @@ struct DraggableTextView: View {
                         GeometryReader { geo in
                             Color.clear
                                 .onAppear {
-                                    updateTextState(geo: geo) // Global çerçeveyi güncelle
+                                    updateTextState(geo: geo)
                                 }
                         }
                     )

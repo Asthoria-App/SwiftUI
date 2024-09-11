@@ -39,11 +39,9 @@ struct StoryEditView: View {
     @State private var selectedTimeIndex: Int? = nil
     @State private var draggableLocations: [DraggableLocation] = []
     @State private var selectedLocationIndex: Int? = nil
-
     @State private var showTagOverlay: Bool = false
     @State private var tagText: String = ""
-    
-    
+    @State private var draggableTags: [DraggableTag] = []
     @State private var selectedStickerImage: UIImage? = nil
     @State private var globalIndex: CGFloat = 1
     @State private var showDrawingOverlay: Bool = false
@@ -53,12 +51,27 @@ struct StoryEditView: View {
     @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     
+    let users = [
+        User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "jane_smith", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "alex_jones", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "emily_davis", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "michael", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "omercan", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "salih", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "vita", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "hosna", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "zafer_azar_zafer", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "cemal", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "muzaffer", profileImage: UIImage(systemName: "person.circle.fill")!),
+        User(username: "mohammad", profileImage: UIImage(systemName: "person.circle.fill")!),
+    ]
+    
     
     @State private var processedVideoURL: URL? = nil
     @State private var selectedEffect: EffectType? = nil
-    
-    
     @State private var showFullScreenPlayer: Bool = false
+    
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
@@ -92,7 +105,6 @@ struct StoryEditView: View {
             let width = screenSize.height * correctedVideoSize.width / correctedVideoSize.height
             videoFrame = CGRect(x: (screenSize.width - width) / 2, y: 0, width: width, height: screenSize.height)
         }
-        
         return videoFrame
     }
     
@@ -143,9 +155,7 @@ struct StoryEditView: View {
                     .frame(width: 200, height: 80)
                     .aspectRatio(contentMode: .fit)
                     .zIndex(draggableTimes[index].zIndex)
-                    .onAppear {
-                        print(" time Image Position: \(draggableTimes[index].position), time Image Size: \(draggableTimes[index].image.size)")
-                    }
+             
             }
             ForEach(draggableLocations.indices, id: \.self) { index in
                 DraggableLocationView(
@@ -154,10 +164,19 @@ struct StoryEditView: View {
                     index: index,
                     hideButtons: $hideButtons
                 )
-                .frame(width: 200, height: 60)
+                .frame(width: 200, height: 40)
                 .zIndex(draggableLocations[index].zIndex)
             }
-
+            ForEach(draggableTags.indices, id: \.self) { index in
+                DraggableTagView(draggableTag: $draggableTags[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100)) {
+                    draggableTags.remove(at: index)
+                }
+             
+                .frame(width: 220, height: 40)
+                .zIndex(draggableTags[index].zIndex)
+            }
+            
+            
             ForEach(draggableStickers.indices, id: \.self) { index in
                 DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100), onDelete: {
                     draggableStickers.remove(at: index)
@@ -191,7 +210,7 @@ struct StoryEditView: View {
                     print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
                 }
             }
-            if !showDrawingOverlay && !hideButtons {
+            if !showDrawingOverlay && !hideButtons && !showTagOverlay{
                 GeometryReader { geometry in
                     AdditionalButtonsView(addTimeImage: {
                         let newDraggableTime = DraggableTime(image: UIImage(), position: .zero, scale: 1.0, angle: .zero, zIndex: globalIndex)
@@ -203,19 +222,16 @@ struct StoryEditView: View {
                         globalIndex += 1
                         draggableLocations.append(newDraggableLocation)
                         selectedLocationIndex = draggableLocations.count - 1
-                    })
+                    }, showTagOverlay: $showTagOverlay)
                     .frame(width: 100)
                     .position(x: geometry.size.width - 30, y: geometry.size.height / 2)
                 }
                 .zIndex(100)
             }
             
-            
-            
-            
             if !showDrawingOverlay {
                 VStack {
-                    if !hideButtons {
+                    if !hideButtons && !showTagOverlay {
                         HStack {
                             Button(action: {
                                 showBackgroundImagePicker = true
@@ -303,7 +319,7 @@ struct StoryEditView: View {
                     
                     Spacer()
                     
-                    if  !hideButtons && !showOverlay {
+                    if  !hideButtons && !showOverlay && !showTagOverlay {
                         VStack {
                             Spacer()
                             Button("Done") {
@@ -323,7 +339,7 @@ struct StoryEditView: View {
                         }
                     }
                     
-                    if hideButtons && !showOverlay {
+                    if hideButtons && !showOverlay && !showTagOverlay{
                         VStack {
                             Spacer()
                             Button(action: {
@@ -345,6 +361,11 @@ struct StoryEditView: View {
                     }
                 }
                 .zIndex(100)
+            }
+            if showTagOverlay {
+                TagOverlayView(showTagOverlay: $showTagOverlay, tagText: $tagText, draggableTags: $draggableTags, globalIndex: $globalIndex, allUsers: self.users)
+                    .transition(.move(edge: .bottom))
+                    .animation(.easeInOut, value: showTagOverlay)
             }
             
             if showDrawingOverlay {
@@ -459,8 +480,8 @@ struct StoryEditView: View {
         }
         
         for draggableTime in draggableTimes {
-              print("DraggableTime Position: \(draggableTime.position)")
-          }
+            print("DraggableTime Position: \(draggableTime.position)")
+        }
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
         
         if let effect = selectedEffect {
@@ -603,11 +624,12 @@ import SwiftUI
 struct AdditionalButtonsView: View {
     var addTimeImage: () -> Void
     var addLocationImage: () -> Void
-    
+    @Binding var showTagOverlay: Bool
     var body: some View {
         HStack(spacing: 20) {
             VStack(spacing: 12) {
                 Button(action: {
+                    showTagOverlay = true
                     print("Tag Button clicked")
                 }) {
                     Image(systemName: "tag")
@@ -632,7 +654,7 @@ struct AdditionalButtonsView: View {
                 .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
                 
                 Button(action: {
-           addLocationImage()
+                    addLocationImage()
                 }) {
                     Image(systemName: "location")
                         .resizable()
@@ -642,7 +664,7 @@ struct AdditionalButtonsView: View {
                         .padding(10)
                 }
                 .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+                
             }
         }
         .padding()
@@ -825,7 +847,7 @@ struct EffectButton: View {
                     .resizable()
                     .scaledToFill()
                     .clipShape(Circle())
-
+                
                 Circle()
                     .stroke(selectedEffect == effectType ? Color.blue : Color.white, lineWidth: 2)
                     .shadow(color: .black.opacity(0.5), radius: 5, x: 3, y: 3)
@@ -872,7 +894,7 @@ struct EffectSelectionView: View {
                                         .font(.caption)
                                         .foregroundColor(selectedEffect == effects[index] ? Color.blue : Color.white)
                                         .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
-
+                                    
                                 }
                             }
                         }
@@ -936,8 +958,6 @@ enum EffectType: Hashable, Equatable {
         }
     }
 }
-
-
 
 
 struct SimpleVideoPlayerView: UIViewControllerRepresentable {

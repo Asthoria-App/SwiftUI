@@ -62,7 +62,7 @@ struct DraggableTimeView: View {
                                                 origin: globalFrame.origin,
                                                 size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
                                             )
-                                            print("Time Global Frame: \(draggableTime.globalFrame)")
+                                        
                                         }
                                 }
                             )

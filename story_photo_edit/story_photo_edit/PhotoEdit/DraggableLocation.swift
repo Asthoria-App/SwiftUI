@@ -45,18 +45,6 @@ struct DraggableLocationView: View {
                     if !shouldRemove {
                         ZStack {
                         
-                            Image(uiImage: draggableLocation.image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 200, height: 60)
-                                .cornerRadius(7)
-                                .clipped()
-                                .scaleEffect(draggableLocation.lastScaleValue * draggableLocation.scale)
-                                .rotationEffect(draggableLocation.angle)
-                                .position(x: geometry.size.width / 2 + draggableLocation.position.width + dragOffset.width,
-                                          y: geometry.size.height / 2 + draggableLocation.position.height + dragOffset.height)
-
-                         
                             HStack {
                                 Image(systemName: "mappin.circle.fill")
                                     .foregroundColor(draggableLocation.textColor)
@@ -79,7 +67,7 @@ struct DraggableLocationView: View {
                             
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(draggableLocation.backgroundColor.opacity(0.7))
+                            .background(draggableLocation.backgroundColor.opacity(0.6))
                             .cornerRadius(5)
                             .scaleEffect(draggableLocation.lastScaleValue * draggableLocation.scale)
                             .rotationEffect(draggableLocation.angle)
@@ -88,7 +76,7 @@ struct DraggableLocationView: View {
                         }
                         .background(
                             GeometryReader { geo in
-                                Color.clear
+                                Color.green
                                     .onAppear {
                                         let scale = draggableLocation.lastScaleValue * draggableLocation.scale
                                         let globalFrame = geo.frame(in: .global)
@@ -96,7 +84,7 @@ struct DraggableLocationView: View {
                                             origin: globalFrame.origin,
                                             size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
                                         )
-                                        print("Image Global Frame: \(draggableLocation.globalFrame)")
+                                      updateLocationState(geo: geo)
                                     }
                             }
                         )
@@ -126,7 +114,7 @@ struct DraggableLocationView: View {
                                             draggableLocation.position.width += dragOffset.width
                                             draggableLocation.position.height += dragOffset.height
                                             dragOffset = .zero
-                                            updateLocationFrame(geo: geometry)
+                                            updateLocationState(geo: geometry)
                                         }
                                         dragOffset = .zero
                                         hideButtons = false
@@ -138,7 +126,7 @@ struct DraggableLocationView: View {
                                     }
                                     .onEnded { newAngle in
                                         draggableLocation.angle = newAngle
-                                        updateLocationFrame(geo: geometry)
+                                        updateLocationState(geo: geometry)
                                     }
                             )
                             .simultaneously(with: MagnificationGesture()
@@ -148,7 +136,7 @@ struct DraggableLocationView: View {
                                 .onEnded { _ in
                                     draggableLocation.lastScaleValue *= draggableLocation.scale
                                     draggableLocation.scale = 1.0
-                                    updateLocationFrame(geo: geometry)
+                                    updateLocationState(geo: geometry)
                                 }
                             )
                         )
@@ -190,15 +178,15 @@ struct DraggableLocationView: View {
             }
         }
     }
-
-    private func updateLocationFrame(geo: GeometryProxy) {
+    
+    private func updateLocationState(geo: GeometryProxy) {
         let scale = draggableLocation.lastScaleValue * draggableLocation.scale
-
+        
         let transformedSize = CGSize(width: geo.size.width * scale, height: geo.size.height * scale)
-
+        
         let offsetX = (geo.size.width * scale - geo.size.width) / 2
         let offsetY = (geo.size.height * scale - geo.size.height) / 2
-
+        
         draggableLocation.globalFrame = CGRect(
             origin: CGPoint(
                 x: geo.frame(in: .global).origin.x + dragOffset.width + draggableLocation.position.width - offsetX,
@@ -206,7 +194,9 @@ struct DraggableLocationView: View {
             ),
             size: transformedSize
         )
+        print("Updated Location Global Frame: \(draggableLocation.globalFrame)", transformedSize)
     }
+
 }
 
 extension DraggableLocation {
