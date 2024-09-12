@@ -39,6 +39,7 @@ struct StoryEditView: View {
     @State private var selectedTimeIndex: Int? = nil
     @State private var draggableLocations: [DraggableLocation] = []
     @State private var selectedLocationIndex: Int? = nil
+    @State private var selectedTagIndex: Int? = nil
     @State private var showTagOverlay: Bool = false
     @State private var tagText: String = ""
     @State private var draggableTags: [DraggableTag] = []
@@ -48,9 +49,16 @@ struct StoryEditView: View {
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+//    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+    @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+
     
+    @State private var showMusicSelectionOverlay: Bool = false
+    @State private var selectedSoundURL: URL? = nil
+    
+    @State private var isMuted: Bool = false
+
     let users = [
         User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
         User(username: "jane_smith", profileImage: UIImage(systemName: "person.circle.fill")!),
@@ -126,11 +134,11 @@ struct StoryEditView: View {
                 }
             case .video:
                 if let processedVideoURL = processedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons)
+                    FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted)
                         .edgesIgnoringSafeArea(.all)
                 }
                 else if let exportedVideoURL = exportedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons)
+                    FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted)
                         .edgesIgnoringSafeArea(.all)
                 }
             }
@@ -152,11 +160,22 @@ struct StoryEditView: View {
             
             ForEach(draggableTimes.indices, id: \.self) { index in
                 DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
-                    .frame(width: 200, height: 80)
+                    .frame(width: 150, height: 150)
                     .aspectRatio(contentMode: .fit)
                     .zIndex(draggableTimes[index].zIndex)
              
             }
+            
+            ForEach(draggableTags.indices, id: \.self) { index in
+                DraggableTagView(draggableTag: $draggableTags[index],
+                                 hideButtons: $hideButtons,
+                                 selectedTagIndex: $selectedTagIndex
+                               )
+
+                .frame(width: 220, height: 40)
+                .zIndex(draggableTags[index].zIndex)
+            }
+            
             ForEach(draggableLocations.indices, id: \.self) { index in
                 DraggableLocationView(
                     draggableLocation: $draggableLocations[index],
@@ -167,14 +186,8 @@ struct StoryEditView: View {
                 .frame(width: 200, height: 40)
                 .zIndex(draggableLocations[index].zIndex)
             }
-            ForEach(draggableTags.indices, id: \.self) { index in
-                DraggableTagView(draggableTag: $draggableTags[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100)) {
-                    draggableTags.remove(at: index)
-                }
-             
-                .frame(width: 220, height: 40)
-                .zIndex(draggableTags[index].zIndex)
-            }
+            
+         
             
             
             ForEach(draggableStickers.indices, id: \.self) { index in
@@ -222,7 +235,7 @@ struct StoryEditView: View {
                         globalIndex += 1
                         draggableLocations.append(newDraggableLocation)
                         selectedLocationIndex = draggableLocations.count - 1
-                    }, showTagOverlay: $showTagOverlay)
+                    }, showTagOverlay: $showTagOverlay, isMuted: $isMuted, selectedSoundURL: $selectedSoundURL)
                     .frame(width: 100)
                     .position(x: geometry.size.width - 30, y: geometry.size.height / 2)
                 }
@@ -478,17 +491,19 @@ struct StoryEditView: View {
             print("Video URL not found")
             return
         }
-        
+        guard let soundURL = selectedSoundURL else {
+             print("Sound file not found")
+             return
+         }
         for draggableTime in draggableTimes {
             print("DraggableTime Position: \(draggableTime.position)")
         }
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
-        
+
         if let effect = selectedEffect {
             switch effect {
             case .monochrome:
-                
-                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
                 videoProcessor.processVideo { url in
                     DispatchQueue.main.async {
                         self.processedVideoURL = url
@@ -499,7 +514,7 @@ struct StoryEditView: View {
                     }
                 }
             case .color:
-                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
                 videoProcessor.processVideo { url in
                     DispatchQueue.main.async {
                         self.processedVideoURL = url
@@ -511,7 +526,7 @@ struct StoryEditView: View {
                 }
             }
         } else {
-            let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage)
+            let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
             videoProcessor.processVideo { url in
                 DispatchQueue.main.async {
                     self.processedVideoURL = url
@@ -523,7 +538,7 @@ struct StoryEditView: View {
             }
         }
     }
-    
+
     
     
     private func showProcessedVideo(processedURL: URL) {
@@ -545,6 +560,14 @@ struct StoryEditView: View {
         for image in draggableImages {
             allElements.append((image: image.image, text: nil, rect: image.globalFrame, angle: image.angle.radians, zIndex: image.zIndex))
         }
+        
+        for time in draggableTimes {
+            allElements.append((image: time.image, text: nil, rect: time.globalFrame, angle: time.angle.radians, zIndex: time.zIndex))
+        }
+        for location in draggableLocations {
+            allElements.append((image: location.image, text: nil, rect: location.globalFrame, angle: location.angle.radians, zIndex: location.zIndex))
+        }
+
         
         for drawing in draggableDrawings {
             allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
@@ -614,60 +637,109 @@ struct StoryEditView: View {
         
         let composedImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        
         return composedImage ?? UIImage()
     }
 }
 
-import SwiftUI
+
 
 struct AdditionalButtonsView: View {
     var addTimeImage: () -> Void
     var addLocationImage: () -> Void
+
     @Binding var showTagOverlay: Bool
+    @Binding var isMuted: Bool
+    @State private var showMusicSelectionOverlay: Bool = false
+    @Binding var selectedSoundURL: URL?
+
+    @State private var audioPlayer: AVPlayer?
+
     var body: some View {
-        HStack(spacing: 20) {
-            VStack(spacing: 12) {
-                Button(action: {
-                    showTagOverlay = true
-                    print("Tag Button clicked")
-                }) {
-                    Image(systemName: "tag")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.white)
-                        .padding(10)
-                }
-                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-                
-                Button(action: {
-                    addTimeImage()
-                }) {
-                    Image(systemName: "clock")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.white)
-                        .padding(10)
-                }
-                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-                
-                Button(action: {
-                    addLocationImage()
-                }) {
-                    Image(systemName: "location")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.white)
-                        .padding(10)
-                }
-                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-                
+        VStack(spacing: 12) {
+            Button(action: {
+                showTagOverlay = true
+            }) {
+                Image(systemName: "tag")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white)
+                    .padding(10)
             }
+            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
+            Button(action: {
+                addTimeImage()
+            }) {
+                Image(systemName: "clock")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white)
+                    .padding(10)
+            }
+            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
+            Button(action: {
+                addLocationImage()
+            }) {
+                Image(systemName: "location")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white)
+                    .padding(10)
+            }
+            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
+            Button(action: {
+                isMuted.toggle()
+            }) {
+                Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white)
+                    .padding(10)
+            }
+            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+
+            Button(action: {
+                showMusicSelectionOverlay = true
+            }) {
+                Image(systemName: "music.note.list")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white)
+                    .padding(10)
+            }
+            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
         }
-        .padding()
+        .sheet(isPresented: $showMusicSelectionOverlay) {
+            SoundSelectionView(isShowing: $showMusicSelectionOverlay, selectedSound: $selectedSoundURL)
+           
+        }
+        .onChange(of: selectedSoundURL) { newSoundURL in
+            if let soundURL = newSoundURL {
+                playSelectedMusic(soundURL: soundURL)
+            }
+            print(selectedSoundURL, newSoundURL , "wwwwww")
+        }
+    }
+
+    private func playSelectedMusic(soundURL: URL) {
+        if let player = audioPlayer {
+            player.pause()
+        }
+        
+        audioPlayer = AVPlayer(url: soundURL)
+        audioPlayer?.isMuted = false
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: audioPlayer?.currentItem, queue: .main) { _ in
+            self.audioPlayer?.seek(to: .zero)
+            self.audioPlayer?.play()
+        }
+        audioPlayer?.play()
     }
 }
 
@@ -679,6 +751,58 @@ struct AdditionalButtonsView: View {
 
 
 
+
+
+struct SoundSelectionView: View {
+    @Binding var isShowing: Bool
+    @Binding var selectedSound: URL?
+    let soundFiles = ["audio1", "audio2", "audio3"]
+    let fileExtension = "mp3"
+    
+    var body: some View {
+        VStack {
+            Text("Select Background Music")
+                .font(.headline)
+                .padding()
+            
+            ScrollView {
+                ForEach(soundFiles, id: \.self) { sound in
+                    Button(action: {
+                        if let url = Bundle.main.url(forResource: sound, withExtension: fileExtension) {
+                            selectedSound = url
+                        }
+                        isShowing = false
+                    }) {
+                        Text(sound.capitalized)
+                            .font(.title2)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                    }
+                }
+            }
+            
+            Button(action: {
+                isShowing = false
+            }) {
+                Text("Cancel")
+                    .font(.title3)
+                    .foregroundColor(.red)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+            }
+        }
+        .background(Color.black)
+        .cornerRadius(20)
+        .padding()
+        .shadow(radius: 10)
+    }
+}
 
 
 
@@ -736,6 +860,8 @@ struct FullScreenVideoPlayerView: View {
     @State private var player = AVPlayer()
     @Binding var selectedEffect: EffectType?
     @Binding var hideButtons: Bool
+    @Binding var isMUted: Bool
+    
     
     var body: some View {
         VStack {
@@ -747,6 +873,9 @@ struct FullScreenVideoPlayerView: View {
                 .onDisappear {
                     player.pause()
                     NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
+                }
+                .onChange(of: isMUted) { newValue in
+                    player.isMuted = newValue
                 }
                 .edgesIgnoringSafeArea(.all)
             
@@ -760,6 +889,7 @@ struct FullScreenVideoPlayerView: View {
     private func setupPlayer() {
         let playerItem = AVPlayerItem(url: videoURL)
         player.replaceCurrentItem(with: playerItem)
+        player.isMuted = isMUted
         
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
             player.seek(to: .zero)

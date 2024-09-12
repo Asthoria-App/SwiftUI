@@ -6,10 +6,15 @@ import SwiftUI
 public class VideoProcessor: ObservableObject {
     private let videoURL: URL
     private let overlayImage: UIImage
+    private let isMuted: Bool
+    private let soundURL: URL
 
-    public init(videoURL: URL, overlayImage: UIImage) {
+
+    public init(videoURL: URL, overlayImage: UIImage, isMuted: Bool, soundURL: URL) {
         self.videoURL = videoURL
         self.overlayImage = overlayImage
+        self.isMuted = isMuted
+        self.soundURL = soundURL
     }
 
     public func processVideo(completion: @escaping (URL?) -> Void) {
@@ -27,7 +32,19 @@ public class VideoProcessor: ObservableObject {
                 }
 
                 let videoComposition = try await createOverlayComposition(for: videoTrack, originalDuration: originalDuration, in: composition)
-
+                if !isMuted {
+                         if let audioTrack = try await asset.loadTracks(withMediaType: .audio).first {
+                             let audioCompositionTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
+                             try audioCompositionTrack.insertTimeRange(CMTimeRange(start: .zero, duration: originalDuration), of: audioTrack, at: .zero)
+                         }
+                     } else {
+                         // Yeni müziği ekleme
+                         let soundAsset = AVAsset(url: soundURL)
+                         if let soundTrack = try await soundAsset.loadTracks(withMediaType: .audio).first {
+                             let soundCompositionTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
+                             try soundCompositionTrack.insertTimeRange(CMTimeRange(start: .zero, duration: originalDuration), of: soundTrack, at: .zero)
+                         }
+                     }
                 export(composition: composition, videoComposition: videoComposition, completion: completion)
             } catch {
                 completion(nil)

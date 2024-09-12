@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct DraggableLocation {
-    var image: UIImage
+    var image: UIImage = UIImage() // Varsayılan olarak boş bir UIImage tanımlıyoruz.
     var position: CGSize
     var scale: CGFloat
     var angle: Angle
@@ -48,7 +49,7 @@ struct DraggableLocationView: View {
                             HStack {
                                 Image(systemName: "mappin.circle.fill")
                                     .foregroundColor(draggableLocation.textColor)
-                                
+
                                 if draggableLocation.useGradientText {
                                     Text(draggableLocation.locationText)
                                         .font(Font.system(size: 24))
@@ -64,7 +65,6 @@ struct DraggableLocationView: View {
                                         .foregroundColor(draggableLocation.textColor)
                                 }
                             }
-                            
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(draggableLocation.backgroundColor.opacity(0.6))
@@ -76,7 +76,7 @@ struct DraggableLocationView: View {
                         }
                         .background(
                             GeometryReader { geo in
-                                Color.green
+                                Color.clear
                                     .onAppear {
                                         let scale = draggableLocation.lastScaleValue * draggableLocation.scale
                                         let globalFrame = geo.frame(in: .global)
@@ -84,6 +84,7 @@ struct DraggableLocationView: View {
                                             origin: globalFrame.origin,
                                             size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
                                         )
+                                     
                                       updateLocationState(geo: geo)
                                     }
                             }
@@ -142,7 +143,7 @@ struct DraggableLocationView: View {
                         )
                         .onTapGesture {
                             tapCount += 1
-                            
+                            draggableLocation.image = getViewAsImage()
                             switch tapCount {
                             case 1:
                                 if draggableLocation.locationText == draggableLocation.locationText.uppercased() {
@@ -197,6 +198,28 @@ struct DraggableLocationView: View {
         print("Updated Location Global Frame: \(draggableLocation.globalFrame)", transformedSize)
     }
 
+
+
+ 
+    private func getViewAsImage() -> UIImage {
+        let controller = UIHostingController(rootView: DraggableLocationView(draggableLocation: $draggableLocation, selectedLocationIndex: $selectedLocationIndex, index: index, hideButtons: $hideButtons))
+        
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+
+        controller.view.layoutIfNeeded()
+
+        let targetSize = controller.view.intrinsicContentSize
+        controller.view.bounds = CGRect(origin: .zero, size: targetSize)
+
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+
+        return renderer.image { _ in
+            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
+    }
+
 }
 
 extension DraggableLocation {
@@ -212,5 +235,16 @@ extension DraggableLocation {
             copy.useGradientText = useGradientText
         }
         return copy
+    }
+}
+// UIColor extension'ı ile Color'ı UIColor'a çeviriyoruz
+extension Color {
+    func uiColor() -> UIColor {
+        let components = self.cgColor?.components
+        let red = components?[0] ?? 0.0
+        let green = components?[1] ?? 0.0
+        let blue = components?[2] ?? 0.0
+        let alpha = self.cgColor?.alpha ?? 1.0
+        return UIColor(red: red, green: green, blue: blue, alpha: alpha)
     }
 }
