@@ -27,6 +27,7 @@
 		563B95012C80789200649B68 /* DrawingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95002C80789200649B68 /* DrawingOverlayView.swift */; };
 		563B95032C8078B800649B68 /* ToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95022C8078B800649B68 /* ToolButton.swift */; };
 		564D72CC2C81B1C400EF71FC /* MetalPetal in Frameworks */ = {isa = PBXBuildFile; productRef = 564D72CB2C81B1C400EF71FC /* MetalPetal */; };
+		5673FE012C94425600BE5CD6 /* audio4.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 5673FE002C94425600BE5CD6 /* audio4.mp3 */; };
 		568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */; };
 		568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */; };
 		568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */; };
@@ -65,6 +66,7 @@
 		563B94FD2C80783C00649B68 /* DrawingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingView.swift; sourceTree = "<group>"; };
 		563B95002C80789200649B68 /* DrawingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingOverlayView.swift; sourceTree = "<group>"; };
 		563B95022C8078B800649B68 /* ToolButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButton.swift; sourceTree = "<group>"; };
+		5673FE002C94425600BE5CD6 /* audio4.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = audio4.mp3; sourceTree = "<group>"; };
 		568D7CA42C76259E00A4D361 /* Forum-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Forum-Regular.ttf"; sourceTree = "<group>"; };
 		568D7CA62C7625A800A4D361 /* GreatVibes-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GreatVibes-Regular.ttf"; sourceTree = "<group>"; };
 		568D7CA82C7625B300A4D361 /* GreyQo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GreyQo-Regular.ttf"; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				56BEC14D2C93218700A135EC /* audio1.mp3 */,
 				56BEC14F2C9329CB00A135EC /* audio2.mp3 */,
 				56BEC1502C9329CC00A135EC /* audio3.mp3 */,
+				5673FE002C94425600BE5CD6 /* audio4.mp3 */,
 				56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */,
 				561BAE0B2C7332C600C0991E /* Assets.xcassets */,
 			);
@@ -272,6 +275,7 @@
 				56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */,
 				561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */,
 				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
+				5673FE012C94425600BE5CD6 /* audio4.mp3 in Resources */,
 				56BEC1512C9329CC00A135EC /* audio2.mp3 in Resources */,
 				568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */,
 				561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */,

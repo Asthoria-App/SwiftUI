@@ -58,6 +58,7 @@ struct StoryEditView: View {
     @State private var selectedSoundURL: URL? = nil
     
     @State private var isMuted: Bool = false
+    @State private var  isPlaying: Bool = true
 
     let users = [
         User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
@@ -235,7 +236,7 @@ struct StoryEditView: View {
                         globalIndex += 1
                         draggableLocations.append(newDraggableLocation)
                         selectedLocationIndex = draggableLocations.count - 1
-                    }, showTagOverlay: $showTagOverlay, isMuted: $isMuted, selectedSoundURL: $selectedSoundURL)
+                    }, showTagOverlay: $showTagOverlay, isMuted: $isMuted, selectedSoundURL: $selectedSoundURL, isPlaying: $isPlaying)
                     .frame(width: 100)
                     .position(x: geometry.size.width - 30, y: geometry.size.height / 2)
                 }
@@ -434,17 +435,21 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
         }
+  
         .edgesIgnoringSafeArea(.top)
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
-        
-        .fullScreenCover(isPresented: $showFullScreenPlayer) {
+        .fullScreenCover(isPresented: $showFullScreenPlayer, onDismiss: {
+            isPlaying = true
+        }) {
             SimpleVideoPlayerView(videoURL: processedVideoURL!)
                 .edgesIgnoringSafeArea(.all)
-            
+                .onAppear {
+                    isPlaying = false
+                }
         }
-        
+
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
                 .onDisappear {
@@ -491,10 +496,8 @@ struct StoryEditView: View {
             print("Video URL not found")
             return
         }
-        guard let soundURL = selectedSoundURL else {
-             print("Sound file not found")
-             return
-         }
+         let soundURL = selectedSoundURL
+        
         for draggableTime in draggableTimes {
             print("DraggableTime Position: \(draggableTime.position)")
         }
@@ -651,6 +654,7 @@ struct AdditionalButtonsView: View {
     @Binding var isMuted: Bool
     @State private var showMusicSelectionOverlay: Bool = false
     @Binding var selectedSoundURL: URL?
+    @Binding var isPlaying: Bool
 
     @State private var audioPlayer: AVPlayer?
 
@@ -693,8 +697,9 @@ struct AdditionalButtonsView: View {
             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
 
             Button(action: {
-                isMuted.toggle()
-            }) {
+                if selectedSoundURL == nil {
+                      isMuted.toggle()
+                  }            }) {
                 Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -717,16 +722,30 @@ struct AdditionalButtonsView: View {
             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
         }
         .sheet(isPresented: $showMusicSelectionOverlay) {
-            SoundSelectionView(isShowing: $showMusicSelectionOverlay, selectedSound: $selectedSoundURL)
+            SoundSelectionView(isShowing: $showMusicSelectionOverlay, selectedSound: $selectedSoundURL, stopCurrentMusic: {
+                audioPlayer?.pause()
+                audioPlayer = nil
+            })
            
         }
         .onChange(of: selectedSoundURL) { newSoundURL in
             if let soundURL = newSoundURL {
                 playSelectedMusic(soundURL: soundURL)
+                isMuted = true
             }
-            print(selectedSoundURL, newSoundURL , "wwwwww")
+        }
+        .onChange(of: isPlaying) {  newValue in
+            if newValue == true {
+                audioPlayer?.play()
+            } else {
+                audioPlayer?.pause()
+                audioPlayer = nil
+            }
         }
     }
+    
+    
+
 
     private func playSelectedMusic(soundURL: URL) {
         if let player = audioPlayer {
@@ -739,24 +758,21 @@ struct AdditionalButtonsView: View {
             self.audioPlayer?.seek(to: .zero)
             self.audioPlayer?.play()
         }
-        audioPlayer?.play()
+        if isPlaying {
+            audioPlayer?.play()
+        } else {
+            audioPlayer?.pause()
+            audioPlayer = nil
+        }
+        
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 struct SoundSelectionView: View {
     @Binding var isShowing: Bool
     @Binding var selectedSound: URL?
-    let soundFiles = ["audio1", "audio2", "audio3"]
+    var stopCurrentMusic: () -> Void
+    let soundFiles = ["audio1", "audio2", "audio3", "audio4"]
     let fileExtension = "mp3"
     
     var body: some View {
@@ -766,6 +782,20 @@ struct SoundSelectionView: View {
                 .padding()
             
             ScrollView {
+                Button(action: {
+                    selectedSound = nil
+                    stopCurrentMusic()
+                    isShowing = false
+                }) {
+                    Text("No Music")
+                        .font(.title2)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                }
+                
                 ForEach(soundFiles, id: \.self) { sound in
                     Button(action: {
                         if let url = Bundle.main.url(forResource: sound, withExtension: fileExtension) {
@@ -1098,7 +1128,7 @@ struct SimpleVideoPlayerView: UIViewControllerRepresentable {
         let player = AVPlayer(url: videoURL)
         
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-            player.seek(to: .zero)
+//            player.seek(to: .zero)
             player.play()
         }
         

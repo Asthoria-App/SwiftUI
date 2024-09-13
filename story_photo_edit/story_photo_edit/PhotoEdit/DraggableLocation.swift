@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 
 struct DraggableLocation {
-    var image: UIImage = UIImage() // Varsayılan olarak boş bir UIImage tanımlıyoruz.
+    var image: UIImage = UIImage() 
     var position: CGSize
     var scale: CGFloat
     var angle: Angle
