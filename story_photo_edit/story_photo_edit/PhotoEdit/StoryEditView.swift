@@ -49,17 +49,17 @@ struct StoryEditView: View {
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
     @State private var backgroundType: BackgroundType = .video
-//    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+    //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
-
+    
     
     @State private var showMusicSelectionOverlay: Bool = false
     @State private var selectedSoundURL: URL? = nil
     
     @State private var isMuted: Bool = false
     @State private var  isPlaying: Bool = true
-
+    
     let users = [
         User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
         User(username: "jane_smith", profileImage: UIImage(systemName: "person.circle.fill")!),
@@ -164,15 +164,15 @@ struct StoryEditView: View {
                     .frame(width: 150, height: 150)
                     .aspectRatio(contentMode: .fit)
                     .zIndex(draggableTimes[index].zIndex)
-             
+                
             }
             
             ForEach(draggableTags.indices, id: \.self) { index in
                 DraggableTagView(draggableTag: $draggableTags[index],
                                  hideButtons: $hideButtons,
                                  selectedTagIndex: $selectedTagIndex
-                               )
-
+                )
+                
                 .frame(width: 220, height: 40)
                 .zIndex(draggableTags[index].zIndex)
             }
@@ -188,7 +188,7 @@ struct StoryEditView: View {
                 .zIndex(draggableLocations[index].zIndex)
             }
             
-         
+            
             
             
             ForEach(draggableStickers.indices, id: \.self) { index in
@@ -435,7 +435,7 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
         }
-  
+        
         .edgesIgnoringSafeArea(.top)
         .sheet(isPresented: $showBackgroundImagePicker) {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
@@ -449,7 +449,7 @@ struct StoryEditView: View {
                     isPlaying = false
                 }
         }
-
+        
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
                 .onDisappear {
@@ -496,13 +496,13 @@ struct StoryEditView: View {
             print("Video URL not found")
             return
         }
-         let soundURL = selectedSoundURL
+        let soundURL = selectedSoundURL
         
         for draggableTime in draggableTimes {
             print("DraggableTime Position: \(draggableTime.position)")
         }
         let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
-
+        
         if let effect = selectedEffect {
             switch effect {
             case .monochrome:
@@ -541,7 +541,7 @@ struct StoryEditView: View {
             }
         }
     }
-
+    
     
     
     private func showProcessedVideo(processedURL: URL) {
@@ -556,32 +556,72 @@ struct StoryEditView: View {
         
         var allElements: [(image: UIImage?, text: NSAttributedString?, rect: CGRect, angle: CGFloat, zIndex: CGFloat)] = []
         
+        // Add draggable stickers
         for sticker in draggableStickers {
             allElements.append((image: sticker.image, text: nil, rect: sticker.globalFrame, angle: sticker.angle.radians, zIndex: sticker.zIndex))
         }
         
+        // Add draggable images
         for image in draggableImages {
             allElements.append((image: image.image, text: nil, rect: image.globalFrame, angle: image.angle.radians, zIndex: image.zIndex))
         }
         
+        // Add draggable times
         for time in draggableTimes {
             allElements.append((image: time.image, text: nil, rect: time.globalFrame, angle: time.angle.radians, zIndex: time.zIndex))
         }
+        
+        // Add draggable locations
         for location in draggableLocations {
             allElements.append((image: location.image, text: nil, rect: location.globalFrame, angle: location.angle.radians, zIndex: location.zIndex))
         }
-
         
+        // Add draggable tags with scaling
+        for tag in draggableTags {
+            let scaledFontSize = fontSize * tag.lastScaleValue * tag.scale // Scale font size
+            let tagAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: scaledFontSize), // Apply the scaled font size
+                .foregroundColor: UIColor(tag.textColor)
+            ]
+            
+            let attributedTagText = NSAttributedString(string: tag.text, attributes: tagAttributes)
+            let tagSize = attributedTagText.size()
+            let tagRect = CGRect(
+                origin: CGPoint(x: tag.position.width + screenSize.width / 2 - tagSize.width / 2,
+                                y: tag.position.height + screenSize.height / 2 - tagSize.height / 2),
+                size: tagSize
+            )
+            
+            context?.saveGState()
+            
+            // Apply rotation and translation
+            context?.translateBy(x: tagRect.midX, y: tagRect.midY)
+            context?.rotate(by: tag.angle.radians)
+            context?.translateBy(x: -tagRect.midX, y: -tagRect.midY)
+            
+            // Draw background color behind the text
+            context?.setFillColor(UIColor(tag.backgroundColor).withAlphaComponent(0.6).cgColor)
+            context?.fill(tagRect.insetBy(dx: -10, dy: -5)) // Add padding to the background
+            
+            // Draw regular text with scaled font size
+            attributedTagText.draw(in: tagRect)
+            
+            context?.restoreGState()
+        }
+        
+        // Add draggable drawings
         for drawing in draggableDrawings {
             allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
         }
         
+        // Add draggable texts with scaling
         for text in draggableTexts {
-            let scaledFontSize = text.fontSize * text.scale
+            let scaledFontSize = text.fontSize * text.scale // Apply scaling to the font size
             let textAttributes: [NSAttributedString.Key: Any] = [
                 .font: text.font.toUIFont(size: scaledFontSize)!,
                 .foregroundColor: UIColor(text.textColor)
             ]
+            
             let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
             let textSize = attributedString.size()
             let rect = CGRect(
@@ -589,11 +629,28 @@ struct StoryEditView: View {
                                 y: text.position.height + screenSize.height / 2 - textSize.height / 2),
                 size: textSize
             )
-            allElements.append((image: nil, text: attributedString, rect: rect, angle: text.angle.radians, zIndex: text.zIndex))
+            
+            context?.saveGState()
+            
+            // Apply rotation and scaling
+            context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.rotate(by: text.angle.radians)
+            context?.translateBy(x: -rect.midX, y: -rect.midY)
+            
+            // Draw background color behind the text
+            context?.setFillColor(UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).cgColor)
+            context?.fill(rect.insetBy(dx: -10, dy: -5)) // Add padding to the background
+            
+            // Draw the text
+            attributedString.draw(in: rect)
+            
+            context?.restoreGState()
         }
         
+        // Sort elements by zIndex
         allElements.sort { $0.zIndex < $1.zIndex }
         
+        // Apply any selected effect (such as color overlay)
         if let selectedEffect = selectedEffect {
             if case .color(let colorOverlay) = selectedEffect {
                 context?.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
@@ -601,10 +658,12 @@ struct StoryEditView: View {
             }
         }
         
+        // Draw images and text in the sorted order
         for element in allElements {
             let rect = element.rect
             context?.saveGState()
             
+            // Apply rotation and scaling for each element
             context?.translateBy(x: rect.midX, y: rect.midY)
             context?.rotate(by: element.angle)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
@@ -642,6 +701,12 @@ struct StoryEditView: View {
         UIGraphicsEndImageContext()
         return composedImage ?? UIImage()
     }
+
+    
+
+
+
+
 }
 
 
@@ -649,15 +714,15 @@ struct StoryEditView: View {
 struct AdditionalButtonsView: View {
     var addTimeImage: () -> Void
     var addLocationImage: () -> Void
-
+    
     @Binding var showTagOverlay: Bool
     @Binding var isMuted: Bool
     @State private var showMusicSelectionOverlay: Bool = false
     @Binding var selectedSoundURL: URL?
     @Binding var isPlaying: Bool
-
+    
     @State private var audioPlayer: AVPlayer?
-
+    
     var body: some View {
         VStack(spacing: 12) {
             Button(action: {
@@ -671,7 +736,7 @@ struct AdditionalButtonsView: View {
                     .padding(10)
             }
             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+            
             Button(action: {
                 addTimeImage()
             }) {
@@ -683,7 +748,7 @@ struct AdditionalButtonsView: View {
                     .padding(10)
             }
             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+            
             Button(action: {
                 addLocationImage()
             }) {
@@ -695,20 +760,20 @@ struct AdditionalButtonsView: View {
                     .padding(10)
             }
             .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+            
             Button(action: {
                 if selectedSoundURL == nil {
-                      isMuted.toggle()
-                  }            }) {
-                Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white)
-                    .padding(10)
-            }
-            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-
+                    isMuted.toggle()
+                }            }) {
+                    Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.white)
+                        .padding(10)
+                }
+                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
+            
             Button(action: {
                 showMusicSelectionOverlay = true
             }) {
@@ -726,7 +791,7 @@ struct AdditionalButtonsView: View {
                 audioPlayer?.pause()
                 audioPlayer = nil
             })
-           
+            
         }
         .onChange(of: selectedSoundURL) { newSoundURL in
             if let soundURL = newSoundURL {
@@ -745,8 +810,8 @@ struct AdditionalButtonsView: View {
     }
     
     
-
-
+    
+    
     private func playSelectedMusic(soundURL: URL) {
         if let player = audioPlayer {
             player.pause()
@@ -1128,7 +1193,7 @@ struct SimpleVideoPlayerView: UIViewControllerRepresentable {
         let player = AVPlayer(url: videoURL)
         
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-//            player.seek(to: .zero)
+                        player.seek(to: .zero)
             player.play()
         }
         

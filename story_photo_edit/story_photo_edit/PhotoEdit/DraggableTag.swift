@@ -19,6 +19,9 @@ struct DraggableTag {
     var textColor: Color = .white
     var useGradientText: Bool = false
     var originalText: String
+    var image: UIImage
+
+    
 }
 
 struct DraggableTagView: View {
@@ -38,87 +41,97 @@ struct DraggableTagView: View {
         endPoint: .trailing
     )
 
+    // Calculate the scaled font size based on the scale and lastScaleValue
+    var scaledFontSize: CGFloat {
+        let baseFontSize: CGFloat = 22 // Set your base font size
+     
+        return min(baseFontSize * draggableTag.lastScaleValue * draggableTag.scale, 60) // Max font size set to 60
+    }
+
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack {
                     if !shouldRemove {
                         ZStack {
-                            Text(draggableTag.text)
-                                .font(Font.system(size: 22))
-                                .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
-                                .overlay(
-                                    draggableTag.useGradientText ?
-                                    gradientColor.mask(Text(draggableTag.text).font(.system(size: 22))) : nil
-                                )
-                              
-                                .padding(6)
-                                .background(draggableTag.backgroundColor.opacity(0.6))
-                                .cornerRadius(5)
-                                .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale)
-                                .rotationEffect(draggableTag.angle)
-                                .position(x: geometry.size.width / 2 + draggableTag.position.width + dragOffset.width,
-                                          y: geometry.size.height / 2 + draggableTag.position.height + dragOffset.height)
-                                .gesture(
-                                    SimultaneousGesture(
-                                        DragGesture()
-                                            .onChanged { value in
-                                                hideButtons = true
-                                                dragOffset = value.translation
+                            // The ResizableText component dynamically adjusts font size to fit
+                            ResizableText(
+                                text: draggableTag.text,
+                                fontSize: scaledFontSize, // Use the scaled font size
+                                availableWidth: geometry.size.width - 20 // Add padding to available width
+                            )
+                            .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
+                            .overlay(
+                                draggableTag.useGradientText ?
+                                gradientColor.mask(Text(draggableTag.text).font(.system(size: scaledFontSize))) : nil
+                            )
+                            .padding(6)
+                            .background(draggableTag.backgroundColor.opacity(0.6))
+                            .cornerRadius(5)
+                            .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale) // Apply the scale effect
+                            .rotationEffect(draggableTag.angle)
+                            .position(x: geometry.size.width / 2 + draggableTag.position.width + dragOffset.width,
+                                      y: geometry.size.height / 2 + draggableTag.position.height + dragOffset.height)
+                            .gesture(
+                                SimultaneousGesture(
+                                    DragGesture()
+                                        .onChanged { value in
+                                            hideButtons = true
+                                            dragOffset = value.translation
 
-                                                let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
-                                                if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
-                                                    isDraggingOverDelete = true
-                                                } else {
-                                                    isDraggingOverDelete = false
-                                                }
-                                            }
-                                            .onEnded { value in
-                                                if isDraggingOverDelete {
-                                                    withAnimation(.smooth(duration: 0.3)) {
-                                                        shouldRemove = true
-                                                    }
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                        draggableTag = DraggableTag(text: draggableTag.text, position: draggableTag.position, scale: draggableTag.scale, angle: draggableTag.angle, zIndex: draggableTag.zIndex, originalText: draggableTag.originalText)
-                                                    }
-                                                } else {
-                                                    draggableTag.position.width += dragOffset.width
-                                                    draggableTag.position.height += dragOffset.height
-                                                    dragOffset = .zero
-                                                    updateTagState(geo: geometry)
-                                                }
-                                                dragOffset = .zero
-                                                hideButtons = false
+                                            let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                            if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
+                                                isDraggingOverDelete = true
+                                            } else {
                                                 isDraggingOverDelete = false
-                                            },
-                                        RotationGesture()
-                                            .onChanged { newAngle in
-                                                draggableTag.angle += newAngle - draggableTag.angle
                                             }
-                                            .onEnded { newAngle in
-                                                draggableTag.angle = newAngle
+                                        }
+                                        .onEnded { value in
+                                            if isDraggingOverDelete {
+                                                withAnimation(.smooth(duration: 0.3)) {
+                                                    shouldRemove = true
+                                                }
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    draggableTag = DraggableTag(text: draggableTag.text, position: draggableTag.position, scale: draggableTag.scale, angle: draggableTag.angle, zIndex: draggableTag.zIndex, originalText: draggableTag.originalText, image: draggableTag.image)
+                                                }
+                                            } else {
+                                                draggableTag.position.width += dragOffset.width
+                                                draggableTag.position.height += dragOffset.height
+                                                dragOffset = .zero
                                                 updateTagState(geo: geometry)
                                             }
-                                    )
-                                    .simultaneously(with: MagnificationGesture()
-                                        .onChanged { value in
-                                            draggableTag.scale = value
+                                            dragOffset = .zero
+                                            hideButtons = false
+                                            isDraggingOverDelete = false
+                                        },
+                                    RotationGesture()
+                                        .onChanged { newAngle in
+                                            draggableTag.angle += newAngle - draggableTag.angle
                                         }
-                                        .onEnded { _ in
-                                            draggableTag.lastScaleValue *= draggableTag.scale
-                                            draggableTag.scale = 1.0
-                                    updateTagState(geo: geometry)
+                                        .onEnded { newAngle in
+                                            draggableTag.angle = newAngle
+                                            updateTagState(geo: geometry)
                                         }
-                                    )
                                 )
-                                .onTapGesture {
-                                    tapCount += 1
-                                    updateTagAppearance()
-                                }
+                                .simultaneously(with: MagnificationGesture()
+                                    .onChanged { value in
+                                        draggableTag.scale = value
+                                    }
+                                    .onEnded { _ in
+                                        draggableTag.lastScaleValue *= draggableTag.scale
+                                        draggableTag.scale = 1.0
+                                        updateTagState(geo: geometry)
+                                    }
+                                )
+                            )
+                            .onTapGesture {
+                                tapCount += 1
+                                updateTagAppearance()
+                            }
                         }
                         .background(
                             GeometryReader { geo in
-                                Color.blue
+                                Color.clear
                                     .onAppear {
                                         let scale = draggableTag.lastScaleValue * draggableTag.scale
                                         let globalFrame = geo.frame(in: .global)
@@ -135,8 +148,6 @@ struct DraggableTagView: View {
                                         
                                         updateTagState(geo: geo)
                                     }
-
-
                             }
                         )
                     }
@@ -186,7 +197,34 @@ struct DraggableTagView: View {
     }
 }
 
+// ResizableText component adjusted to use scaled font size
+struct ResizableText: View {
+    let text: String
+    var fontSize: CGFloat
+    var availableWidth: CGFloat
 
+    var body: some View {
+        Text(text)
+            .font(.system(size: min(fontSizeToFit(), fontSize))) // Ensure font size is adjusted dynamically
+            .lineLimit(1) // Ensures text stays on one line
+            .fixedSize(horizontal: true, vertical: false) // Avoids text wrapping
+    }
+
+    // Dynamically calculate the font size to fit within the available width
+    private func fontSizeToFit() -> CGFloat {
+        let maxWidth: CGFloat = availableWidth
+        let calculatedFontSize = UIFont.systemFont(ofSize: fontSize).pointSize
+        let attributedText = NSAttributedString(string: text, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: calculatedFontSize)])
+        let textSize = attributedText.size()
+        
+        if textSize.width > maxWidth {
+            // Scale down the font size if the text width exceeds the available width
+            return calculatedFontSize * (maxWidth / textSize.width)
+        }
+        
+        return fontSize
+    }
+}
 
 extension DraggableTag {
     func copyWith(newBackground: Color? = nil, newTextColor: Color? = nil, useGradientText: Bool? = nil) -> DraggableTag {
@@ -203,3 +241,5 @@ extension DraggableTag {
         return copy
     }
 }
+
+

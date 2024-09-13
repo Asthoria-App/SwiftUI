@@ -30,7 +30,6 @@ public class VideoProcessor: ObservableObject {
                     return
                 }
 
-                // Eğer soundURL varsa yeni sesi yükle, yoksa orijinal sesi kullan
                 var finalDuration = originalVideoDuration
 
                 if let soundURL = soundURL {
