@@ -1,147 +1,79 @@
 import SwiftUI
-import AVFoundation
-import UIKit
-import Vision
+import ARKit
+import SceneKit
 
 @main
 struct story_photo_editApp: App {
     var body: some Scene {
         WindowGroup {
-            StoryEditView()
+            ARFaceFilterView()
         }
     }
 }
 
-struct CameraView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
-        let controller = CameraViewController()
-        return controller
+struct ARFaceFilterView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> ARFaceFilterViewController {
+        return ARFaceFilterViewController()
     }
     
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: ARFaceFilterViewController, context: Context) {}
 }
 
-class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private var captureSession: AVCaptureSession!
-    private var previewLayer: AVCaptureVideoPreviewLayer!
-    private var overlayLayer = CAShapeLayer()
+class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
+    var sceneView: ARSCNView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        captureSession = AVCaptureSession()
-        guard let videoCaptureDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else { return }
-        let videoInput: AVCaptureDeviceInput
+        sceneView = ARSCNView(frame: self.view.frame)
+        sceneView.delegate = self
+        sceneView.automaticallyUpdatesLighting = true
         
-        do {
-            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
-        } catch {
-            print("Error creating video input: \(error.localizedDescription)")
-            return
-        }
-        
-        if captureSession.canAddInput(videoInput) {
-            captureSession.addInput(videoInput)
-        } else {
-            print("Unable to add video input.")
-            return
-        }
-        
-        let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoQueue"))
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-        }
-        
-        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.frame = view.layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-        
-        overlayLayer.frame = view.bounds
-        view.layer.addSublayer(overlayLayer)
-        
-        captureSession.startRunning()
+        // Configure face tracking
+        let configuration = ARFaceTrackingConfiguration()
+        sceneView.session.run(configuration)
+        view.addSubview(sceneView)
     }
     
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+    // Add glasses when the face is detected
+    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
+        guard let faceAnchor = anchor as? ARFaceAnchor else { return nil }
         
-        let request = VNDetectFaceLandmarksRequest { (req, err) in
-            if let error = err {
-                print("Face landmarks error: \(error.localizedDescription)")
-                return
-            }
-            guard let results = req.results as? [VNFaceObservation] else { return }
-            
-            DispatchQueue.main.async {
-                self.overlayLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
-                
-                for result in results {
-                    if let landmarks = result.landmarks, let outerLips = landmarks.outerLips, let innerLips = landmarks.innerLips {
-                        self.drawLips(outerLips, in: result, orientation: connection.videoOrientation, color: UIColor.red.withAlphaComponent(0.4).cgColor)
-                        self.drawLips(innerLips, in: result, orientation: connection.videoOrientation, color: UIColor.red.withAlphaComponent(0.4).cgColor)
-                    }
-                }
-            }
-        }
+        let faceNode = SCNNode()
         
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            print("Vision request failed: \(error.localizedDescription)")
-        }
+        // Add 2D glasses image to the face
+        let glassesNode = createGlassesNode()
+        faceNode.addChildNode(glassesNode)
+        
+        return faceNode
     }
     
-    func drawLips(_ lips: VNFaceLandmarkRegion2D, in faceObservation: VNFaceObservation, orientation: AVCaptureVideoOrientation, color: CGColor) {
-        let path = UIBezierPath()
-        let faceBoundingBox = faceObservation.boundingBox
+    // Function to create a glasses node using a 2D image
+    private func createGlassesNode() -> SCNNode {
+        let glassesNode = SCNNode()
         
-        let points = lips.normalizedPoints.map { point -> CGPoint in
-            var x = faceBoundingBox.origin.x + point.x * faceBoundingBox.width
-            var y = faceBoundingBox.origin.y + point.y * faceBoundingBox.height
-            
-            if orientation == .portrait || orientation == .portraitUpsideDown {
-                x = 1 - x
-            }
-            
-            switch orientation {
-            case .landscapeLeft:
-                swap(&x, &y)
-                y = 1 - y
-            case .landscapeRight:
-                swap(&x, &y)
-                x = 1 - x
-            case .portraitUpsideDown:
-                x = 1 - x
-                y = 1 - y
-            default:
-                break
-            }
-            
-            let convertedX = x * overlayLayer.bounds.width
-            let convertedY = (1 - y) * overlayLayer.bounds.height
-            return CGPoint(x: convertedX, y: convertedY)
-        }
+        // Load the glasses image from assets
+        let glassesImage = UIImage(named: "aaa")!
+        let glassesPlane = SCNPlane(width: 0.15, height: 0.05) // Adjust the size to fit the face
         
-        path.move(to: points.first ?? .zero)
-        for point in points.dropFirst() {
-            path.addLine(to: point)
-        }
-        path.close()
+        let glassesMaterial = SCNMaterial()
+        glassesMaterial.diffuse.contents = glassesImage
+        glassesPlane.materials = [glassesMaterial]
         
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.path = path.cgPath
-        shapeLayer.fillColor = color
-        shapeLayer.strokeColor = color
-        overlayLayer.addSublayer(shapeLayer)
+        let glassesImageNode = SCNNode(geometry: glassesPlane)
+        glassesImageNode.position = SCNVector3(0, 0.02, 0.08) // Position it in front of the face
+        
+        // Attach glasses node
+        glassesNode.addChildNode(glassesImageNode)
+        
+        return glassesNode
     }
-}
-
-struct ContentView: View {
-    var body: some View {
-        CameraView()
-            .edgesIgnoringSafeArea(.all)
+    
+    // Update the position and orientation of the glasses node based on the face anchor
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+        
+        let transform = SCNMatrix4(faceAnchor.transform)
+        node.transform = transform
     }
 }
