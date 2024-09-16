@@ -47,23 +47,23 @@ struct DraggableLocationView: View {
                         ZStack {
                         
                             HStack {
-                                Image(systemName: "mappin.circle.fill")
-                                    .foregroundColor(draggableLocation.textColor)
-
-                                if draggableLocation.useGradientText {
-                                    Text(draggableLocation.locationText)
-                                        .font(Font.system(size: 24))
-                                        .foregroundColor(.clear)
-                                        .overlay(
-                                            gradientColor
-                                                .mask(Text(draggableLocation.locationText)
-                                                    .font(Font.system(size: 24)))
-                                        )
-                                } else {
-                                    Text(draggableLocation.locationText)
-                                        .font(Font.system(size: 24))
-                                        .foregroundColor(draggableLocation.textColor)
+                                HStack {
+                                    if draggableLocation.useGradientText {
+                                        Text("📍 " + draggableLocation.locationText)
+                                            .font(Font.system(size: 24))
+                                            .foregroundColor(.clear)
+                                            .overlay(
+                                                gradientColor
+                                                    .mask(Text("📍 " + draggableLocation.locationText)
+                                                        .font(Font.system(size: 24)))
+                                            )
+                                    } else {
+                                        Text("📍 " + draggableLocation.locationText)
+                                            .font(Font.system(size: 24))
+                                            .foregroundColor(draggableLocation.textColor)
+                                    }
                                 }
+
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -198,26 +198,28 @@ struct DraggableLocationView: View {
         print("Updated Location Global Frame: \(draggableLocation.globalFrame)", transformedSize)
     }
 
-
-
- 
     private func getViewAsImage() -> UIImage {
-        let controller = UIHostingController(rootView: DraggableLocationView(draggableLocation: $draggableLocation, selectedLocationIndex: $selectedLocationIndex, index: index, hideButtons: $hideButtons))
+        let label = UILabel()
+        label.text = "📍 " + draggableLocation.locationText
         
-        let window = UIWindow(frame: UIScreen.main.bounds)
-        window.rootViewController = controller
-        window.makeKeyAndVisible()
+        label.font = UIFont.systemFont(ofSize: 24)
+        let col = UIColor(draggableLocation.textColor)
+        label.textColor = col
+        // SwiftUI Color'ı UIColor'a dönüştür
+//        label.textColor = draggableLocation.textColor.uiColor()
+        
+        print("Converted UIColor: \(String(describing: label.textColor.debugDescription))")  // Test için kontrol edelim
+        
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.frame = CGRect(x: 0, y: 0, width: 200, height: 40)
 
-        controller.view.layoutIfNeeded()
-
-        let targetSize = controller.view.intrinsicContentSize
-        controller.view.bounds = CGRect(origin: .zero, size: targetSize)
-
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-
-        return renderer.image { _ in
-            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
-        }
+        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
+        label.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image ?? UIImage()
     }
 
 }
@@ -237,14 +239,5 @@ extension DraggableLocation {
         return copy
     }
 }
-// UIColor extension'ı ile Color'ı UIColor'a çeviriyoruz
-extension Color {
-    func uiColor() -> UIColor {
-        let components = self.cgColor?.components
-        let red = components?[0] ?? 0.0
-        let green = components?[1] ?? 0.0
-        let blue = components?[2] ?? 0.0
-        let alpha = self.cgColor?.alpha ?? 1.0
-        return UIColor(red: red, green: green, blue: blue, alpha: alpha)
-    }
-}
+import SwiftUI
+

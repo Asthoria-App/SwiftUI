@@ -41,12 +41,7 @@ struct DraggableTagView: View {
         endPoint: .trailing
     )
 
-    // Calculate the scaled font size based on the scale and lastScaleValue
-    var scaledFontSize: CGFloat {
-        let baseFontSize: CGFloat = 22 // Set your base font size
-     
-        return min(baseFontSize * draggableTag.lastScaleValue * draggableTag.scale, 60) // Max font size set to 60
-    }
+
 
     var body: some View {
         ZStack {
@@ -54,16 +49,13 @@ struct DraggableTagView: View {
                 VStack {
                     if !shouldRemove {
                         ZStack {
-                            // The ResizableText component dynamically adjusts font size to fit
-                            ResizableText(
-                                text: draggableTag.text,
-                                fontSize: scaledFontSize, // Use the scaled font size
-                                availableWidth: geometry.size.width - 20 // Add padding to available width
-                            )
+                       
+                            Text(verbatim: draggableTag.text)
+                                .font(Font.system(size: 26))
                             .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
                             .overlay(
                                 draggableTag.useGradientText ?
-                                gradientColor.mask(Text(draggableTag.text).font(.system(size: scaledFontSize))) : nil
+                                gradientColor.mask(Text(draggableTag.text).font(.system(size: 26))) : nil
                             )
                             .padding(6)
                             .background(draggableTag.backgroundColor.opacity(0.6))
@@ -194,35 +186,6 @@ struct DraggableTagView: View {
             size: transformedSize
         )
         print("Updated Location Global Frame: \(draggableTag.globalFrame)")
-    }
-}
-
-// ResizableText component adjusted to use scaled font size
-struct ResizableText: View {
-    let text: String
-    var fontSize: CGFloat
-    var availableWidth: CGFloat
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: min(fontSizeToFit(), fontSize))) // Ensure font size is adjusted dynamically
-            .lineLimit(1) // Ensures text stays on one line
-            .fixedSize(horizontal: true, vertical: false) // Avoids text wrapping
-    }
-
-    // Dynamically calculate the font size to fit within the available width
-    private func fontSizeToFit() -> CGFloat {
-        let maxWidth: CGFloat = availableWidth
-        let calculatedFontSize = UIFont.systemFont(ofSize: fontSize).pointSize
-        let attributedText = NSAttributedString(string: text, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: calculatedFontSize)])
-        let textSize = attributedText.size()
-        
-        if textSize.width > maxWidth {
-            // Scale down the font size if the text width exceeds the available width
-            return calculatedFontSize * (maxWidth / textSize.width)
-        }
-        
-        return fontSize
     }
 }
 

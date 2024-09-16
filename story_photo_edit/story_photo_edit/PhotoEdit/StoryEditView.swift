@@ -161,7 +161,9 @@ struct StoryEditView: View {
             
             ForEach(draggableTimes.indices, id: \.self) { index in
                 DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
-                    .frame(width: 150, height: 150)
+                    .frame(width: 150, height:draggableTimes[index].currentTimeStyle == .analogClock ? 150: 50)
+                
+                
                     .aspectRatio(contentMode: .fit)
                     .zIndex(draggableTimes[index].zIndex)
                 
@@ -556,31 +558,26 @@ struct StoryEditView: View {
         
         var allElements: [(image: UIImage?, text: NSAttributedString?, rect: CGRect, angle: CGFloat, zIndex: CGFloat)] = []
         
-        // Add draggable stickers
         for sticker in draggableStickers {
             allElements.append((image: sticker.image, text: nil, rect: sticker.globalFrame, angle: sticker.angle.radians, zIndex: sticker.zIndex))
         }
         
-        // Add draggable images
         for image in draggableImages {
             allElements.append((image: image.image, text: nil, rect: image.globalFrame, angle: image.angle.radians, zIndex: image.zIndex))
         }
         
-        // Add draggable times
         for time in draggableTimes {
             allElements.append((image: time.image, text: nil, rect: time.globalFrame, angle: time.angle.radians, zIndex: time.zIndex))
         }
         
-        // Add draggable locations
         for location in draggableLocations {
             allElements.append((image: location.image, text: nil, rect: location.globalFrame, angle: location.angle.radians, zIndex: location.zIndex))
         }
         
-        // Add draggable tags with scaling
         for tag in draggableTags {
-            let scaledFontSize = fontSize * tag.lastScaleValue * tag.scale // Scale font size
+            let scaledFontSize = 26 * tag.lastScaleValue * tag.scale
             let tagAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: scaledFontSize), // Apply the scaled font size
+                .font: UIFont.systemFont(ofSize: scaledFontSize),
                 .foregroundColor: UIColor(tag.textColor)
             ]
             
@@ -594,29 +591,23 @@ struct StoryEditView: View {
             
             context?.saveGState()
             
-            // Apply rotation and translation
             context?.translateBy(x: tagRect.midX, y: tagRect.midY)
             context?.rotate(by: tag.angle.radians)
             context?.translateBy(x: -tagRect.midX, y: -tagRect.midY)
             
-            // Draw background color behind the text
             context?.setFillColor(UIColor(tag.backgroundColor).withAlphaComponent(0.6).cgColor)
-            context?.fill(tagRect.insetBy(dx: -10, dy: -5)) // Add padding to the background
+            context?.fill(tagRect.insetBy(dx: -6 * tag.lastScaleValue, dy: -6 * tag.lastScaleValue))
             
-            // Draw regular text with scaled font size
             attributedTagText.draw(in: tagRect)
-            
             context?.restoreGState()
         }
         
-        // Add draggable drawings
         for drawing in draggableDrawings {
             allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
         }
         
-        // Add draggable texts with scaling
         for text in draggableTexts {
-            let scaledFontSize = text.fontSize * text.scale // Apply scaling to the font size
+            let scaledFontSize = text.fontSize * text.scale
             let textAttributes: [NSAttributedString.Key: Any] = [
                 .font: text.font.toUIFont(size: scaledFontSize)!,
                 .foregroundColor: UIColor(text.textColor)
@@ -631,26 +622,19 @@ struct StoryEditView: View {
             )
             
             context?.saveGState()
-            
-            // Apply rotation and scaling
             context?.translateBy(x: rect.midX, y: rect.midY)
             context?.rotate(by: text.angle.radians)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
             
-            // Draw background color behind the text
             context?.setFillColor(UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).cgColor)
-            context?.fill(rect.insetBy(dx: -10, dy: -5)) // Add padding to the background
+            context?.fill(rect.insetBy(dx: -10, dy: -5))
             
-            // Draw the text
             attributedString.draw(in: rect)
-            
             context?.restoreGState()
         }
         
-        // Sort elements by zIndex
         allElements.sort { $0.zIndex < $1.zIndex }
         
-        // Apply any selected effect (such as color overlay)
         if let selectedEffect = selectedEffect {
             if case .color(let colorOverlay) = selectedEffect {
                 context?.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
@@ -658,12 +642,10 @@ struct StoryEditView: View {
             }
         }
         
-        // Draw images and text in the sorted order
         for element in allElements {
             let rect = element.rect
             context?.saveGState()
             
-            // Apply rotation and scaling for each element
             context?.translateBy(x: rect.midX, y: rect.midY)
             context?.rotate(by: element.angle)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
@@ -701,15 +683,7 @@ struct StoryEditView: View {
         UIGraphicsEndImageContext()
         return composedImage ?? UIImage()
     }
-
-    
-
-
-
-
 }
-
-
 
 struct AdditionalButtonsView: View {
     var addTimeImage: () -> Void
@@ -829,7 +803,6 @@ struct AdditionalButtonsView: View {
             audioPlayer?.pause()
             audioPlayer = nil
         }
-        
     }
 }
 
@@ -1193,7 +1166,7 @@ struct SimpleVideoPlayerView: UIViewControllerRepresentable {
         let player = AVPlayer(url: videoURL)
         
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-                        player.seek(to: .zero)
+            player.seek(to: .zero)
             player.play()
         }
         
