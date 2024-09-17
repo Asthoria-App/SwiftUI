@@ -27,6 +27,8 @@
 		56329A1E2C998A3E001D01D0 /* Demon_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */; };
 		56329A1F2C998A3E001D01D0 /* Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A1B2C998A3E001D01D0 /* Mask.usdz */; };
 		56329A212C998E68001D01D0 /* Eyebrows.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A202C998E68001D01D0 /* Eyebrows.usdz */; };
+		56329A232C999505001D01D0 /* Glasses.scn in Resources */ = {isa = PBXBuildFile; fileRef = 56329A222C999505001D01D0 /* Glasses.scn */; };
+		56329A252C999665001D01D0 /* oni_mask.glb in Resources */ = {isa = PBXBuildFile; fileRef = 56329A242C999665001D01D0 /* oni_mask.glb */; };
 		563B94EF2C804CB000649B68 /* DraggableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94EE2C804CB000649B68 /* DraggableText.swift */; };
 		563B94F12C804D6F00649B68 /* DraggableSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94F02C804D6F00649B68 /* DraggableSticker.swift */; };
 		563B94F32C804E0D00649B68 /* TextOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94F22C804E0D00649B68 /* TextOverlayView.swift */; };
@@ -77,6 +79,8 @@
 		56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Demon_Mask.usdz; sourceTree = "<group>"; };
 		56329A1B2C998A3E001D01D0 /* Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Mask.usdz; sourceTree = "<group>"; };
 		56329A202C998E68001D01D0 /* Eyebrows.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Eyebrows.usdz; sourceTree = "<group>"; };
+		56329A222C999505001D01D0 /* Glasses.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Glasses.scn; sourceTree = "<group>"; };
+		56329A242C999665001D01D0 /* oni_mask.glb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oni_mask.glb; sourceTree = "<group>"; };
 		563B94EE2C804CB000649B68 /* DraggableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableText.swift; sourceTree = "<group>"; };
 		563B94F02C804D6F00649B68 /* DraggableSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableSticker.swift; sourceTree = "<group>"; };
 		563B94F22C804E0D00649B68 /* TextOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextOverlayView.swift; sourceTree = "<group>"; };
@@ -215,7 +219,9 @@
 				56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */,
 				56329A1B2C998A3E001D01D0 /* Mask.usdz */,
 				56329A182C998A3D001D01D0 /* Beard.usdz */,
+				56329A242C999665001D01D0 /* oni_mask.glb */,
 				56329A122C997C09001D01D0 /* Glasses.usdz */,
+				56329A222C999505001D01D0 /* Glasses.scn */,
 				56329A202C998E68001D01D0 /* Eyebrows.usdz */,
 				56329A162C9981CD001D01D0 /* Venice_Mask.usdz */,
 				56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */,
@@ -299,6 +305,7 @@
 			files = (
 				568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */,
 				56329A1E2C998A3E001D01D0 /* Demon_Mask.usdz in Resources */,
+				56329A252C999665001D01D0 /* oni_mask.glb in Resources */,
 				568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */,
 				56BEC1522C9329CC00A135EC /* audio3.mp3 in Resources */,
 				568D7CAB2C7625C100A4D361 /* Roboto-Medium.ttf in Resources */,
@@ -308,6 +315,7 @@
 				56329A0D2C997301001D01D0 /* Doflamingo_Glasses.usdz in Resources */,
 				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
 				5673FE012C94425600BE5CD6 /* audio4.mp3 in Resources */,
+				56329A232C999505001D01D0 /* Glasses.scn in Resources */,
 				56329A112C9978BC001D01D0 /* Face_Model.usdz in Resources */,
 				56329A1C2C998A3E001D01D0 /* Beard.usdz in Resources */,
 				56329A172C9981CD001D01D0 /* Venice_Mask.usdz in Resources */,

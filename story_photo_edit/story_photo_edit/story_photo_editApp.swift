@@ -34,17 +34,20 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         
         view.addSubview(sceneView)
     }
-    
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return nil }
-        
-        let faceNode = SCNNode()
-        
-        let maskNode = createBeardMaskNode()
-        faceNode.addChildNode(maskNode)
-        
-        return faceNode
-    }
+          guard let faceAnchor = anchor as? ARFaceAnchor else { return nil }
+          
+          let faceNode = SCNNode()
+          
+          let glassesNode = createGlassesMaskNode()
+          faceNode.addChildNode(glassesNode)
+          
+          let occlusionNode = createOcclusionNode(for: faceAnchor)
+          faceNode.addChildNode(occlusionNode)
+          
+          return faceNode
+      }
+      
     
     private func createHalfMaskNode() -> SCNNode {
         guard let maskScene = try? SCNScene(named: "Half_Mask.usdz") else {
@@ -72,6 +75,21 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         maskNode.scale = SCNVector3(0.0089, 0.0089, 0.0089)
         
         maskNode.position = SCNVector3(-0.004, -0.08, 0.05)
+
+        return maskNode
+    }
+    
+    
+    // Gözlük node'u
+    private func createGlassesMaskNode() -> SCNNode {
+        guard let maskScene = try? SCNScene(named: "Glasses.usdz") else {
+            print("Mask model not found")
+            return SCNNode()
+        }
+        
+        let maskNode = maskScene.rootNode.clone()
+        maskNode.scale = SCNVector3(0.0009, 0.0009, 0.0009)
+        maskNode.position = SCNVector3(0.0, 0.02, 0.05)
         
         return maskNode
     }
@@ -92,10 +110,89 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         
         return maskNode
     }
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-        
-        let transform = SCNMatrix4(faceAnchor.transform)
-        node.transform = transform
-    }
+    
+       private func createOcclusionNode(for faceAnchor: ARFaceAnchor) -> SCNNode {
+           let occlusionGeometry = ARSCNFaceGeometry(device: sceneView.device!)!
+           occlusionGeometry.firstMaterial?.colorBufferWriteMask = []
+           occlusionGeometry.firstMaterial?.isDoubleSided = true
+           
+           let occlusionNode = SCNNode(geometry: occlusionGeometry)
+           occlusionNode.renderingOrder = -1
+           
+           return occlusionNode
+       }
+
+       func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+           guard let faceAnchor = anchor as? ARFaceAnchor,
+                 let occlusionNode = node.childNodes.first(where: { $0.geometry is ARSCNFaceGeometry }) else {
+               return
+           }
+           
+           // Yüz takibi güncelleniyor
+           let faceGeometry = occlusionNode.geometry as? ARSCNFaceGeometry
+           faceGeometry?.update(from: faceAnchor.geometry)
+       }
+
 }
+//import SwiftUI
+//import ARKit
+//import SceneKit
+//import Vision
+//
+//class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
+//    var sceneView: ARSCNView!
+//    var faceLandmarksRequest = VNDetectFaceLandmarksRequest()
+//    
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        
+//        sceneView = ARSCNView(frame: self.view.frame)
+//        sceneView.delegate = self
+//        sceneView.automaticallyUpdatesLighting = true
+//        
+//        let configuration = ARFaceTrackingConfiguration()
+//        sceneView.session.run(configuration)
+//        
+//        view.addSubview(sceneView)
+//    }
+//    
+//    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
+//        guard let faceAnchor = anchor as? ARFaceAnchor else { return nil }
+//        
+//        let faceNode = SCNNode()
+//        
+//        // Yüzde dudakları kırmızı yapma işlemi
+//        let lipNode = createLipNode(for: faceAnchor)
+//        faceNode.addChildNode(lipNode)
+//        
+//        return faceNode
+//    }
+//    
+//    // Dudakları kırmızı yapacak node oluşturma
+//    private func createLipNode(for faceAnchor: ARFaceAnchor) -> SCNNode {
+//        let lipNode = SCNNode()
+//        
+//        // Dudak bölgesi için basit kırmızı bir geometri
+//        let lipsGeometry = SCNPlane(width: 0.02, height: 0.01)
+//        lipsGeometry.firstMaterial?.diffuse.contents = UIColor.red.withAlphaComponent(0.7)
+//        
+//        let leftLipNode = SCNNode(geometry: lipsGeometry)
+//        let rightLipNode = SCNNode(geometry: lipsGeometry)
+//        
+//        // Dudakların konumlandırılması
+//        leftLipNode.position = SCNVector3(faceAnchor.leftEyePose.translation.x, faceAnchor.leftEyePose.translation.y, faceAnchor.leftEyePose.translation.z)
+//        rightLipNode.position = SCNVector3(faceAnchor.rightEyePose.translation.x, faceAnchor.rightEyePose.translation.y, faceAnchor.rightEyePose.translation.z)
+//        
+//        lipNode.addChildNode(leftLipNode)
+//        lipNode.addChildNode(rightLipNode)
+//        
+//        return lipNode
+//    }
+//    
+//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+//        
+//        let transform = SCNMatrix4(faceAnchor.transform)
+//        node.transform = transform
+//    }
+//}
