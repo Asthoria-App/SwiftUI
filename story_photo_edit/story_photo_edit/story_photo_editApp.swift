@@ -39,7 +39,9 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         let faceNode = SCNNode()
         
         let glassesNode = createGlassesNode()
+        let hatNode = createHatNode()
         faceNode.addChildNode(glassesNode)
+        faceNode.addChildNode(hatNode)
         
         return faceNode
     }
@@ -62,6 +64,25 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         
         return glassesNode
     }
+    
+    func createHatNode() -> SCNNode {
+        let hatNode = SCNNode()
+        
+        let hatImage = UIImage(named: "hat")!
+        let hatPlane = SCNPlane(width: 0.2, height: 0.13)
+        
+        let hatMaterial = SCNMaterial()
+        hatMaterial.diffuse.contents = hatImage
+        hatPlane.materials = [hatMaterial]
+        
+        let hatImageNode = SCNNode(geometry: hatPlane)
+        hatImageNode.position = SCNVector3(0, 0.12, 0.1)
+        
+        hatNode.addChildNode(hatImageNode)
+        
+        return hatNode
+    }
+
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         guard let faceAnchor = anchor as? ARFaceAnchor else { return }
