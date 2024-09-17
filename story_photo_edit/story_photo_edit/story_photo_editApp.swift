@@ -28,8 +28,10 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         sceneView = ARSCNView(frame: self.view.frame)
         sceneView.delegate = self
         sceneView.automaticallyUpdatesLighting = true
+        
         let configuration = ARFaceTrackingConfiguration()
         sceneView.session.run(configuration)
+        
         view.addSubview(sceneView)
     }
     
@@ -38,52 +40,58 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         
         let faceNode = SCNNode()
         
-        let glassesNode = createGlassesNode()
-        let hatNode = createHatNode()
-        faceNode.addChildNode(glassesNode)
-        faceNode.addChildNode(hatNode)
+        let maskNode = createBeardMaskNode()
+        faceNode.addChildNode(maskNode)
         
         return faceNode
     }
     
-    private func createGlassesNode() -> SCNNode {
-        let glassesNode = SCNNode()
+    private func createHalfMaskNode() -> SCNNode {
+        guard let maskScene = try? SCNScene(named: "Half_Mask.usdz") else {
+            print("Mask model not found")
+            return SCNNode()
+        }
         
-        let glassesImage = UIImage(named: "effect1")!
-        let glassesPlane = SCNPlane(width: 0.15, height: 0.15)
+        let maskNode = maskScene.rootNode.clone()
         
-        let glassesMaterial = SCNMaterial()
-        glassesMaterial.diffuse.contents = glassesImage
-        glassesPlane.materials = [glassesMaterial]
+        maskNode.scale = SCNVector3(0.0095, 0.0095, 0.0095)
         
-        let glassesImageNode = SCNNode(geometry: glassesPlane)
-        glassesImageNode.position = SCNVector3(0, 0.02, 0.08)
+        maskNode.position = SCNVector3(0, 0.0, 0.1)
         
-
-        glassesNode.addChildNode(glassesImageNode)
-        
-        return glassesNode
+        return maskNode
     }
     
-    func createHatNode() -> SCNNode {
-        let hatNode = SCNNode()
+    private func createBeardMaskNode() -> SCNNode {
+        guard let maskScene = try? SCNScene(named: "Beard.usdz") else {
+            print("Mask model not found")
+            return SCNNode()
+        }
         
-        let hatImage = UIImage(named: "hat")!
-        let hatPlane = SCNPlane(width: 0.2, height: 0.13)
+        let maskNode = maskScene.rootNode.clone()
         
-        let hatMaterial = SCNMaterial()
-        hatMaterial.diffuse.contents = hatImage
-        hatPlane.materials = [hatMaterial]
+        maskNode.scale = SCNVector3(0.0089, 0.0089, 0.0089)
         
-        let hatImageNode = SCNNode(geometry: hatPlane)
-        hatImageNode.position = SCNVector3(0, 0.12, 0.1)
+        maskNode.position = SCNVector3(-0.004, -0.08, 0.05)
         
-        hatNode.addChildNode(hatImageNode)
-        
-        return hatNode
+        return maskNode
     }
 
+
     
+    private func createVeniceMaskNode() -> SCNNode {
+        guard let maskScene = try? SCNScene(named: "Venice_Mask.usdz") else {
+            print("Mask model not found")
+            return SCNNode()
+        }
+        
+        let maskNode = maskScene.rootNode.clone()
+        
+        maskNode.scale = SCNVector3(0.08, 0.08, 0.08)
+        
+        maskNode.position = SCNVector3(0, -0.224, 0.02)
+        
+        return maskNode
+    }
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         guard let faceAnchor = anchor as? ARFaceAnchor else { return }
         
