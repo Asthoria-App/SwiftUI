@@ -18,7 +18,6 @@
 		561BAE162C73335200C0991E /* StoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561BAE152C73335200C0991E /* StoryEditView.swift */; };
 		56329A0D2C997301001D01D0 /* Doflamingo_Glasses.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */; };
 		56329A0F2C997476001D01D0 /* Doflamingo_Glasses.scn in Resources */ = {isa = PBXBuildFile; fileRef = 56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */; };
-		56329A112C9978BC001D01D0 /* Face_Model.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A102C9978BC001D01D0 /* Face_Model.usdz */; };
 		56329A132C997C09001D01D0 /* Glasses.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A122C997C09001D01D0 /* Glasses.usdz */; };
 		56329A152C997DEA001D01D0 /* Half_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A142C997DEA001D01D0 /* Half_Mask.usdz */; };
 		56329A172C9981CD001D01D0 /* Venice_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A162C9981CD001D01D0 /* Venice_Mask.usdz */; };
@@ -48,6 +47,10 @@
 		568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 568D7CAE2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf */; };
 		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
 		56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56901BC82C8748DA00F611E9 /* VideoProcessor.swift */; };
+		569753862C9ADF2C00F8654D /* Hair_2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753842C9ADF2900F8654D /* Hair_2.usdz */; };
+		569753872C9ADF2C00F8654D /* Hair_1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753852C9ADF2B00F8654D /* Hair_1.usdz */; };
+		569753892C9AEA3D00F8654D /* Face_Model.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753882C9AEA3D00F8654D /* Face_Model.usdz */; };
+		5697538B2C9AEACD00F8654D /* Face_Model.scn in Resources */ = {isa = PBXBuildFile; fileRef = 5697538A2C9AEACD00F8654D /* Face_Model.scn */; };
 		56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */; };
 		56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */; };
 		56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */; };
@@ -70,7 +73,6 @@
 		561BAE152C73335200C0991E /* StoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEditView.swift; sourceTree = "<group>"; };
 		56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Doflamingo_Glasses.usdz; sourceTree = "<group>"; };
 		56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Doflamingo_Glasses.scn; sourceTree = "<group>"; };
-		56329A102C9978BC001D01D0 /* Face_Model.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Face_Model.usdz; sourceTree = "<group>"; };
 		56329A122C997C09001D01D0 /* Glasses.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Glasses.usdz; sourceTree = "<group>"; };
 		56329A142C997DEA001D01D0 /* Half_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Half_Mask.usdz; sourceTree = "<group>"; };
 		56329A162C9981CD001D01D0 /* Venice_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Venice_Mask.usdz; sourceTree = "<group>"; };
@@ -101,6 +103,10 @@
 		568D7CB02C7626DC00A4D361 /* story-photo-edit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "story-photo-edit-Info.plist"; sourceTree = SOURCE_ROOT; };
 		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
 		56901BC82C8748DA00F611E9 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
+		569753842C9ADF2900F8654D /* Hair_2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Hair_2.usdz; sourceTree = "<group>"; };
+		569753852C9ADF2B00F8654D /* Hair_1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Hair_1.usdz; sourceTree = "<group>"; };
+		569753882C9AEA3D00F8654D /* Face_Model.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Face_Model.usdz; sourceTree = "<group>"; };
+		5697538A2C9AEACD00F8654D /* Face_Model.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Face_Model.scn; sourceTree = "<group>"; };
 		56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_1.gif; sourceTree = "<group>"; };
 		56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_3.gif; sourceTree = "<group>"; };
 		56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_4.gif; sourceTree = "<group>"; };
@@ -217,6 +223,10 @@
 			children = (
 				56329A192C998A3E001D01D0 /* Catwoman_Mask.usdz */,
 				56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */,
+				569753852C9ADF2B00F8654D /* Hair_1.usdz */,
+				569753842C9ADF2900F8654D /* Hair_2.usdz */,
+				569753882C9AEA3D00F8654D /* Face_Model.usdz */,
+				5697538A2C9AEACD00F8654D /* Face_Model.scn */,
 				56329A1B2C998A3E001D01D0 /* Mask.usdz */,
 				56329A182C998A3D001D01D0 /* Beard.usdz */,
 				56329A242C999665001D01D0 /* oni_mask.glb */,
@@ -226,7 +236,6 @@
 				56329A162C9981CD001D01D0 /* Venice_Mask.usdz */,
 				56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */,
 				56329A142C997DEA001D01D0 /* Half_Mask.usdz */,
-				56329A102C9978BC001D01D0 /* Face_Model.usdz */,
 				56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */,
 				56AC5F2D2C7CDCA7000E04DD /* gif_2.gif */,
 				56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */,
@@ -312,11 +321,12 @@
 				56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */,
 				56329A152C997DEA001D01D0 /* Half_Mask.usdz in Resources */,
 				561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */,
+				569753862C9ADF2C00F8654D /* Hair_2.usdz in Resources */,
 				56329A0D2C997301001D01D0 /* Doflamingo_Glasses.usdz in Resources */,
 				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
+				569753872C9ADF2C00F8654D /* Hair_1.usdz in Resources */,
 				5673FE012C94425600BE5CD6 /* audio4.mp3 in Resources */,
 				56329A232C999505001D01D0 /* Glasses.scn in Resources */,
-				56329A112C9978BC001D01D0 /* Face_Model.usdz in Resources */,
 				56329A1C2C998A3E001D01D0 /* Beard.usdz in Resources */,
 				56329A172C9981CD001D01D0 /* Venice_Mask.usdz in Resources */,
 				56329A132C997C09001D01D0 /* Glasses.usdz in Resources */,
@@ -332,6 +342,8 @@
 				568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */,
 				56AC5F312C7CDCA7000E04DD /* gif_2.gif in Resources */,
 				56329A212C998E68001D01D0 /* Eyebrows.usdz in Resources */,
+				569753892C9AEA3D00F8654D /* Face_Model.usdz in Resources */,
+				5697538B2C9AEACD00F8654D /* Face_Model.scn in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
