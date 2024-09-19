@@ -48,7 +48,7 @@ struct StoryEditView: View {
     @State private var showDrawingOverlay: Bool = false
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
-    @State private var backgroundType: BackgroundType = .video
+    @State private var backgroundType: BackgroundType = .photo
     //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
@@ -340,13 +340,15 @@ struct StoryEditView: View {
                         VStack {
                             Spacer()
                             Button("Done") {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    if let videoFrame = getVideoFrame() {
-                                        processVideo(videoFrame: videoFrame)
-                                    } else {
-                                        print("Video frame could not be determined")
-                                    }
-                                }
+                                generateImageFromPhoto()
+//                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                                    if let videoFrame = getVideoFrame() {
+//                                        processVideo(videoFrame: videoFrame)
+//                                    } else {
+//                                        print("Video frame could not be determined")
+//                                    }
+//                                }
+                                
                             }
                             .font(.title2)
                             .padding()
