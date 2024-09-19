@@ -70,6 +70,7 @@ struct DraggableTextView: View {
                     .position(positionInBounds(geometry))
                     .scaleEffect(lastScaleValue * scale)
                     .rotationEffect(angle)
+                
                     .background(
                         GeometryReader { geo in
                             Color.clear

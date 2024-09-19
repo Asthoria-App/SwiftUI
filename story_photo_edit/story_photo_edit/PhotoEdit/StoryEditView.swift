@@ -607,12 +607,10 @@ struct StoryEditView: View {
             allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
         }
         for text in draggableTexts {
-            // Satır sarma ve hizalama için paragraf stili oluştur
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.lineBreakMode = .byWordWrapping
             paragraphStyle.alignment = .center
             
-            // Normal font boyutunu al
             let normalFontSize = text.fontSize
             let textAttributes: [NSAttributedString.Key: Any] = [
                 .font: text.font.toUIFont(size: normalFontSize)!,
@@ -620,7 +618,6 @@ struct StoryEditView: View {
                 .paragraphStyle: paragraphStyle
             ]
             
-            // Metin boyutunu sınırsız yükseklikle hesapla (ölçek uygulanmadan önce)
             let maxWidth = screenSize.width
             let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
             let textSize = attributedString.boundingRect(
@@ -628,33 +625,26 @@ struct StoryEditView: View {
                 options: [.usesLineFragmentOrigin, .usesFontLeading],
                 context: nil).size
             
-            // Ölçeklendirilmiş pozisyonu ve metin çerçevesini hesapla
             let scaledWidth = textSize.width
             let scaledHeight = textSize.height
             let scaledX = text.position.width * text.lastScale + screenSize.width / 2 - scaledWidth / 2
             let scaledY = text.position.height * text.lastScale + screenSize.height / 2 - scaledHeight / 2
             
-            // Metnin çizileceği ölçeklendirilmiş rect çerçevesi
             var rect = CGRect(
                 origin: CGPoint(x: scaledX, y: scaledY),
                 size: CGSize(width: scaledWidth, height: scaledHeight)
             )
             
-            // Context'e scale ve transform uygula
             context?.saveGState()
             context?.translateBy(x: rect.midX, y: rect.midY)
             context?.scaleBy(x: text.lastScale, y: text.lastScale)
             context?.rotate(by: text.angle.radians)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
             
-            // Arka plan rengini ayarla
             context?.setFillColor(UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).cgColor)
-            context?.fill(rect.insetBy(dx: -10, dy: -5)) // Arka planı doldur
-            
-            // Metni çiz
+            context?.fill(rect.insetBy(dx: -10, dy: -5))
             attributedString.draw(in: rect)
             
-            // Context'i geri yükle
             context?.restoreGState()
         }
         
@@ -712,224 +702,6 @@ struct StoryEditView: View {
     }
 }
 
-struct AdditionalButtonsView: View {
-    var addTimeImage: () -> Void
-    var addLocationImage: () -> Void
-    
-    @Binding var showTagOverlay: Bool
-    @Binding var isMuted: Bool
-    @State private var showMusicSelectionOverlay: Bool = false
-    @Binding var selectedSoundURL: URL?
-    @Binding var isPlaying: Bool
-    
-    @State private var audioPlayer: AVPlayer?
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Button(action: {
-                showTagOverlay = true
-            }) {
-                Image(systemName: "tag")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white)
-                    .padding(10)
-            }
-            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-            
-            Button(action: {
-                addTimeImage()
-            }) {
-                Image(systemName: "clock")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white)
-                    .padding(10)
-            }
-            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-            
-            Button(action: {
-                addLocationImage()
-            }) {
-                Image(systemName: "location")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white)
-                    .padding(10)
-            }
-            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-            
-            Button(action: {
-                if selectedSoundURL == nil {
-                    isMuted.toggle()
-                }            }) {
-                    Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.white)
-                        .padding(10)
-                }
-                .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-            
-            Button(action: {
-                showMusicSelectionOverlay = true
-            }) {
-                Image(systemName: "music.note.list")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white)
-                    .padding(10)
-            }
-            .shadow(color: .gray.opacity(0.8), radius: 5, x: 0, y: 5)
-        }
-        .sheet(isPresented: $showMusicSelectionOverlay) {
-            SoundSelectionView(isShowing: $showMusicSelectionOverlay, selectedSound: $selectedSoundURL, stopCurrentMusic: {
-                audioPlayer?.pause()
-                audioPlayer = nil
-            })
-            
-        }
-        .onChange(of: selectedSoundURL) { newSoundURL in
-            if let soundURL = newSoundURL {
-                playSelectedMusic(soundURL: soundURL)
-                isMuted = true
-            }
-        }
-        .onChange(of: isPlaying) {  newValue in
-            if newValue == true {
-                audioPlayer?.play()
-            } else {
-                audioPlayer?.pause()
-                audioPlayer = nil
-            }
-        }
-    }
-    
-    
-    
-    
-    private func playSelectedMusic(soundURL: URL) {
-        if let player = audioPlayer {
-            player.pause()
-        }
-        
-        audioPlayer = AVPlayer(url: soundURL)
-        audioPlayer?.isMuted = false
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: audioPlayer?.currentItem, queue: .main) { _ in
-            self.audioPlayer?.seek(to: .zero)
-            self.audioPlayer?.play()
-        }
-        if isPlaying {
-            audioPlayer?.play()
-        } else {
-            audioPlayer?.pause()
-            audioPlayer = nil
-        }
-    }
-}
-
-struct SoundSelectionView: View {
-    @Binding var isShowing: Bool
-    @Binding var selectedSound: URL?
-    var stopCurrentMusic: () -> Void
-    let soundFiles = ["audio1", "audio2", "audio3", "audio4"]
-    let fileExtension = "mp3"
-    
-    var body: some View {
-        VStack {
-            Text("Select Background Music")
-                .font(.headline)
-                .padding()
-            
-            ScrollView {
-                Button(action: {
-                    selectedSound = nil
-                    stopCurrentMusic()
-                    isShowing = false
-                }) {
-                    Text("No Music")
-                        .font(.title2)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                }
-                
-                ForEach(soundFiles, id: \.self) { sound in
-                    Button(action: {
-                        if let url = Bundle.main.url(forResource: sound, withExtension: fileExtension) {
-                            selectedSound = url
-                        }
-                        isShowing = false
-                    }) {
-                        Text(sound.capitalized)
-                            .font(.title2)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .padding(.horizontal)
-                    }
-                }
-            }
-            
-            Button(action: {
-                isShowing = false
-            }) {
-                Text("Cancel")
-                    .font(.title3)
-                    .foregroundColor(.red)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(10)
-                    .padding(.horizontal)
-            }
-        }
-        .background(Color.black)
-        .cornerRadius(20)
-        .padding()
-        .shadow(radius: 10)
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -949,266 +721,3 @@ struct GeneratedImageView: View {
     }
 }
 
-struct FullScreenVideoPlayerView: View {
-    var videoURL: URL
-    
-    @State private var player = AVPlayer()
-    @Binding var selectedEffect: EffectType?
-    @Binding var hideButtons: Bool
-    @Binding var isMUted: Bool
-    
-    
-    var body: some View {
-        VStack {
-            VideoPlayerContainer(player: player, selectedEffect: $selectedEffect)
-                .onAppear {
-                    setupPlayer()
-                    player.play()
-                }
-                .onDisappear {
-                    player.pause()
-                    NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
-                }
-                .onChange(of: isMUted) { newValue in
-                    player.isMuted = newValue
-                }
-                .edgesIgnoringSafeArea(.all)
-            
-            if !hideButtons {
-                EffectSelectionView(selectedEffect: $selectedEffect)
-                    .frame(height: 100)
-            }
-        }
-    }
-    
-    private func setupPlayer() {
-        let playerItem = AVPlayerItem(url: videoURL)
-        player.replaceCurrentItem(with: playerItem)
-        player.isMuted = isMUted
-        
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-            player.seek(to: .zero)
-            player.play()
-        }
-    }
-}
-
-struct VideoPlayerContainer: UIViewControllerRepresentable {
-    var player: AVPlayer
-    
-    @Binding var selectedEffect: EffectType?
-    
-    func makeUIViewController(context: Context) -> UIViewController {
-        let controller = UIViewController()
-        let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspectFill
-        playerLayer.frame = UIScreen.main.bounds
-        
-        let containerView = UIView(frame: UIScreen.main.bounds)
-        containerView.layer.addSublayer(playerLayer)
-        
-        controller.view = containerView
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        if let playerLayer = uiViewController.view.layer.sublayers?.first as? AVPlayerLayer {
-            playerLayer.frame = UIScreen.main.bounds
-        }
-        
-        uiViewController.view.subviews.forEach { $0.removeFromSuperview() }
-        
-        if let selectedEffect = selectedEffect {
-            switch selectedEffect {
-            case .color(let color):
-                resetVideoCompositionIfNeeded()
-                
-                let overlayView = UIView(frame: UIScreen.main.bounds)
-                overlayView.backgroundColor = UIColor(color)
-                overlayView.alpha = 0.1
-                uiViewController.view.addSubview(overlayView)
-                
-            case .monochrome:
-                if let currentPlayerItem = player.currentItem {
-                    let filter = CIFilter(name: "CIColorMonochrome")
-                    filter?.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
-                    filter?.setValue(1.0, forKey: kCIInputIntensityKey)
-                    
-                    let videoComposition = AVVideoComposition(asset: currentPlayerItem.asset) { request in
-                        let source = request.sourceImage.clampedToExtent()
-                        filter?.setValue(source, forKey: kCIInputImageKey)
-                        
-                        if let output = filter?.outputImage {
-                            let croppedOutput = output.cropped(to: request.sourceImage.extent)
-                            request.finish(with: croppedOutput, context: nil)
-                        } else {
-                            request.finish(with: request.sourceImage, context: nil)
-                        }
-                    }
-                    currentPlayerItem.videoComposition = videoComposition
-                }
-            }
-        }
-    }
-    
-    private func resetVideoCompositionIfNeeded() {
-        if let currentPlayerItem = player.currentItem {
-            currentPlayerItem.videoComposition = nil
-        }
-    }
-}
-
-
-struct EffectButton: View {
-    var effectType: EffectType
-    @Binding var selectedEffect: EffectType?
-    
-    var body: some View {
-        Button(action: {
-            selectedEffect = effectType
-        }) {
-            ZStack {
-                Image(imageName(for: effectType))
-                    .resizable()
-                    .scaledToFill()
-                    .clipShape(Circle())
-                
-                Circle()
-                    .stroke(selectedEffect == effectType ? Color.blue : Color.white, lineWidth: 2)
-                    .shadow(color: .black.opacity(0.5), radius: 5, x: 3, y: 3)
-            }
-            .frame(width: 56, height: 56)
-        }
-    }
-    
-    private func imageName(for effect: EffectType) -> String {
-        switch effect {
-        case .color(.red): return "view"
-        case .color(.blue): return "view2"
-        case .color(.purple): return "view3"
-        case .color(.brown): return "view4"
-        case .color(.cyan): return "view"
-        default: return "view2"
-        }
-    }
-}
-
-struct EffectSelectionView: View {
-    @Binding var selectedEffect: EffectType?
-    let effects: [EffectType] = [.color(.red), .color(.blue), .color(.purple), .color(.brown), .color(.cyan), .monochrome]
-    
-    @State private var currentIndex: Int = 0
-    @State private var scrollOffset: CGFloat = 0.0
-    @State private var dragOffset: CGFloat = 0.0
-    
-    let buttonWidth: CGFloat = 86
-    
-    var body: some View {
-        VStack {
-            GeometryReader { geometry in
-                ScrollViewReader { scrollViewProxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 30) {
-                            ForEach(effects.indices, id: \.self) { index in
-                                VStack {
-                                    EffectButton(effectType: effects[index], selectedEffect: $selectedEffect)
-                                        .frame(width: 56, height: 56)
-                                        .padding(.top, 10)
-                                    
-                                    Text(effects[index].name)
-                                        .font(.caption)
-                                        .foregroundColor(selectedEffect == effects[index] ? Color.blue : Color.white)
-                                        .shadow(color: .black.opacity(0.4), radius: 2, x: 1, y: 1)
-                                    
-                                }
-                            }
-                        }
-                        .padding(.horizontal, (geometry.size.width - buttonWidth) / 2)
-                        .offset(x: scrollOffset + dragOffset)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    dragOffset = value.translation.width
-                                }
-                                .onEnded { value in
-                                    dragOffset = 0
-                                    let totalOffset = scrollOffset + value.translation.width
-                                    let snapIndex = Int(round(totalOffset / buttonWidth))
-                                    let nearestIndex = min(max(currentIndex - snapIndex, 0), effects.count - 1)
-                                    currentIndex = nearestIndex
-                                    withAnimation(.easeOut) {
-                                        scrollOffset = -CGFloat(currentIndex) * 56
-                                    }
-                                }
-                        )
-                    }
-                    
-                    .onAppear {
-                        withAnimation(.easeOut) {
-                            scrollOffset = -CGFloat(currentIndex) * buttonWidth
-                        }
-                    }
-                }
-            }
-            .frame(height: 190)
-            
-            
-        }
-        .background(Color.black.opacity(0.3))
-    }
-}
-
-enum EffectType: Hashable, Equatable {
-    case color(Color)
-    case monochrome
-    
-    var description: String {
-        switch self {
-        case .color(let color):
-            return "Color: \(color.description.capitalized)"
-        case .monochrome:
-            return "Monochrome"
-        }
-    }
-    
-    var name: String {
-        switch self {
-        case .color(.red): return "Red"
-        case .color(.blue): return "Blue"
-        case .color(.purple): return "Purple"
-        case .color(.brown): return "Brown"
-        case .color(.cyan): return "Cyan"
-        case .monochrome: return "Monochrome"
-        default: return "None"
-        }
-    }
-}
-
-
-struct SimpleVideoPlayerView: UIViewControllerRepresentable {
-    var videoURL: URL
-    
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let playerViewController = AVPlayerViewController()
-        let player = AVPlayer(url: videoURL)
-        
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-            player.seek(to: .zero)
-            player.play()
-        }
-        
-        playerViewController.player = player
-        playerViewController.videoGravity = .resizeAspectFill
-        
-        playerViewController.showsPlaybackControls = false
-        player.play()
-        return playerViewController
-    }
-    
-    func updateUIViewController(_ playerViewController: AVPlayerViewController, context: Context) {
-    }
-    
-    static func dismantleUIViewController(_ playerViewController: AVPlayerViewController, coordinator: ()) {
-        NotificationCenter.default.removeObserver(playerViewController, name: .AVPlayerItemDidPlayToEndTime, object: nil)
-    }
-}

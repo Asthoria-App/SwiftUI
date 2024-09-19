@@ -245,6 +245,7 @@ struct DynamicHeightTextView: UIViewRepresentable {
         textView.text = text
         textView.backgroundColor = UIColor(backgroundColor).withAlphaComponent(backgroundOpacity)
         textView.layer.masksToBounds = true
+        textView.layer.cornerRadius = 5
         textView.textColor = UIColor(textColor)
         textView.becomeFirstResponder()
         

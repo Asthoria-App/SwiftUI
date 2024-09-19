@@ -63,6 +63,7 @@ struct DraggableTimeView: View {
                                                 size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
                                             )
                                             updateTimeState(geo: geo)
+                                            draggableTime.image = getCurrentTimeAsImage()
                                         }
                                 }
                             )
