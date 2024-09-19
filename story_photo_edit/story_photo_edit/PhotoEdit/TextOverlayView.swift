@@ -17,7 +17,9 @@ struct OverlayView: View {
     @Binding var selectedFont: CustomFont
     @Binding var originalTextColor: Color
     @Binding var fontSize: CGFloat
+    @Binding var lastScale: CGFloat
     var onChange: () -> Void
+    
     
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
@@ -156,12 +158,13 @@ struct OverlayView: View {
                     backgroundColor: $backgroundColor,
                     selectedFont: $selectedFont,
                     textWidth: $textWidth,
-                    fontSize: $fontSize
+                    fontSize: $fontSize,
+                    lastScale: $lastScale
                 )
                 .frame(width: textWidth, height: textHeight)
                 .padding(8)
                 .background(Color.clear)
-                .cornerRadius(5)
+              
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         focusTextView()
@@ -208,7 +211,11 @@ struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var selectedFont: CustomFont
     @Binding var textWidth: CGFloat
     @Binding var fontSize: CGFloat
+    @Binding var lastScale: CGFloat
     
+    // Internal state for scaling
+    @State private var currentScale: CGFloat = 1.0
+
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: DynamicHeightTextView
         
@@ -238,7 +245,6 @@ struct DynamicHeightTextView: UIViewRepresentable {
         textView.text = text
         textView.backgroundColor = UIColor(backgroundColor).withAlphaComponent(backgroundOpacity)
         textView.layer.masksToBounds = true
-        textView.layer.cornerRadius = 5
         textView.textColor = UIColor(textColor)
         textView.becomeFirstResponder()
         
@@ -267,7 +273,19 @@ struct DynamicHeightTextView: UIViewRepresentable {
             self.textWidth = min(size.width, maxWidth)
         }
     }
+
+    func scaleGesture() -> some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                self.currentScale = value
+                self.lastScale = self.currentScale
+            }
+            .onEnded { _ in
+                self.currentScale = 1.0
+            }
+    }
 }
+
 
 struct ColorSelectionView: View {
     @Binding var selectedColor: Color

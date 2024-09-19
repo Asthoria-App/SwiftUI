@@ -59,7 +59,7 @@ struct DraggableTagView: View {
                             )
                             .padding(6)
                             .background(draggableTag.backgroundColor.opacity(0.6))
-                            .cornerRadius(5)
+                         
                             .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale) // Apply the scale effect
                             .rotationEffect(draggableTag.angle)
                             .position(x: geometry.size.width / 2 + draggableTag.position.width + dragOffset.width,

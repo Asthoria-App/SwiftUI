@@ -16,18 +16,13 @@
 		561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 561BAE0B2C7332C600C0991E /* Assets.xcassets */; };
 		561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 561BAE0E2C7332C600C0991E /* Preview Assets.xcassets */; };
 		561BAE162C73335200C0991E /* StoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561BAE152C73335200C0991E /* StoryEditView.swift */; };
-		56329A0D2C997301001D01D0 /* Doflamingo_Glasses.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */; };
-		56329A0F2C997476001D01D0 /* Doflamingo_Glasses.scn in Resources */ = {isa = PBXBuildFile; fileRef = 56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */; };
 		56329A132C997C09001D01D0 /* Glasses.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A122C997C09001D01D0 /* Glasses.usdz */; };
 		56329A152C997DEA001D01D0 /* Half_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A142C997DEA001D01D0 /* Half_Mask.usdz */; };
-		56329A172C9981CD001D01D0 /* Venice_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A162C9981CD001D01D0 /* Venice_Mask.usdz */; };
 		56329A1C2C998A3E001D01D0 /* Beard.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A182C998A3D001D01D0 /* Beard.usdz */; };
 		56329A1D2C998A3E001D01D0 /* Catwoman_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A192C998A3E001D01D0 /* Catwoman_Mask.usdz */; };
 		56329A1E2C998A3E001D01D0 /* Demon_Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */; };
 		56329A1F2C998A3E001D01D0 /* Mask.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A1B2C998A3E001D01D0 /* Mask.usdz */; };
-		56329A212C998E68001D01D0 /* Eyebrows.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 56329A202C998E68001D01D0 /* Eyebrows.usdz */; };
 		56329A232C999505001D01D0 /* Glasses.scn in Resources */ = {isa = PBXBuildFile; fileRef = 56329A222C999505001D01D0 /* Glasses.scn */; };
-		56329A252C999665001D01D0 /* oni_mask.glb in Resources */ = {isa = PBXBuildFile; fileRef = 56329A242C999665001D01D0 /* oni_mask.glb */; };
 		563B94EF2C804CB000649B68 /* DraggableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94EE2C804CB000649B68 /* DraggableText.swift */; };
 		563B94F12C804D6F00649B68 /* DraggableSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94F02C804D6F00649B68 /* DraggableSticker.swift */; };
 		563B94F32C804E0D00649B68 /* TextOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B94F22C804E0D00649B68 /* TextOverlayView.swift */; };
@@ -48,9 +43,6 @@
 		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
 		56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56901BC82C8748DA00F611E9 /* VideoProcessor.swift */; };
 		569753862C9ADF2C00F8654D /* Hair_2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753842C9ADF2900F8654D /* Hair_2.usdz */; };
-		569753872C9ADF2C00F8654D /* Hair_1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753852C9ADF2B00F8654D /* Hair_1.usdz */; };
-		569753892C9AEA3D00F8654D /* Face_Model.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753882C9AEA3D00F8654D /* Face_Model.usdz */; };
-		5697538B2C9AEACD00F8654D /* Face_Model.scn in Resources */ = {isa = PBXBuildFile; fileRef = 5697538A2C9AEACD00F8654D /* Face_Model.scn */; };
 		56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */; };
 		56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */; };
 		56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */; };
@@ -71,18 +63,13 @@
 		561BAE0B2C7332C600C0991E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		561BAE0E2C7332C600C0991E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		561BAE152C73335200C0991E /* StoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEditView.swift; sourceTree = "<group>"; };
-		56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Doflamingo_Glasses.usdz; sourceTree = "<group>"; };
-		56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Doflamingo_Glasses.scn; sourceTree = "<group>"; };
 		56329A122C997C09001D01D0 /* Glasses.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Glasses.usdz; sourceTree = "<group>"; };
 		56329A142C997DEA001D01D0 /* Half_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Half_Mask.usdz; sourceTree = "<group>"; };
-		56329A162C9981CD001D01D0 /* Venice_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Venice_Mask.usdz; sourceTree = "<group>"; };
 		56329A182C998A3D001D01D0 /* Beard.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Beard.usdz; sourceTree = "<group>"; };
 		56329A192C998A3E001D01D0 /* Catwoman_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Catwoman_Mask.usdz; sourceTree = "<group>"; };
 		56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Demon_Mask.usdz; sourceTree = "<group>"; };
 		56329A1B2C998A3E001D01D0 /* Mask.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Mask.usdz; sourceTree = "<group>"; };
-		56329A202C998E68001D01D0 /* Eyebrows.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Eyebrows.usdz; sourceTree = "<group>"; };
 		56329A222C999505001D01D0 /* Glasses.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Glasses.scn; sourceTree = "<group>"; };
-		56329A242C999665001D01D0 /* oni_mask.glb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oni_mask.glb; sourceTree = "<group>"; };
 		563B94EE2C804CB000649B68 /* DraggableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableText.swift; sourceTree = "<group>"; };
 		563B94F02C804D6F00649B68 /* DraggableSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableSticker.swift; sourceTree = "<group>"; };
 		563B94F22C804E0D00649B68 /* TextOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextOverlayView.swift; sourceTree = "<group>"; };
@@ -104,9 +91,6 @@
 		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
 		56901BC82C8748DA00F611E9 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
 		569753842C9ADF2900F8654D /* Hair_2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Hair_2.usdz; sourceTree = "<group>"; };
-		569753852C9ADF2B00F8654D /* Hair_1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Hair_1.usdz; sourceTree = "<group>"; };
-		569753882C9AEA3D00F8654D /* Face_Model.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Face_Model.usdz; sourceTree = "<group>"; };
-		5697538A2C9AEACD00F8654D /* Face_Model.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Face_Model.scn; sourceTree = "<group>"; };
 		56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_1.gif; sourceTree = "<group>"; };
 		56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_3.gif; sourceTree = "<group>"; };
 		56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_4.gif; sourceTree = "<group>"; };
@@ -223,20 +207,12 @@
 			children = (
 				56329A192C998A3E001D01D0 /* Catwoman_Mask.usdz */,
 				56329A1A2C998A3E001D01D0 /* Demon_Mask.usdz */,
-				569753852C9ADF2B00F8654D /* Hair_1.usdz */,
 				569753842C9ADF2900F8654D /* Hair_2.usdz */,
-				569753882C9AEA3D00F8654D /* Face_Model.usdz */,
-				5697538A2C9AEACD00F8654D /* Face_Model.scn */,
 				56329A1B2C998A3E001D01D0 /* Mask.usdz */,
 				56329A182C998A3D001D01D0 /* Beard.usdz */,
-				56329A242C999665001D01D0 /* oni_mask.glb */,
 				56329A122C997C09001D01D0 /* Glasses.usdz */,
 				56329A222C999505001D01D0 /* Glasses.scn */,
-				56329A202C998E68001D01D0 /* Eyebrows.usdz */,
-				56329A162C9981CD001D01D0 /* Venice_Mask.usdz */,
-				56329A0C2C997301001D01D0 /* Doflamingo_Glasses.usdz */,
 				56329A142C997DEA001D01D0 /* Half_Mask.usdz */,
-				56329A0E2C997476001D01D0 /* Doflamingo_Glasses.scn */,
 				56AC5F2D2C7CDCA7000E04DD /* gif_2.gif */,
 				56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */,
 				56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */,
@@ -314,7 +290,6 @@
 			files = (
 				568D7CA52C76259E00A4D361 /* Forum-Regular.ttf in Resources */,
 				56329A1E2C998A3E001D01D0 /* Demon_Mask.usdz in Resources */,
-				56329A252C999665001D01D0 /* oni_mask.glb in Resources */,
 				568D7CA72C7625A800A4D361 /* GreatVibes-Regular.ttf in Resources */,
 				56BEC1522C9329CC00A135EC /* audio3.mp3 in Resources */,
 				568D7CAB2C7625C100A4D361 /* Roboto-Medium.ttf in Resources */,
@@ -322,15 +297,11 @@
 				56329A152C997DEA001D01D0 /* Half_Mask.usdz in Resources */,
 				561BAE0F2C7332C600C0991E /* Preview Assets.xcassets in Resources */,
 				569753862C9ADF2C00F8654D /* Hair_2.usdz in Resources */,
-				56329A0D2C997301001D01D0 /* Doflamingo_Glasses.usdz in Resources */,
 				568D7CAF2C7626C600A4D361 /* Montserrat-VariableFont_wght.ttf in Resources */,
-				569753872C9ADF2C00F8654D /* Hair_1.usdz in Resources */,
 				5673FE012C94425600BE5CD6 /* audio4.mp3 in Resources */,
 				56329A232C999505001D01D0 /* Glasses.scn in Resources */,
 				56329A1C2C998A3E001D01D0 /* Beard.usdz in Resources */,
-				56329A172C9981CD001D01D0 /* Venice_Mask.usdz in Resources */,
 				56329A132C997C09001D01D0 /* Glasses.usdz in Resources */,
-				56329A0F2C997476001D01D0 /* Doflamingo_Glasses.scn in Resources */,
 				56BEC1512C9329CC00A135EC /* audio2.mp3 in Resources */,
 				568D7CAD2C7625D300A4D361 /* Righteous-Regular.ttf in Resources */,
 				561BAE0C2C7332C600C0991E /* Assets.xcassets in Resources */,
@@ -341,9 +312,6 @@
 				56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */,
 				568D7CA92C7625B300A4D361 /* GreyQo-Regular.ttf in Resources */,
 				56AC5F312C7CDCA7000E04DD /* gif_2.gif in Resources */,
-				56329A212C998E68001D01D0 /* Eyebrows.usdz in Resources */,
-				569753892C9AEA3D00F8654D /* Face_Model.usdz in Resources */,
-				5697538B2C9AEACD00F8654D /* Face_Model.scn in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

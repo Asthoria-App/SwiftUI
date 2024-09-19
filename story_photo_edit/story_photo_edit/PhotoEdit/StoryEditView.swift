@@ -186,7 +186,7 @@ struct StoryEditView: View {
                     index: index,
                     hideButtons: $hideButtons
                 )
-                .frame(width: 200, height: 40)
+                .frame(width: 140, height: 40)
                 .zIndex(draggableLocations[index].zIndex)
             }
             
@@ -219,7 +219,8 @@ struct StoryEditView: View {
                     selectedFont: $draggableTexts[index].font,
                     fontSize: $draggableTexts[index].fontSize,
                     index: index,
-                    selectedTextIndex: $selectedTextIndex
+                    selectedTextIndex: $selectedTextIndex,
+                    lastScaleValue: $draggableTexts[index].lastScale
                 )
                 .zIndex(draggableTexts[index].zIndex)
                 .onAppear {
@@ -300,7 +301,7 @@ struct StoryEditView: View {
                                     backgroundOpacity: backgroundOpacity,
                                     font: selectedFont,
                                     fontSize: fontSize,
-                                    zIndex: globalIndex
+                                    zIndex: globalIndex, lastScale: 1.0
                                 )
                                 globalIndex += 1
                                 draggableTexts.append(newText)
@@ -424,7 +425,7 @@ struct StoryEditView: View {
                     backgroundOpacity: $draggableTexts[selectedIndex].backgroundOpacity,
                     selectedFont: $draggableTexts[selectedIndex].font,
                     originalTextColor: $originalTextColor,
-                    fontSize: $draggableTexts[selectedIndex].fontSize,
+                    fontSize: $draggableTexts[selectedIndex].fontSize, lastScale: $draggableTexts[selectedIndex].lastScale,
                     onChange: {
                         draggableTexts[selectedIndex].originalTextColor = originalTextColor
                         draggableTexts[selectedIndex].textColor = textColor
@@ -605,33 +606,59 @@ struct StoryEditView: View {
         for drawing in draggableDrawings {
             allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
         }
-        
         for text in draggableTexts {
-            let scaledFontSize = text.fontSize * text.scale
+            // Satır sarma ve hizalama için paragraf stili oluştur
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            paragraphStyle.alignment = .center
+            
+            // Normal font boyutunu al
+            let normalFontSize = text.fontSize
             let textAttributes: [NSAttributedString.Key: Any] = [
-                .font: text.font.toUIFont(size: scaledFontSize)!,
-                .foregroundColor: UIColor(text.textColor)
+                .font: text.font.toUIFont(size: normalFontSize)!,
+                .foregroundColor: UIColor(text.textColor),
+                .paragraphStyle: paragraphStyle
             ]
             
+            // Metin boyutunu sınırsız yükseklikle hesapla (ölçek uygulanmadan önce)
+            let maxWidth = screenSize.width
             let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
-            let textSize = attributedString.size()
-            let rect = CGRect(
-                origin: CGPoint(x: text.position.width + screenSize.width / 2 - textSize.width / 2,
-                                y: text.position.height + screenSize.height / 2 - textSize.height / 2),
-                size: textSize
+            let textSize = attributedString.boundingRect(
+                with: CGSize(width: maxWidth, height: CGFloat.infinity),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil).size
+            
+            // Ölçeklendirilmiş pozisyonu ve metin çerçevesini hesapla
+            let scaledWidth = textSize.width
+            let scaledHeight = textSize.height
+            let scaledX = text.position.width * text.lastScale + screenSize.width / 2 - scaledWidth / 2
+            let scaledY = text.position.height * text.lastScale + screenSize.height / 2 - scaledHeight / 2
+            
+            // Metnin çizileceği ölçeklendirilmiş rect çerçevesi
+            var rect = CGRect(
+                origin: CGPoint(x: scaledX, y: scaledY),
+                size: CGSize(width: scaledWidth, height: scaledHeight)
             )
             
+            // Context'e scale ve transform uygula
             context?.saveGState()
             context?.translateBy(x: rect.midX, y: rect.midY)
+            context?.scaleBy(x: text.lastScale, y: text.lastScale)
             context?.rotate(by: text.angle.radians)
             context?.translateBy(x: -rect.midX, y: -rect.midY)
             
+            // Arka plan rengini ayarla
             context?.setFillColor(UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).cgColor)
-            context?.fill(rect.insetBy(dx: -10, dy: -5))
+            context?.fill(rect.insetBy(dx: -10, dy: -5)) // Arka planı doldur
             
+            // Metni çiz
             attributedString.draw(in: rect)
+            
+            // Context'i geri yükle
             context?.restoreGState()
         }
+        
+        
         
         allElements.sort { $0.zIndex < $1.zIndex }
         

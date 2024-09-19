@@ -1,160 +1,113 @@
 import SwiftUI
 import AVFoundation
 import Vision
-//import CoreImage
-//import CoreImage.CIFilterBuiltins
 
-
-struct CameraView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
-        let controller = CameraViewController()
-        return controller
-    }
+struct CameraView: UIViewRepresentable {
     
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
+    class Coordinator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+        var parent: CameraView
+        var sequenceRequestHandler = VNSequenceRequestHandler()
 
-class CameraViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private var captureSession: AVCaptureSession!
-    private var previewLayer: AVCaptureVideoPreviewLayer!
-    private var overlayLayer = CAShapeLayer()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        captureSession = AVCaptureSession()
-        guard let videoCaptureDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else { return }
-        let videoInput: AVCaptureDeviceInput
-        
-        do {
-            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
-        } catch {
-            print("Error creating video input: \(error.localizedDescription)")
-            return
+        init(parent: CameraView) {
+            self.parent = parent
         }
         
-        if captureSession.canAddInput(videoInput) {
-            captureSession.addInput(videoInput)
-        } else {
-            print("Unable to add video input.")
-            return
-        }
-        
-        let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoQueue"))
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-        }
-        
-        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.frame = view.layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-        overlayLayer.frame = view.bounds
-        view.layer.addSublayer(overlayLayer)
-        
-        
-        
-        captureSession.startRunning()
-    }
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
-        let request = VNDetectFaceLandmarksRequest { (req, err) in
-            if let error = err {
-                print("Face landmarks error: \(error.localizedDescription)")
-                return
-            }
-            guard let results = req.results as? [VNFaceObservation] else { return }
+        func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+            guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             
-            DispatchQueue.main.async {
-                self.overlayLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
-                
-                for result in results {
-                    if let landmarks = result.landmarks, let outerLips = landmarks.outerLips, let innerLips = landmarks.innerLips {
-                        self.drawLips(outerLips, in: result, orientation: connection.videoOrientation, color: UIColor.red.withAlphaComponent(0.5).cgColor)
-                        self.drawLips(innerLips, in: result, orientation: connection.videoOrientation, color: UIColor.red.withAlphaComponent(0.5
-                                                                                                                                            ).cgColor)
+            let detectFaceRequest = VNDetectFaceLandmarksRequest { request, error in
+                if let results = request.results as? [VNFaceObservation], let face = results.first {
+                    DispatchQueue.main.async {
+                        self.parent.handleFaceLandmarks(face)
                     }
                 }
             }
-        }
-        
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            print("Vision request failed: \(error.localizedDescription)")
+            
+            do {
+                try sequenceRequestHandler.perform([detectFaceRequest], on: pixelBuffer)
+            } catch {
+                print("Yüz tespiti sırasında hata: \(error)")
+            }
         }
     }
     
-    func drawLips(_ lips: VNFaceLandmarkRegion2D, in faceObservation: VNFaceObservation, orientation: AVCaptureVideoOrientation, color: CGColor) {
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(parent: self)
+    }
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: UIScreen.main.bounds)
+        let session = AVCaptureSession()
+        session.sessionPreset = .photo
+        
+        // Ön kamerayı seçiyoruz
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
+              let input = try? AVCaptureDeviceInput(device: camera) else {
+            return view
+        }
+        
+        session.addInput(input)
+        
+        // Video verilerini işlemek için bir çıktı oluşturuyoruz
+        let videoOutput = AVCaptureVideoDataOutput()
+        videoOutput.setSampleBufferDelegate(context.coordinator, queue: DispatchQueue(label: "videoQueue"))
+        session.addOutput(videoOutput)
+        
+        // Canlı önizleme katmanını ekliyoruz
+        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.frame = view.frame
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+        
+        session.startRunning()
+        
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {}
+    
+    // Dudakları tespit edip ruj uygulama
+    func handleFaceLandmarks(_ face: VNFaceObservation) {
+        guard let landmarks = face.landmarks, let lips = landmarks.outerLips else { return }
+        
         let path = UIBezierPath()
-        let faceBoundingBox = faceObservation.boundingBox
-        
-        // Dudak noktalarını overlay layer'a uygun şekilde dönüştür
-        let points = lips.normalizedPoints.map { point -> CGPoint in
-            var x = faceBoundingBox.origin.x + point.x * faceBoundingBox.width
-            var y = faceBoundingBox.origin.y + point.y * faceBoundingBox.height
-            
-            // Cihazın oryantasyonuna göre koordinatları düzenleyin
-            if orientation == .portrait || orientation == .portraitUpsideDown {
-                x = 1 - x
+        for i in 0..<lips.pointCount {
+            let point = lips.normalizedPoints[i]
+            let scaledPoint = CGPoint(x: point.x * UIScreen.main.bounds.width, y: (1 - point.y) * UIScreen.main.bounds.height)
+            if i == 0 {
+                path.move(to: scaledPoint)
+            } else {
+                path.addLine(to: scaledPoint)
             }
-            
-            switch orientation {
-            case .landscapeLeft:
-                swap(&x, &y)
-                y = 1 - y
-                x = 1 - x
-            case .landscapeRight:
-                swap(&x, &y)
-            case .portraitUpsideDown:
-                x = 1 - x
-                y = 1 - y
-            default:
-                break
-            }
-            
-            let convertedX = x * overlayLayer.bounds.width
-            let convertedY = (1 - y) * overlayLayer.bounds.height
-            return CGPoint(x: convertedX, y: convertedY)
         }
+        path.close()
         
-        // Catmull-Rom splines kullanarak pürüzsüz çizim
-        if points.count > 2 {
-            path.move(to: points.first!)
-            for i in 1..<points.count - 1 {
-                let p0 = points[i - 1]
-                let p1 = points[i]
-                let p2 = points[i + 1]
-                let midPoint = midPointForPoints(p1: p1, p2: p2)
-                
-                // İki nokta arasında pürüzsüz bir eğri çizin
-                path.addQuadCurve(to: midPoint, controlPoint: p1)
+        // Dudaklara kırmızı ruj uyguluyoruz
+        let lipsLayer = CAShapeLayer()
+        lipsLayer.path = path.cgPath
+        lipsLayer.fillColor = UIColor.red.withAlphaComponent(0.8).cgColor
+        
+        DispatchQueue.main.async {
+            if let window = UIApplication.shared.windows.first {
+                window.layer.sublayers?.removeAll(where: { $0 is CAShapeLayer }) // Önceki katmanları kaldırıyoruz
+                window.layer.addSublayer(lipsLayer) // Yeni kırmızı katmanı ekliyoruz
             }
-            path.addLine(to: points.last!)
-            path.close()
         }
-        
-        // Çizimi layer'a ekle
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.path = path.cgPath
-        shapeLayer.fillColor = color
-        shapeLayer.strokeColor = color
-        overlayLayer.addSublayer(shapeLayer)
     }
-
-    // İki nokta arasında orta noktayı hesaplar
-    func midPointForPoints(p1: CGPoint, p2: CGPoint) -> CGPoint {
-        return CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
-    }
-
 }
 
 struct ContentView: View {
     var body: some View {
         CameraView()
-            .edgesIgnoringSafeArea(.all)
+            .edgesIgnoringSafeArea(.all) // Kamera görünümü tam ekran yapıyoruz
     }
-  }
+}
+
+@main
+struct CameraApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}

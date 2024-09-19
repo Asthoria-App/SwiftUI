@@ -20,9 +20,10 @@ struct DraggableText {
     var originalTextColor: Color
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
+    var lastScale: CGFloat
 
     
-    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat) {
+    init(text: String, position: CGSize, scale: CGFloat, angle: Angle, textColor: Color, backgroundColor: Color, backgroundOpacity: CGFloat, font: CustomFont, fontSize: CGFloat, zIndex: CGFloat, lastScale: CGFloat) {
         self.text = text
         self.position = position
         self.scale = scale
@@ -34,6 +35,7 @@ struct DraggableText {
         self.font = font
         self.fontSize = fontSize
         self.zIndex = zIndex
+        self.lastScale = lastScale
     }
 }
 
@@ -53,7 +55,7 @@ struct DraggableTextView: View {
     var index: Int
     @Binding var selectedTextIndex: Int?
     
-    @State private var lastScaleValue: CGFloat = 1.0
+    @Binding var lastScaleValue: CGFloat
     @State private var currentDragOffset: CGSize = .zero
     @State private var isDraggingOverDelete: Bool = false
     
@@ -65,7 +67,6 @@ struct DraggableTextView: View {
                     .foregroundColor(textColor)
                     .padding(8)
                     .background(backgroundColor.opacity(backgroundOpacity))
-                    .cornerRadius(5)
                     .position(positionInBounds(geometry))
                     .scaleEffect(lastScaleValue * scale)
                     .rotationEffect(angle)
@@ -162,12 +163,13 @@ struct DraggableTextView: View {
     }
 
     private func updateTextState(geo: GeometryProxy) {
-        let scale = lastScaleValue * self.scale
+     
+        let updatedScale = lastScaleValue * scale
+      
+        let transformedSize = CGSize(width: geo.size.width * updatedScale, height: geo.size.height * updatedScale)
         
-        let transformedSize = CGSize(width: geo.size.width * scale, height: geo.size.height * scale)
-        
-        let offsetX = (geo.size.width * scale - geo.size.width) / 2
-        let offsetY = (geo.size.height * scale - geo.size.height) / 2
+        let offsetX = (geo.size.width * updatedScale - geo.size.width) / 2
+        let offsetY = (geo.size.height * updatedScale - geo.size.height) / 2
 
         let globalFrame = CGRect(
             origin: CGPoint(
@@ -179,9 +181,7 @@ struct DraggableTextView: View {
         
         print("Updated Text Global Frame: \(globalFrame)")
         
-        // Burada `globalFrame` değerini `draggableText`'in ilgili özelliğine atayabilirsiniz.
-        // Ancak `draggableText` yerine `globalFrame` değerini `DraggableTextView`'in dışına
-        // nasıl aktaracağınızı düşünmelisiniz.
     }
+
 
 }

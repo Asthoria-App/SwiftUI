@@ -6,10 +6,12 @@ import SceneKit
 struct story_photo_editApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            StoryEditView()
         }
     }
 }
+
+
 struct ARFaceFilterView: UIViewControllerRepresentable {
     @Binding var selectedMask: MaskType
 
@@ -136,7 +138,7 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
             currentMaskNode = createHalfMaskNode()
         case .hair1:
             print("Creating hair1 mask node")
-            currentMaskNode = createHair1MaskNode(for: faceAnchor) // Face anchor bilgisi ile
+            currentMaskNode = createHair1MaskNode(for: faceAnchor)
         case .hair2:
             print("Creating hair2 mask node")
             currentMaskNode = createHair2MaskNode()
@@ -173,18 +175,13 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         
         let maskNode = maskScene.rootNode.clone()
         
-        // Ölçekleme ayarları: Modelin boyutunu kafa boyutuna uygun yapıyoruz
         maskNode.scale = SCNVector3(0.2, 0.2, 0.2)
         
-        // Transform verilerini kullanarak yüz pozisyonunu alıyoruz
         let faceTransform = faceAnchor.transform
         let facePosition = SCNVector3(faceTransform.columns.3.x, faceTransform.columns.3.y, faceTransform.columns.3.z)
         
-        // Yüzün üzerine takılacak şekilde saç modelinin pozisyonunu ayarlıyoruz
-        // Yüzün biraz yukarısına ve arkasına yerleştiriyoruz (Y ve Z eksenlerinde kaydırma)
         maskNode.position = SCNVector3(facePosition.x, facePosition.y + 0.15, facePosition.z - 0.05)
         
-        // Saç modelini kafanın üstüne oturtmak için kafa izleme verilerine göre rotasyonu ayarlıyoruz
         maskNode.transform = SCNMatrix4(faceTransform)
 
         print("Hair model created and positioned correctly on head")
@@ -241,23 +238,18 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
      }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        // Öncelikle anchor'ın doğru türde olup olmadığını kontrol ediyoruz.
         guard let faceAnchor = anchor as? ARFaceAnchor else {
             print("Error: Anchor is not ARFaceAnchor")
             return
         }
         
-        // Daha sonra occlusion düğümünün var olup olmadığını kontrol ediyoruz.
         guard let occlusionNode = node.childNodes.first(where: { $0.geometry is ARSCNFaceGeometry }) else {
-//            print("Error: Occlusion node not found during update")
             return
         }
         
-        // Yüz geometrisini güncelleyerek maskeyi yeniden oluşturuyoruz.
         let faceGeometry = occlusionNode.geometry as? ARSCNFaceGeometry
         faceGeometry?.update(from: faceAnchor.geometry)
         
-//        print("Successfully updated occlusion node with face geometry.")
     }
 
 }

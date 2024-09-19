@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		565CBD7A2C9C03E0004A005C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD792C9C03E0004A005C /* Vision.framework */; };
+		565CBD7C2C9C03E7004A005C /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD7B2C9C03E7004A005C /* CoreML.framework */; };
 		569753992C9B0D1F00F8654D /* testApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569753982C9B0D1F00F8654D /* testApp.swift */; };
 		5697539B2C9B0D1F00F8654D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5697539A2C9B0D1F00F8654D /* ContentView.swift */; };
 		5697539D2C9B0D2100F8654D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5697539C2C9B0D2100F8654D /* Assets.xcassets */; };
@@ -14,6 +16,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		565CBD792C9C03E0004A005C /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
+		565CBD7B2C9C03E7004A005C /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		569753952C9B0D1F00F8654D /* test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		569753982C9B0D1F00F8654D /* testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = testApp.swift; sourceTree = "<group>"; };
 		5697539A2C9B0D1F00F8654D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -26,17 +30,29 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				565CBD7C2C9C03E7004A005C /* CoreML.framework in Frameworks */,
+				565CBD7A2C9C03E0004A005C /* Vision.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		565CBD782C9C03DF004A005C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				565CBD7B2C9C03E7004A005C /* CoreML.framework */,
+				565CBD792C9C03E0004A005C /* Vision.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		5697538C2C9B0D1F00F8654D = {
 			isa = PBXGroup;
 			children = (
 				569753972C9B0D1F00F8654D /* test */,
 				569753962C9B0D1F00F8654D /* Products */,
+				565CBD782C9C03DF004A005C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};

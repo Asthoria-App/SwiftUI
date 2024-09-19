@@ -80,7 +80,8 @@ struct TagOverlayView: View {
                     backgroundColor: $backgroundColor,
                     selectedFont: $selectedFont,
                     textWidth: $textWidth,
-                    fontSize: $fontSize
+                    fontSize: $fontSize,
+                    lastScale: .constant(1.0)
                 )
                 .frame(width: textWidth, height: textHeight)
                 .padding(8)
