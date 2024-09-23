@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5603BC432CA1A813000A1711 /* Eyebrows.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 5603BC422CA1A812000A1711 /* Eyebrows.usdz */; };
+		5603BC452CA1AAEB000A1711 /* Eyebrows.scn in Resources */ = {isa = PBXBuildFile; fileRef = 5603BC442CA1AAEB000A1711 /* Eyebrows.scn */; };
 		565CBD7A2C9C03E0004A005C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD792C9C03E0004A005C /* Vision.framework */; };
 		565CBD7C2C9C03E7004A005C /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD7B2C9C03E7004A005C /* CoreML.framework */; };
 		565CBD8E2C9D6B7D004A005C /* Lips.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 565CBD8D2C9D6B7C004A005C /* Lips.usdz */; };
@@ -18,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5603BC422CA1A812000A1711 /* Eyebrows.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Eyebrows.usdz; sourceTree = "<group>"; };
+		5603BC442CA1AAEB000A1711 /* Eyebrows.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Eyebrows.scn; sourceTree = "<group>"; };
 		565CBD792C9C03E0004A005C /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
 		565CBD7B2C9C03E7004A005C /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		565CBD8D2C9D6B7C004A005C /* Lips.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Lips.usdz; sourceTree = "<group>"; };
@@ -74,6 +78,8 @@
 				565CBD8D2C9D6B7C004A005C /* Lips.usdz */,
 				565CBD8F2C9D6C6B004A005C /* Lips.scn */,
 				569753982C9B0D1F00F8654D /* testApp.swift */,
+				5603BC422CA1A812000A1711 /* Eyebrows.usdz */,
+				5603BC442CA1AAEB000A1711 /* Eyebrows.scn */,
 				5697539A2C9B0D1F00F8654D /* ContentView.swift */,
 				5697539C2C9B0D2100F8654D /* Assets.xcassets */,
 				5697539E2C9B0D2100F8654D /* Preview Content */,
@@ -149,8 +155,10 @@
 			files = (
 				565CBD8E2C9D6B7D004A005C /* Lips.usdz in Resources */,
 				569753A02C9B0D2100F8654D /* Preview Assets.xcassets in Resources */,
+				5603BC452CA1AAEB000A1711 /* Eyebrows.scn in Resources */,
 				565CBD902C9D6C6C004A005C /* Lips.scn in Resources */,
 				5697539D2C9B0D2100F8654D /* Assets.xcassets in Resources */,
+				5603BC432CA1A813000A1711 /* Eyebrows.usdz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
