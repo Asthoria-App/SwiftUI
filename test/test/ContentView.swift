@@ -20,14 +20,93 @@ struct ContentView: View {
 class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
     var sceneView: ARSCNView!
     var lowerLipNode: SCNNode?
-    // Kaşları çevreleyen noktaların indeksleri
-      let leftEyebrowIndices: [Int] = [168, 420, 329, 328, 327, 326, 335, 197, 198, 326, 163, 161, 207, 170] // Örnek indeksler
-      let rightEyebrowIndices: [Int] = [617, 850, 781, 764, 763, 762, 768, 646, 647, 650, 614, 613, 761, 612, 610, 656, 619] // Örnek indeksler
-      
+    var eyeLashNode: SCNNode?
+    var eyelinerNode: SCNNode?
+    
+    let eyelinerVerticesIndices: [[Int32]] = [
+        
+        [1090, 1191, 1091],
+        
+        [1091, 1191, 1092],
+        [1092, 1191, 1190],
+        
+        [1092, 1190, 1093],
+        [1093, 1190, 1189],
+        
+        [1094, 1093, 1189],
+        [1189, 1188, 1094],
+        
+        [1095, 1094, 1187],
+        [1187, 1094, 1188],
+        
+        [1096, 1095, 1187],
+        [1096, 1187, 1186],
+        
+        [1097, 1096, 1185],
+        [1185, 1096, 1186],
+        
+        [1098, 1097, 1185],
+        [1185, 1098, 1184],
+        
+        [1099, 1098, 1183],
+        [1183, 1098, 1184],
+        
+        [1100, 1099, 1182],
+        [1099, 1183, 1182],
+        
+        [1101, 1100, 1182],
+        [1181, 1101, 1182],
+        
+        [417, 1181, 1182],
+        [132, 417, 1182],
+        
+        [132, 1182, 1186],
+        
+        [1080, 1079, 1170],
+        
+        [1079, 1078, 1170],
+        [1170, 1078, 1171],
+        
+        [1078, 1077, 1171],
+        [1171, 1077, 1172],
+        
+        [1077, 1076, 1173],
+        [1077, 1173, 1172],
+        
+        [1076, 1075, 1174],
+        [1174, 1173, 1076],
+        
+        [1075, 1074, 1174],
+        [1174, 1074, 1175],
+        
+        [1074, 1073, 1176],
+        [1176, 1175, 1074],
+        
+        [1073, 1072, 1176],
+        [1176, 1072, 1177],
+        
+        [1072, 1071, 1178],
+        [1178, 1177, 1072],
+        
+        [1071, 1070, 1179],
+        [1179, 1071, 1178],
+        
+        [1070, 1069, 1179],
+        [1069, 1180, 1179],
+        
+        [1180, 847, 1179],
+        [847, 581, 1179],
+        
+        [1179, 581, 1175],
+
+
+        
+        
+    ]
+    
     
     let lowerLipIndices: [[Int32]] = [
-        // MARK: - top lips, right, first layer
-      [22, 541, 21],
+        [22, 541, 21],
         [22, 671, 541],
         [671, 543, 541],
         [543, 671, 672],
@@ -46,9 +125,7 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         [677, 826, 635],
         [825, 826, 677],
         
-        
         // MARK: - top lips, right, second layer
-        
         [23, 671, 22],
         [23, 542, 671],
         [542, 672, 671],
@@ -66,12 +143,8 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         [636, 825, 677],
         [824, 825, 636],
         
-        
-        
         // MARK: - top lips, right, third layer
-        
-        
-     [23, 24, 542],
+        [23, 24, 542],
         [542, 24, 691],
         [691, 544, 542],
         [691, 690, 544],
@@ -90,8 +163,6 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         [823, 824, 685],
         [823, 684, 638],
         
-    
-    
         // MARK: - top lips, left, first layer
         [22, 21, 92],
         [92, 237, 22],
@@ -128,7 +199,7 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         [243, 187, 103],
         [243, 395, 187],
         [187, 395, 394],
-     
+        
         // MARK: - top lips, left, third layer
         [24, 23, 93],
         [93, 256, 24],
@@ -148,59 +219,40 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         [394, 393, 250],
         [189, 249, 393],
         [393, 394, 189],
-      
-      
-      // MARK: - bottom lips, left, first layer
-      
-//      [407, 285, 275],
-//      [285, 260, 265],
-//      [290, 260, 265],
-
-      [],
-      
-      [190, 1212, 247],
-      [247, 248, 190],
-      [1212, 123, 247],
- 
-      [248, 1212, 123],
-      [123, 279, 275],
-      [275, 247, 123],
-      [279, 286, 290],
-      [290, 275, 279],
-      [286, 270, 274],
-      [274, 290, 286],
-      [270, 261, 265],
-      [265, 274, 270],
-      [261, 29, 25],
-      [25, 265, 261],
-      [29, 696, 700],
-      [700, 25, 29],
-      [696, 705, 709],
-      [709, 700, 696],
-      [705, 721, 725],
-      [725, 709, 705],
-      [721, 714, 710],
-      [710, 725, 721],
-      [714, 572, 682],
-      [682, 710, 714],
-      [572, 1208, 683],
-      [683, 682, 572],
-      [1208, 1207, 740],
-      [740, 683, 1208],
-      [1207, 837, 834],
-      [834, 740, 1207],
-      [837, 678, 684],
-      [684, 834, 837]
-
-
-      
-      
-      
-      
-      
         
-        
-
+        // MARK: - bottom lips, left, first layer
+        [190, 1212, 247],
+        [247, 248, 190],
+        [1212, 123, 247],
+        [248, 1212, 123],
+        [123, 279, 275],
+        [275, 247, 123],
+        [279, 286, 290],
+        [290, 275, 279],
+        [286, 270, 274],
+        [274, 290, 286],
+        [270, 261, 265],
+        [265, 274, 270],
+        [261, 29, 25],
+        [25, 265, 261],
+        [29, 696, 700],
+        [700, 25, 29],
+        [696, 705, 709],
+        [709, 700, 696],
+        [705, 721, 725],
+        [725, 709, 705],
+        [721, 714, 710],
+        [710, 725, 721],
+        [714, 572, 682],
+        [682, 710, 714],
+        [572, 1208, 683],
+        [683, 682, 572],
+        [1208, 1207, 740],
+        [740, 683, 1208],
+        [1207, 837, 834],
+        [834, 740, 1207],
+        [837, 678, 684],
+        [684, 834, 837],
     ]
     
     override func viewDidLoad() {
@@ -209,11 +261,18 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         sceneView = ARSCNView(frame: self.view.bounds)
         sceneView.delegate = self
         sceneView.automaticallyUpdatesLighting = true
-//        sceneView.debugOptions = [.showWireframe, .showBoundingBoxes, .showCreases, .showConstraints]
+//                sceneView.debugOptions = [.showWireframe, .showBoundingBoxes, .showCreases, .showConstraints]
         view.addSubview(sceneView)
         
         let configuration = ARFaceTrackingConfiguration()
         sceneView.session.run(configuration)
+        
+        let light = SCNLight()
+        light.type = .omni
+        let lightNode = SCNNode()
+        lightNode.light = light
+        lightNode.position = SCNVector3(x: 0, y: 0, z: 10)
+//        sceneView.scene.rootNode.addChildNode(lightNode)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -221,85 +280,200 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.pause()
     }
     
-    // Renderer başlangıcında yüz ve alt dudağı oluşturuluyor
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
         guard let faceAnchor = anchor as? ARFaceAnchor else { return nil }
+        
         
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
         let faceGeometry = ARSCNFaceGeometry(device: device)
         let node = SCNNode(geometry: faceGeometry)
-//        node.geometry?.firstMaterial?.fillMode = .lines
+//                node.geometry?.firstMaterial?.fillMode = .lines
         node.geometry?.firstMaterial?.transparency = 0.0
         
+        if let eyeLashNode = loadEyelashesModel() {
+            self.eyeLashNode = eyeLashNode
+                         node.addChildNode(eyeLashNode)
+        }
+        
+        
         addLowerLipSurface(to: node, from: faceAnchor)
+        
+//        updateEyelashPosition(from: faceAnchor)
+        addEyelinerSurface(to: node, from: faceAnchor, triangles: eyelinerVerticesIndices)
         
         return node
     }
     
-    // Alt dudağın yüzeyini ekleme
+    
+    
+    
+     func addEyelinerSurface(to node: SCNNode, from faceAnchor: ARFaceAnchor, triangles: [[Int32]]) {
+         let vertices = faceAnchor.geometry.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
+         
+         let vertexSource = SCNGeometrySource(vertices: vertices)
+         
+         var indices: [Int32] = []
+         for triangle in triangles {
+             indices.append(contentsOf: triangle)
+         }
+         
+         let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<Int32>.size)
+         let geometryElement = SCNGeometryElement(data: indexData,
+                                                  primitiveType: .triangles,
+                                                  primitiveCount: indices.count / 3,
+                                                  bytesPerIndex: MemoryLayout<Int32>.size)
+         
+         let geometry = SCNGeometry(sources: [vertexSource], elements: [geometryElement])
+         
+         let material = SCNMaterial()
+         material.diffuse.contents = UIColor.black.withAlphaComponent(0.95)
+         material.isDoubleSided = true
+         geometry.materials = [material]
+         
+         let eyelinerNode = SCNNode(geometry: geometry)
+         node.addChildNode(eyelinerNode)
+         self.eyelinerNode = eyelinerNode
+     }
+   
+    func loadEyelashesModel() -> SCNNode? {
+        guard let url = Bundle.main.url(forResource: "Eyelashes", withExtension: "usdz"),
+              let modelNode = SCNReferenceNode(url: url) else {
+            return nil
+        }
+        modelNode.load()
+        
+        let blackMaterial = SCNMaterial()
+        blackMaterial.diffuse.contents = UIColor.black
+        blackMaterial.emission.contents = UIColor.black
+        
+        if let geometry = modelNode.geometry {
+            geometry.materials = [blackMaterial]
+        } else {
+            modelNode.enumerateChildNodes { (childNode, _) in
+                childNode.geometry?.materials = [blackMaterial]
+            }
+        }
+        
+        return modelNode
+    }
+    
     func addLowerLipSurface(to node: SCNNode, from faceAnchor: ARFaceAnchor) {
         let vertices = faceAnchor.geometry.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
         
-        // SCNGeometrySource oluşturma
         let vertexSource = SCNGeometrySource(vertices: vertices)
         
-        // Manuel olarak belirlenen üçgenler için index oluşturma
         var indices: [Int32] = []
         for triangle in lowerLipIndices {
             indices += triangle
         }
         
-        // Geometrik element oluşturma
         let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<Int32>.size)
         let geometryElement = SCNGeometryElement(data: indexData,
                                                  primitiveType: .triangles,
                                                  primitiveCount: indices.count / 3,
                                                  bytesPerIndex: MemoryLayout<Int32>.size)
         
-        // Geometriyi oluşturuyoruz ve malzemeyi ayarlıyoruz
         let geometry = SCNGeometry(sources: [vertexSource], elements: [geometryElement])
         
         let material = SCNMaterial()
-        material.diffuse.contents = UIColor.red.withAlphaComponent(0.7) // Yarı saydam kırmızı
+        material.diffuse.contents = UIColor.red.withAlphaComponent(0.7)
         material.isDoubleSided = true
-        material.isDoubleSided = true // Her iki tarafta da görünür
-        material.transparency = 1.0 // Tam şeffaflık yok, tamamen görünür
-        material.lightingModel = .physicallyBased // Gerçekçi ışıklandırma modeli
-        material.diffuse.contents = UIColor.white // Alternatif olarak beyaz bir renk ile test
         geometry.materials = [material]
-
-
-        // Geometriyi node'a ekliyoruz
+        
         let lipNode = SCNNode(geometry: geometry)
         lipNode.renderingOrder = 200
         node.addChildNode(lipNode)
         lowerLipNode = lipNode
     }
-
-    // Renderer güncelleme sırasında alt dudağı güncelleme
-    func renderer(
-        _ renderer: SCNSceneRenderer,
-        didUpdate node: SCNNode,
-        for anchor: ARAnchor) {
-            
-            guard let faceAnchor = anchor as? ARFaceAnchor,
-                  let faceGeometry = node.geometry as? ARSCNFaceGeometry else {
-                return
-            }
-            faceGeometry.update(from: faceAnchor.geometry)
-            updateLowerLipSurface(from: faceAnchor)
-        }
     
-    // Alt dudağı güncelleme
+    //    Update eyelashes model
+    func updateEyelashPosition(from faceAnchor: ARFaceAnchor) {
+        let vertices = faceAnchor.geometry.vertices
+        
+        let vertex56 = vertices[56]
+        let vertex1179 = vertices[1179]
+        
+        let position56 = SCNVector3(vertex56.x, vertex56.y, vertex56.z)
+        let position1179 = SCNVector3(vertex1179.x, vertex1179.y, vertex1179.z)
+        
+        let midPosition = SCNVector3(
+            (position56.x + position1179.x) / 2,
+            (position56.y + position1179.y) / 2,
+            (position56.z + position1179.z) / 2
+        )
+        
+        eyeLashNode?.position = midPosition
+        
+        let yOffset: Float = 0.02
+        eyeLashNode?.position.y += yOffset
+        
+        let directionVector = SCNVector3(
+            position1179.x - position56.x,
+            0,
+            position1179.z - position56.z
+        )
+        
+        let angle = atan2(directionVector.z, directionVector.x)
+        eyeLashNode?.eulerAngles = SCNVector3(0, angle, 0)
+        
+        let distance = simd_distance(vertex56, vertex1179)
+        let originalLength: Float = 1.0
+        let scaleFactor = distance / originalLength
+        eyeLashNode?.scale = SCNVector3(0.001, 0.001, 0.001)
+    }
+    func updateEyelinerSurface(from faceAnchor: ARFaceAnchor, triangles: [[Int32]]) {
+        guard let eyelinerNode = eyelinerNode else { return }
+        
+        let vertices = faceAnchor.geometry.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
+        
+        let vertexSource = SCNGeometrySource(vertices: vertices)
+        
+        var indices: [Int32] = []
+        for triangle in triangles {
+            indices.append(contentsOf: triangle)
+        }
+        
+        let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<Int32>.size)
+        let geometryElement = SCNGeometryElement(data: indexData,
+                                                 primitiveType: .triangles,
+                                                 primitiveCount: indices.count / 3,
+                                                 bytesPerIndex: MemoryLayout<Int32>.size)
+        
+        let geometry = SCNGeometry(sources: [vertexSource], elements: [geometryElement])
+        
+        let material = SCNMaterial()
+        material.diffuse.contents = UIColor.black.withAlphaComponent(0.95)
+        material.isDoubleSided = true
+        geometry.materials = [material]
+        
+        eyelinerNode.geometry = geometry
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        
+        guard let faceAnchor = anchor as? ARFaceAnchor,
+              let faceGeometry = node.geometry as? ARSCNFaceGeometry else {
+            return
+        }
+        
+        faceGeometry.update(from: faceAnchor.geometry)
+        
+        updateLowerLipSurface(from: faceAnchor)
+                updateEyelashPosition(from: faceAnchor)
+        updateEyelinerSurface(from: faceAnchor, triangles: eyelinerVerticesIndices)
+        
+        
+        
+    }
+    
+    //    Update lips surface
     func updateLowerLipSurface(from faceAnchor: ARFaceAnchor) {
         guard let lowerLipNode = lowerLipNode else { return }
         
         let vertices = faceAnchor.geometry.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
         
-        // SCNGeometrySource oluşturma
         let vertexSource = SCNGeometrySource(vertices: vertices)
         
-        // Mevcut üçgenler için index oluşturma
         var indices: [Int32] = []
         for triangle in lowerLipIndices {
             indices += triangle
@@ -311,22 +485,13 @@ class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
                                                  primitiveCount: indices.count / 3,
                                                  bytesPerIndex: MemoryLayout<Int32>.size)
         
-        // SCNGeometry oluşturma
         let geometry = SCNGeometry(sources: [vertexSource], elements: [geometryElement])
         
-        // Malzeme ayarlama
         let material = SCNMaterial()
         material.isDoubleSided = true
-        material.isDoubleSided = true // Her iki tarafta da görünür
-        material.transparency = 1.0 // Tam şeffaflık yok, tamamen görünür
-        material.lightingModel = .physicallyBased // Gerçekçi ışıklandırma modeli
-        material.diffuse.contents = UIColor.white // Alternatif olarak beyaz bir renk ile test
-
-        material.diffuse.contents = UIColor.red.withAlphaComponent(0.7) // Yarı saydam kırmızı
+        material.diffuse.contents = UIColor.red.withAlphaComponent(0.7)
         geometry.materials = [material]
         
-        
-        // Mevcut geometry'i güncellemek yerine yeni geometry atama
         lowerLipNode.geometry = geometry
     }
 }
