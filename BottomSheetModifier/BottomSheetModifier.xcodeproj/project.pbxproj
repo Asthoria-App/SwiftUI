@@ -85,8 +85,8 @@
 			children = (
 				566760662CA53F0F009E63D6 /* Modifier */,
 				566760652CA53ED7009E63D6 /* Helpers */,
-				569715322CA3E448007060A0 /* BottomSheetModifierApp.swift */,
 				569715342CA3E448007060A0 /* ContentView.swift */,
+				569715322CA3E448007060A0 /* BottomSheetModifierApp.swift */,
 				569715362CA3E44A007060A0 /* Assets.xcassets */,
 				569715382CA3E44A007060A0 /* Preview Content */,
 			);
