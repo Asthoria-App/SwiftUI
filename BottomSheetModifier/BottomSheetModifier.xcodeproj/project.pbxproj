@@ -7,22 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		566760622CA53DBC009E63D6 /* RoundedCornerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566760612CA53DBC009E63D6 /* RoundedCornerShape.swift */; };
+		566760642CA53E17009E63D6 /* BottomSheetBlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566760632CA53E17009E63D6 /* BottomSheetBlurView.swift */; };
+		566760692CA54304009E63D6 /* BottomSheetModifierWithScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566760682CA54304009E63D6 /* BottomSheetModifierWithScrollView.swift */; };
 		569715332CA3E448007060A0 /* BottomSheetModifierApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715322CA3E448007060A0 /* BottomSheetModifierApp.swift */; };
 		569715352CA3E448007060A0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715342CA3E448007060A0 /* ContentView.swift */; };
 		569715372CA3E44A007060A0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 569715362CA3E44A007060A0 /* Assets.xcassets */; };
 		5697153A2CA3E44A007060A0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 569715392CA3E44A007060A0 /* Preview Assets.xcassets */; };
-		569715412CA3E480007060A0 /* BottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715402CA3E480007060A0 /* BottomSheet.swift */; };
+		569715412CA3E480007060A0 /* BottomSheetModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715402CA3E480007060A0 /* BottomSheetModifier.swift */; };
 		569715432CA40063007060A0 /* Color+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715422CA40063007060A0 /* Color+Extension.swift */; };
 		569715452CA4009C007060A0 /* LineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569715442CA4009C007060A0 /* LineView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		566760612CA53DBC009E63D6 /* RoundedCornerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedCornerShape.swift; sourceTree = "<group>"; };
+		566760632CA53E17009E63D6 /* BottomSheetBlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetBlurView.swift; sourceTree = "<group>"; };
+		566760682CA54304009E63D6 /* BottomSheetModifierWithScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetModifierWithScrollView.swift; sourceTree = "<group>"; };
 		5697152F2CA3E448007060A0 /* BottomSheetModifier.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BottomSheetModifier.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		569715322CA3E448007060A0 /* BottomSheetModifierApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetModifierApp.swift; sourceTree = "<group>"; };
 		569715342CA3E448007060A0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		569715362CA3E44A007060A0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		569715392CA3E44A007060A0 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		569715402CA3E480007060A0 /* BottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheet.swift; sourceTree = "<group>"; };
+		569715402CA3E480007060A0 /* BottomSheetModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetModifier.swift; sourceTree = "<group>"; };
 		569715422CA40063007060A0 /* Color+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extension.swift"; sourceTree = "<group>"; };
 		569715442CA4009C007060A0 /* LineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -38,6 +44,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		566760652CA53ED7009E63D6 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				569715422CA40063007060A0 /* Color+Extension.swift */,
+				566760612CA53DBC009E63D6 /* RoundedCornerShape.swift */,
+				569715442CA4009C007060A0 /* LineView.swift */,
+				566760632CA53E17009E63D6 /* BottomSheetBlurView.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		566760662CA53F0F009E63D6 /* Modifier */ = {
+			isa = PBXGroup;
+			children = (
+				569715402CA3E480007060A0 /* BottomSheetModifier.swift */,
+				566760682CA54304009E63D6 /* BottomSheetModifierWithScrollView.swift */,
+			);
+			path = Modifier;
+			sourceTree = "<group>";
+		};
 		569715262CA3E447007060A0 = {
 			isa = PBXGroup;
 			children = (
@@ -57,13 +83,12 @@
 		569715312CA3E448007060A0 /* BottomSheetModifier */ = {
 			isa = PBXGroup;
 			children = (
+				566760662CA53F0F009E63D6 /* Modifier */,
+				566760652CA53ED7009E63D6 /* Helpers */,
 				569715322CA3E448007060A0 /* BottomSheetModifierApp.swift */,
 				569715342CA3E448007060A0 /* ContentView.swift */,
-				569715402CA3E480007060A0 /* BottomSheet.swift */,
 				569715362CA3E44A007060A0 /* Assets.xcassets */,
 				569715382CA3E44A007060A0 /* Preview Content */,
-				569715422CA40063007060A0 /* Color+Extension.swift */,
-				569715442CA4009C007060A0 /* LineView.swift */,
 			);
 			path = BottomSheetModifier;
 			sourceTree = "<group>";
@@ -147,9 +172,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				569715352CA3E448007060A0 /* ContentView.swift in Sources */,
-				569715412CA3E480007060A0 /* BottomSheet.swift in Sources */,
+				569715412CA3E480007060A0 /* BottomSheetModifier.swift in Sources */,
 				569715332CA3E448007060A0 /* BottomSheetModifierApp.swift in Sources */,
+				566760622CA53DBC009E63D6 /* RoundedCornerShape.swift in Sources */,
 				569715452CA4009C007060A0 /* LineView.swift in Sources */,
+				566760692CA54304009E63D6 /* BottomSheetModifierWithScrollView.swift in Sources */,
+				566760642CA53E17009E63D6 /* BottomSheetBlurView.swift in Sources */,
 				569715432CA40063007060A0 /* Color+Extension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
