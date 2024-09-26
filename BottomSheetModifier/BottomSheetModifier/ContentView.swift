@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var showBottomSheetWithBackgroundImage = false
     @State private var showBottomSheetWithBackgroundBlur = false
     @State private var canCloseAtScrollTop = false
+    
     var body: some View {
         VStack {
             Button("Show Bottom Sheet Without Title") {
@@ -48,8 +49,9 @@ struct ContentView: View {
                 .scaledToFill()
                 .edgesIgnoringSafeArea(.all)
         )
-//        Usage with scrollView
         
+        
+//        Usage with scrollView
         .bottomSheetWithScrollView(isPresented: $showBottomSheetWithoutTitle,
                                    height: 300,
                                    showLines: false,

@@ -10,10 +10,11 @@ import SwiftUI
 struct DraggableSticker {
     var image: UIImage
     var position: CGSize
-    var scale: CGFloat
-    var angle: Angle
+    var scale: CGFloat = 1.0
+    var angle: Angle = .zero
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
+    var lastScaleValue: CGFloat = 1.0
 }
 
 struct DraggableStickerView: View {
@@ -25,7 +26,6 @@ struct DraggableStickerView: View {
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
-    @State private var lastScaleValue: CGFloat = 1.0
     @State private var currentAngle: Angle = .zero
     
     var body: some View {
@@ -38,7 +38,7 @@ struct DraggableStickerView: View {
                             .scaledToFill()
                             .frame(width: 100, height: 100)
                             .clipped()
-                            .scaleEffect(lastScaleValue * draggableSticker.scale)
+                            .scaleEffect(draggableSticker.lastScaleValue * draggableSticker.scale)
                             .rotationEffect(draggableSticker.angle + currentAngle)
                             .position(x: geometry.size.width / 2 + draggableSticker.position.width + dragOffset.width,
                                       y: geometry.size.height / 2 + draggableSticker.position.height + dragOffset.height)
@@ -84,7 +84,7 @@ struct DraggableStickerView: View {
                                         },
                                     RotationGesture()
                                         .onChanged { newAngle in
-                                            currentAngle = newAngle
+                                            currentAngle = newAngle - draggableSticker.angle
                                         }
                                         .onEnded { newAngle in
                                             draggableSticker.angle += currentAngle
@@ -96,8 +96,8 @@ struct DraggableStickerView: View {
                                     .onChanged { value in
                                         draggableSticker.scale = value
                                     }
-                                    .onEnded { _ in
-                                        lastScaleValue *= draggableSticker.scale
+                                    .onEnded { value in
+                                        draggableSticker.lastScaleValue *= draggableSticker.scale
                                         draggableSticker.scale = 1.0
                                         updateStickerState(geo: geometry)
                                     }
@@ -105,16 +105,12 @@ struct DraggableStickerView: View {
                             )
                     }
                 }
-                .onAppear {
-                    print("Sticker's Geometry Size: \(geometry.size)")
-                    print("Sticker's Initial Global Frame: \(geometry.frame(in: .global))")
-                }
             }
         }
     }
     
     private func updateStickerState(geo: GeometryProxy) {
-        let scale = lastScaleValue * draggableSticker.scale
+        let scale = draggableSticker.lastScaleValue * draggableSticker.scale
         
         let transformedSize = CGSize(width: geo.size.width * scale, height: geo.size.height * scale)
         
@@ -131,8 +127,6 @@ struct DraggableStickerView: View {
         
         print("Updated Sticker Global Frame: \(draggableSticker.globalFrame)")
     }
-
-
 }
 
 import Combine

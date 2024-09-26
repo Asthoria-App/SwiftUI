@@ -16,19 +16,13 @@ struct StoryEditView: View {
     @State private var showDeleteButton: Bool = false
     @State private var showOverlay: Bool = false
     @State private var hideButtons: Bool = false
-    @State private var textColor: Color = .white
-    @State private var backgroundOpacity: CGFloat = 0.0
-    @State private var selectedFont: CustomFont = .roboto
     @State private var showBackgroundImagePicker: Bool = false
     @State private var showDraggableImagePicker: Bool = false
     @State private var backgroundImage: UIImage? = nil
     @State private var selectedDraggableImage: UIImage? = nil
     @State private var selectedGradient: LinearGradient? = nil
-    @State private var textBackgroundColor: Color = .clear
-    @State private var originalTextColor: Color = .clear
     @State private var generatedImage: UIImage? = nil
     @State private var showGeneratedImageView: Bool = false
-    @State private var fontSize: CGFloat = 34
     @State private var draggableTexts: [DraggableText] = []
     @State private var selectedTextIndex: Int? = nil
     @State private var draggableImages: [DraggableImage] = []
@@ -48,7 +42,7 @@ struct StoryEditView: View {
     @State private var showDrawingOverlay: Bool = false
     @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
-    @State private var backgroundType: BackgroundType = .photo
+    @State private var backgroundType: BackgroundType = .video
     //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
     //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
@@ -143,90 +137,7 @@ struct StoryEditView: View {
                         .edgesIgnoringSafeArea(.all)
                 }
             }
-            
-            ForEach(draggableDrawings.indices, id: \.self) { index in
-                DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
-                    .zIndex(draggableDrawings[index].zIndex)
-            }
-            
-            ForEach(draggableImages.indices, id: \.self) { index in
-                DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
-                    .frame(width: 200, height: 200)
-                    .aspectRatio(contentMode: .fill)
-                    .zIndex(draggableImages[index].zIndex)
-                    .onAppear {
-                        print("Image Position: \(draggableImages[index].position), Image Size: \(draggableImages[index].image.size)")
-                    }
-            }
-            
-            ForEach(draggableTimes.indices, id: \.self) { index in
-                DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
-                    .frame(width: 150, height:draggableTimes[index].currentTimeStyle == .analogClock ? 150: 50)
-                
-                
-                    .aspectRatio(contentMode: .fit)
-                    .zIndex(draggableTimes[index].zIndex)
-                
-            }
-            
-            ForEach(draggableTags.indices, id: \.self) { index in
-                DraggableTagView(draggableTag: $draggableTags[index],
-                                 hideButtons: $hideButtons,
-                                 selectedTagIndex: $selectedTagIndex
-                )
-                
-                .frame(width: 220, height: 40)
-                .zIndex(draggableTags[index].zIndex)
-            }
-            
-            ForEach(draggableLocations.indices, id: \.self) { index in
-                DraggableLocationView(
-                    draggableLocation: $draggableLocations[index],
-                    selectedLocationIndex: $selectedLocationIndex,
-                    index: index,
-                    hideButtons: $hideButtons
-                )
-                .frame(width: 140, height: 40)
-                .zIndex(draggableLocations[index].zIndex)
-            }
-            
-            
-            
-            
-            ForEach(draggableStickers.indices, id: \.self) { index in
-                DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100), onDelete: {
-                    draggableStickers.remove(at: index)
-                })
-                .frame(width: 100, height: 100)
-                .zIndex(draggableStickers[index].zIndex)
-                .onAppear {
-                    print(draggableStickers[index].globalFrame, "frame in editview")
-                }
-            }
-            
-            ForEach(draggableTexts.indices, id: \.self) { index in
-                DraggableTextView(
-                    userText: $draggableTexts[index].text,
-                    textPosition: $draggableTexts[index].position,
-                    scale: $draggableTexts[index].scale,
-                    angle: $draggableTexts[index].angle,
-                    showDeleteButton: $showDeleteButton,
-                    hideButtons: $hideButtons,
-                    showOverlay: $showOverlay,
-                    textColor: $draggableTexts[index].textColor,
-                    backgroundColor: $draggableTexts[index].backgroundColor,
-                    backgroundOpacity: $draggableTexts[index].backgroundOpacity,
-                    selectedFont: $draggableTexts[index].font,
-                    fontSize: $draggableTexts[index].fontSize,
-                    index: index,
-                    selectedTextIndex: $selectedTextIndex,
-                    lastScaleValue: $draggableTexts[index].lastScale
-                )
-                .zIndex(draggableTexts[index].zIndex)
-                .onAppear {
-                    print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
-                }
-            }
+            addDraggableElements()
             if !showDrawingOverlay && !hideButtons && !showTagOverlay{
                 GeometryReader { geometry in
                     AdditionalButtonsView(addTimeImage: {
@@ -291,23 +202,9 @@ struct StoryEditView: View {
                             
                             
                             Button(action: {
-                                let newText = DraggableText(
-                                    text: "New Text",
-                                    position: .zero,
-                                    scale: 1.0,
-                                    angle: .zero,
-                                    textColor: textColor,
-                                    backgroundColor: textBackgroundColor,
-                                    backgroundOpacity: backgroundOpacity,
-                                    font: selectedFont,
-                                    fontSize: fontSize,
-                                    zIndex: globalIndex, lastScale: 1.0
-                                )
-                                globalIndex += 1
-                                draggableTexts.append(newText)
-                                selectedTextIndex = draggableTexts.count - 1
+//                           hide buttons?
                                 showOverlay = true
-                                textColor = .white
+//                                textColor = .white
                             }) {
                                 Image(systemName: "textformat")
                                     .resizable()
@@ -340,14 +237,14 @@ struct StoryEditView: View {
                         VStack {
                             Spacer()
                             Button("Done") {
-                                generateImageFromPhoto()
-//                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-//                                    if let videoFrame = getVideoFrame() {
-//                                        processVideo(videoFrame: videoFrame)
-//                                    } else {
-//                                        print("Video frame could not be determined")
-//                                    }
-//                                }
+//                                                                generateImageFromPhoto()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    if let videoFrame = getVideoFrame() {
+                                        processVideo(videoFrame: videoFrame)
+                                    } else {
+                                        print("Video frame could not be determined")
+                                    }
+                                }
                                 
                             }
                             .font(.title2)
@@ -418,25 +315,8 @@ struct StoryEditView: View {
                 .zIndex(100)
             }
             
-            if showOverlay, let selectedIndex = selectedTextIndex {
-                OverlayView(
-                    showOverlay: $showOverlay,
-                    userText: $draggableTexts[selectedIndex].text,
-                    textColor: $draggableTexts[selectedIndex].textColor,
-                    backgroundColor: $draggableTexts[selectedIndex].backgroundColor,
-                    backgroundOpacity: $draggableTexts[selectedIndex].backgroundOpacity,
-                    selectedFont: $draggableTexts[selectedIndex].font,
-                    originalTextColor: $originalTextColor,
-                    fontSize: $draggableTexts[selectedIndex].fontSize, lastScale: $draggableTexts[selectedIndex].lastScale,
-                    onChange: {
-                        draggableTexts[selectedIndex].originalTextColor = originalTextColor
-                        draggableTexts[selectedIndex].textColor = textColor
-                        draggableTexts[selectedIndex].backgroundColor = textBackgroundColor
-                        draggableTexts[selectedIndex].backgroundOpacity = backgroundOpacity
-                        draggableTexts[selectedIndex].font = selectedFont
-                        draggableTexts[selectedIndex].fontSize = fontSize
-                    }
-                )
+            if showOverlay {
+                OverlayView(showOverlay: $showOverlay, draggableTexts: $draggableTexts, globalIndex: $globalIndex)
                 .zIndex(100)
             }
         }
@@ -487,14 +367,120 @@ struct StoryEditView: View {
         }
     }
     
-    private func generateImageFromPhoto() {
-        let window = UIApplication.shared.windows.first { $0.isKeyWindow }
-        let renderer = UIGraphicsImageRenderer(bounds: window!.bounds)
-        generatedImage = renderer.image { context in
-            window?.layer.render(in: context.cgContext)
+    private func addDraggableElements() -> some View {
+        ZStack {
+            ForEach(draggableDrawings.indices, id: \.self) { index in
+                DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
+                    .zIndex(draggableDrawings[index].zIndex)
+                    .background(Color.clear)
+            }
+            
+            ForEach(draggableImages.indices, id: \.self) { index in
+                DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
+                    .frame(width: 200, height: 200)
+                    .aspectRatio(contentMode: .fill)
+                    .background(Color.clear)
+                    .zIndex(draggableImages[index].zIndex)
+                    .onAppear {
+                        print("Image Position: \(draggableImages[index].position), Image Size: \(draggableImages[index].image.size)")
+                    }
+            }
+            
+            ForEach(draggableTimes.indices, id: \.self) { index in
+                DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
+                    .frame(width: 150, height: draggableTimes[index].currentTimeStyle == .analogClock ? 150 : 50)
+                    .aspectRatio(contentMode: .fit)
+                    .background(Color.clear)
+                    .zIndex(draggableTimes[index].zIndex)
+            }
+            
+            ForEach(draggableTags.indices, id: \.self) { index in
+                DraggableTagView(draggableTag: $draggableTags[index],
+                                 hideButtons: $hideButtons,
+                                 selectedTagIndex: $selectedTagIndex)
+                .frame(width: 220, height: 40)
+                .background(Color.clear)
+                .zIndex(draggableTags[index].zIndex)
+            }
+            
+            ForEach(draggableLocations.indices, id: \.self) { index in
+                DraggableLocationView(draggableLocation: $draggableLocations[index], selectedLocationIndex: $selectedLocationIndex, index: index, hideButtons: $hideButtons)
+                    .frame(width: 140, height: 40)
+                    .background(Color.clear)
+                    .zIndex(draggableLocations[index].zIndex)
+            }
+            
+            ForEach(draggableStickers.indices, id: \.self) { index in
+                DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100), onDelete: {
+                    draggableStickers.remove(at: index)
+                })
+                .frame(width: 100, height: 100)
+                .background(Color.clear)
+                .zIndex(draggableStickers[index].zIndex)
+                .onAppear {
+                    print(draggableStickers[index].globalFrame, "frame in editview")
+                }
+            }
+            
+            ForEach(draggableTexts.indices, id: \.self) { index in
+                DraggableTextView(draggableText: $draggableTexts[index], hideButtons: $hideButtons, selectedTextIndex: $selectedTextIndex)
+                .zIndex(draggableTexts[index].zIndex)
+                .onAppear {
+                    print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
+                }
+            }
         }
+    }
+    private func generateBackgroundImage(selectedEffect: EffectType? = nil) -> UIImage {
+        let rootView = ZStack {
+            if backgroundType == .photo {
+                if let backgroundImage = backgroundImage {
+                    Image(uiImage: backgroundImage)
+                        .resizable()
+                        .edgesIgnoringSafeArea(.all)
+                } else if let selectedGradient = selectedGradient {
+                    selectedGradient
+                        .edgesIgnoringSafeArea(.all)
+                } else {
+                    Color.clear.edgesIgnoringSafeArea(.all)
+                }
+            }
+            
+            addDraggableElements()
+        }
+        
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.backgroundColor = .clear // Arka plan rengini clear yapıyoruz
+        let hostingController = UIHostingController(rootView: rootView)
+        hostingController.view.backgroundColor = .clear // UIHostingController da clear olmalı
+        window.rootViewController = hostingController
+        window.makeKeyAndVisible()
+
+        
+        // UIGraphicsImageRenderer ile ekran görüntüsünü oluştur
+        let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
+        let generatedImage = renderer.image { context in
+            window.layer.render(in: context.cgContext)
+            
+                        if let effect = selectedEffect {
+                            if case .color(let colorOverlay) = effect {
+                                context.cgContext.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
+                                context.cgContext.fill(window.bounds)
+                            }
+                        }
+        }
+        
+        return generatedImage
+    }
+    
+    private func generateImageFromPhoto() {
+        let image = generateBackgroundImage()
+        
+        generatedImage = image
+        
         showGeneratedImageView = true
     }
+    
     
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = exportedVideoURL else {
@@ -506,47 +492,24 @@ struct StoryEditView: View {
         for draggableTime in draggableTimes {
             print("DraggableTime Position: \(draggableTime.position)")
         }
-        let overlayImage = generateOverlayImage(videoFrame: videoFrame, selectedEffect: selectedEffect)
-        
-        if let effect = selectedEffect {
-            switch effect {
-            case .monochrome:
-                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
-                videoProcessor.processVideo { url in
-                    DispatchQueue.main.async {
-                        self.processedVideoURL = url
-                        if let processedURL = url {
-                            self.showProcessedVideo(processedURL: processedURL)
-                            self.showFullScreenPlayer = true
-                        }
-                    }
-                }
-            case .color:
-                let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
-                videoProcessor.processVideo { url in
-                    DispatchQueue.main.async {
-                        self.processedVideoURL = url
-                        if let processedURL = url {
-                            self.showProcessedVideo(processedURL: processedURL)
-                            self.showFullScreenPlayer = true
-                        }
-                    }
-                }
-            }
-        } else {
-            let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
-            videoProcessor.processVideo { url in
-                DispatchQueue.main.async {
-                    self.processedVideoURL = url
-                    if let processedURL = url {
-                        self.showProcessedVideo(processedURL: processedURL)
-                        self.showFullScreenPlayer = true
-                    }
+
+        // `generateBackgroundImage` fonksiyonunu kullanarak görüntüyü elde edin
+        let overlayImage = generateBackgroundImage(selectedEffect: selectedEffect)
+
+        // Video işleme işlemi
+        let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
+
+        videoProcessor.processVideo { url in
+            DispatchQueue.main.async {
+                self.processedVideoURL = url
+                if let processedURL = url {
+                    self.showProcessedVideo(processedURL: processedURL)
+                    self.showFullScreenPlayer = true
                 }
             }
         }
     }
-    
+
     
     
     private func showProcessedVideo(processedURL: URL) {
@@ -555,156 +518,54 @@ struct StoryEditView: View {
     
     private func generateOverlayImage(videoFrame: CGRect, selectedEffect: EffectType?) -> UIImage {
         let screenSize = UIScreen.main.bounds.size
-        UIGraphicsBeginImageContextWithOptions(screenSize, false, 0)
+        let rendererFormat = UIGraphicsImageRendererFormat.default()
+        rendererFormat.opaque = false // Şeffaf arka plan için opaque ayarını false yapıyoruz
+        rendererFormat.scale = UIScreen.main.scale
         
-        let context = UIGraphicsGetCurrentContext()
+        let renderer = UIGraphicsImageRenderer(size: screenSize, format: rendererFormat)
         
-        var allElements: [(image: UIImage?, text: NSAttributedString?, rect: CGRect, angle: CGFloat, zIndex: CGFloat)] = []
+        let composedImage = renderer.image { context in
+            // Arka planı clear yapıyoruz
+            let image = generateBackgroundImage()
+            let rect = CGRect(x: 100, y: 100, width: 100, height: 100)
+
+            context.cgContext.setFillColor(UIColor.clear.cgColor)
+            context.cgContext.fill(CGRect(origin: .zero, size: screenSize))
+            
         
-        for sticker in draggableStickers {
-            allElements.append((image: sticker.image, text: nil, rect: sticker.globalFrame, angle: sticker.angle.radians, zIndex: sticker.zIndex))
-        }
-        
-        for image in draggableImages {
-            allElements.append((image: image.image, text: nil, rect: image.globalFrame, angle: image.angle.radians, zIndex: image.zIndex))
-        }
-        
-        for time in draggableTimes {
-            allElements.append((image: time.image, text: nil, rect: time.globalFrame, angle: time.angle.radians, zIndex: time.zIndex))
-        }
-        
-        for location in draggableLocations {
-            allElements.append((image: location.image, text: nil, rect: location.globalFrame, angle: location.angle.radians, zIndex: location.zIndex))
-        }
-        
-        for tag in draggableTags {
-            let scaledFontSize = 26 * tag.lastScaleValue * tag.scale
-            let tagAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: scaledFontSize),
-                .foregroundColor: UIColor(tag.textColor)
-            ]
-            
-            let attributedTagText = NSAttributedString(string: tag.text, attributes: tagAttributes)
-            let tagSize = attributedTagText.size()
-            let tagRect = CGRect(
-                origin: CGPoint(x: tag.position.width + screenSize.width / 2 - tagSize.width / 2,
-                                y: tag.position.height + screenSize.height / 2 - tagSize.height / 2),
-                size: tagSize
-            )
-            
-            context?.saveGState()
-            
-            context?.translateBy(x: tagRect.midX, y: tagRect.midY)
-            context?.rotate(by: tag.angle.radians)
-            context?.translateBy(x: -tagRect.midX, y: -tagRect.midY)
-            
-            context?.setFillColor(UIColor(tag.backgroundColor).withAlphaComponent(0.6).cgColor)
-            context?.fill(tagRect.insetBy(dx: -6 * tag.lastScaleValue, dy: -6 * tag.lastScaleValue))
-            
-            attributedTagText.draw(in: tagRect)
-            context?.restoreGState()
-        }
-        
-        for drawing in draggableDrawings {
-            allElements.append((image: drawing.image, text: nil, rect: drawing.position, angle: drawing.angle.radians, zIndex: drawing.zIndex))
-        }
-        for text in draggableTexts {
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byWordWrapping
-            paragraphStyle.alignment = .center
-            
-            let normalFontSize = text.fontSize
-            let textAttributes: [NSAttributedString.Key: Any] = [
-                .font: text.font.toUIFont(size: normalFontSize)!,
-                .foregroundColor: UIColor(text.textColor),
-                .paragraphStyle: paragraphStyle
-            ]
-            
-            let maxWidth = screenSize.width
-            let attributedString = NSAttributedString(string: text.text, attributes: textAttributes)
-            let textSize = attributedString.boundingRect(
-                with: CGSize(width: maxWidth, height: CGFloat.infinity),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil).size
-            
-            let scaledWidth = textSize.width
-            let scaledHeight = textSize.height
-            let scaledX = text.position.width * text.lastScale + screenSize.width / 2 - scaledWidth / 2
-            let scaledY = text.position.height * text.lastScale + screenSize.height / 2 - scaledHeight / 2
-            
-            var rect = CGRect(
-                origin: CGPoint(x: scaledX, y: scaledY),
-                size: CGSize(width: scaledWidth, height: scaledHeight)
-            )
-            
-            context?.saveGState()
-            context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.scaleBy(x: text.lastScale, y: text.lastScale)
-            context?.rotate(by: text.angle.radians)
-            context?.translateBy(x: -rect.midX, y: -rect.midY)
-            
-            context?.setFillColor(UIColor(text.backgroundColor).withAlphaComponent(text.backgroundOpacity).cgColor)
-            context?.fill(rect.insetBy(dx: -10, dy: -5))
-            attributedString.draw(in: rect)
-            
-            context?.restoreGState()
-        }
-        
-        
-        
-        allElements.sort { $0.zIndex < $1.zIndex }
-        
-        if let selectedEffect = selectedEffect {
-            if case .color(let colorOverlay) = selectedEffect {
-                context?.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
-                context?.fill(CGRect(origin: .zero, size: screenSize))
-            }
-        }
-        
-        for element in allElements {
-            let rect = element.rect
-            context?.saveGState()
-            
-            context?.translateBy(x: rect.midX, y: rect.midY)
-            context?.rotate(by: element.angle)
-            context?.translateBy(x: -rect.midX, y: -rect.midY)
-            
-            if let image = element.image {
-                let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
-                path.addClip()
+                context.cgContext.saveGState()
                 
-                let imageSize = image.size
-                let aspectWidth = rect.width / imageSize.width
-                let aspectHeight = rect.height / imageSize.height
-                let aspectRatio = max(aspectWidth, aspectHeight)
+                context.cgContext.translateBy(x: rect.midX, y: rect.midY)
+                context.cgContext.translateBy(x: -rect.midX, y: -rect.midY)
                 
-                let newWidth = imageSize.width * aspectRatio
-                let newHeight = imageSize.height * aspectRatio
-                let drawRect = CGRect(
-                    x: rect.midX - newWidth / 2,
-                    y: rect.midY - newHeight / 2,
-                    width: newWidth,
-                    height: newHeight
-                )
+                // Çizim öncesinde rect'i clear yapıyoruz
+                context.cgContext.setFillColor(UIColor.clear.cgColor)
+                context.cgContext.fill(rect)
                 
-                image.draw(in: drawRect)
-            }
+                // Elemanları çiziyoruz
+                    let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
+                    path.addClip() // Kenarları yuvarlatılmış şeffaf çerçeve
+                    
+                    // Resmi çiziyoruz
+                    image.draw(in: rect)
+                
             
-            if let text = element.text {
-                UIColor.clear.setFill()
-                text.draw(in: rect)
-            }
+                
+                context.cgContext.restoreGState()
+         
             
-            context?.restoreGState()
+            // Eğer bir efekt varsa, onu da uygula
+            if let selectedEffect = selectedEffect {
+                if case .color(let colorOverlay) = selectedEffect {
+                    context.cgContext.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
+                    context.cgContext.fill(CGRect(origin: .zero, size: screenSize))
+                }
+            
         }
-        
-        let composedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return composedImage ?? UIImage()
+        }
+        return composedImage
     }
 }
-
-
 
 
 struct GeneratedImageView: View {
@@ -721,5 +582,6 @@ struct GeneratedImageView: View {
             Text("No image generated")
         }
     }
+        
 }
 

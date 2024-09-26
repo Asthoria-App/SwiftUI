@@ -10,15 +10,21 @@ import Combine
 
 struct OverlayView: View {
     @Binding var showOverlay: Bool
-    @Binding var userText: String
-    @Binding var textColor: Color
-    @Binding var backgroundColor: Color
-    @Binding var backgroundOpacity: CGFloat
-    @Binding var selectedFont: CustomFont
-    @Binding var originalTextColor: Color
-    @Binding var fontSize: CGFloat
-    @Binding var lastScale: CGFloat
-    var onChange: () -> Void
+    @State var userText: String = ""
+    @Binding var draggableTexts: [DraggableText]
+    @Binding var globalIndex: CGFloat
+
+    
+    @State var textColor: Color = .white
+    @State var backgroundColor: Color = .clear
+    @State var backgroundOpacity: CGFloat = 0.0
+    @State var selectedFont: CustomFont = .roboto
+    @State var originalTextColor: Color = .clear
+    @State var fontSize: CGFloat = 34
+    
+
+
+    
     
     
     @State private var textHeight: CGFloat = 30
@@ -34,7 +40,10 @@ struct OverlayView: View {
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     dismissKeyboard()
-                    showOverlay = false
+                    appendTextAndCloseOverlay()
+
+//                    showOverlay = false
+                    
                 }
             
             VStack {
@@ -133,6 +142,7 @@ struct OverlayView: View {
                     
                     Button(action: {
                         dismissKeyboard()
+                        appendTextAndCloseOverlay()
                         showOverlay = false
                     }) {
                         Text("Done")
@@ -159,7 +169,7 @@ struct OverlayView: View {
                     selectedFont: $selectedFont,
                     textWidth: $textWidth,
                     fontSize: $fontSize,
-                    lastScale: $lastScale
+                    lastScale: .constant(1.0)
                 )
                 .frame(width: textWidth, height: textHeight)
                 .padding(8)
@@ -196,6 +206,30 @@ struct OverlayView: View {
             }
             .padding(.top, 0)
         }
+    }
+    
+    private func appendTextAndCloseOverlay() {
+        if userText.count > 1 {
+            let newDraggableText = DraggableText(
+                text: userText,
+                position: .zero,
+                scale: 1.0,
+                angle: .zero,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                backgroundOpacity: backgroundOpacity,
+                font: selectedFont,
+                fontSize: fontSize,
+                originalTextColor: originalTextColor,
+                zIndex: globalIndex,
+               
+                lastScale: 1.0)
+            globalIndex += 1
+            draggableTexts.append(newDraggableText)
+        }
+        
+//        showOverlay = false
+      
     }
 }
 
@@ -275,16 +309,7 @@ struct DynamicHeightTextView: UIViewRepresentable {
         }
     }
 
-    func scaleGesture() -> some Gesture {
-        MagnificationGesture()
-            .onChanged { value in
-                self.currentScale = value
-                self.lastScale = self.currentScale
-            }
-            .onEnded { _ in
-                self.currentScale = 1.0
-            }
-    }
+   
 }
 
 

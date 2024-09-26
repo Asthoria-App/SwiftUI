@@ -89,6 +89,7 @@ public class VideoProcessor: ObservableObject {
 
         overlayLayer.frame = CGRect(origin: .zero, size: renderSize)
         overlayLayer.opacity = 1.0
+        overlayLayer.backgroundColor = UIColor.clear.cgColor
 
         let videoLayer = CALayer()
         videoLayer.frame = CGRect(origin: .zero, size: renderSize)
