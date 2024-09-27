@@ -1,4 +1,3 @@
-
 import AVFoundation
 import CoreImage
 import SwiftUI
@@ -8,12 +7,14 @@ public class VideoProcessor: ObservableObject {
     private let overlayImage: UIImage
     private let isMuted: Bool
     private let soundURL: URL?
+    private let selectedEffect: EffectType?
 
-    public init(videoURL: URL, overlayImage: UIImage, isMuted: Bool, soundURL: URL? = nil) {
+    public init(videoURL: URL, overlayImage: UIImage, isMuted: Bool, soundURL: URL? = nil, selectedEffect: EffectType? = nil) {
         self.videoURL = videoURL
         self.overlayImage = overlayImage
         self.isMuted = isMuted
         self.soundURL = soundURL
+        self.selectedEffect = selectedEffect
     }
 
     public func processVideo(completion: @escaping (URL?) -> Void) {
@@ -46,7 +47,6 @@ public class VideoProcessor: ObservableObject {
 
                     export(composition: composition, videoComposition: videoComposition, completion: completion)
                 } else if !isMuted {
-                    // Orijinal sesi kullan
                     if let audioTrack = try await asset.loadTracks(withMediaType: .audio).first {
                         let videoComposition = try await createOverlayComposition(for: videoTrack, originalDuration: originalVideoDuration, in: composition)
                         let audioCompositionTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
@@ -55,7 +55,6 @@ public class VideoProcessor: ObservableObject {
                         export(composition: composition, videoComposition: videoComposition, completion: completion)
                     }
                 } else {
-                    // Sessiz video
                     let videoComposition = try await createOverlayComposition(for: videoTrack, originalDuration: originalVideoDuration, in: composition)
                     export(composition: composition, videoComposition: videoComposition, completion: completion)
                 }
@@ -81,15 +80,22 @@ public class VideoProcessor: ObservableObject {
 
         let renderSize = try await videoTrack.load(.naturalSize)
         videoComposition.renderSize = renderSize
-        videoComposition.frameDuration = CMTime(value: 1, timescale: 10)
+        videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
+
+        // Monochrome filtresini ekle
+        if case .monochrome = selectedEffect {
+            let filter = CIFilter(name: "CIColorMonochrome")!
+            filter.setValue(CIColor(color: .white), forKey: kCIInputColorKey)
+            filter.setValue(1.0, forKey: kCIInputIntensityKey)
+
+            videoComposition.customVideoCompositorClass = MonochromeVideoCompositor.self
+        }
 
         let overlayLayer = CALayer()
         overlayLayer.contents = overlayImage.cgImage
         overlayLayer.contentsGravity = .resizeAspect
-
         overlayLayer.frame = CGRect(origin: .zero, size: renderSize)
         overlayLayer.opacity = 1.0
-        overlayLayer.backgroundColor = UIColor.clear.cgColor
 
         let videoLayer = CALayer()
         videoLayer.frame = CGRect(origin: .zero, size: renderSize)
@@ -127,4 +133,44 @@ public class VideoProcessor: ObservableObject {
             }
         }
     }
+}
+
+// Custom video compositor for monochrome filter
+public class MonochromeVideoCompositor: NSObject, AVVideoCompositing {
+    public var sourcePixelBufferAttributes: [String : Any]? {
+        return [
+            kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)
+        ]
+    }
+
+    public var requiredPixelBufferAttributesForRenderContext: [String : Any] {
+        return [
+            kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)
+        ]
+    }
+
+    public func startRequest(_ asyncVideoCompositionRequest: AVAsynchronousVideoCompositionRequest) {
+        guard let filter = CIFilter(name: "CIColorMonochrome"),
+              let pixelBuffer = asyncVideoCompositionRequest.sourceFrame(byTrackID: asyncVideoCompositionRequest.sourceTrackIDs[0].int32Value) else {
+            asyncVideoCompositionRequest.finish(with: NSError(domain: "MonochromeCompositor", code: 0, userInfo: nil))
+            return
+        }
+
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        filter.setValue(ciImage, forKey: kCIInputImageKey)
+        filter.setValue(CIColor.white, forKey: kCIInputColorKey)
+        filter.setValue(1.0, forKey: kCIInputIntensityKey)
+
+        if let outputImage = filter.outputImage {
+            let context = CIContext()
+            let renderedBuffer = asyncVideoCompositionRequest.renderContext.newPixelBuffer()!
+
+            context.render(outputImage, to: renderedBuffer)
+            asyncVideoCompositionRequest.finish(withComposedVideoFrame: renderedBuffer)
+        } else {
+            asyncVideoCompositionRequest.finish(with: NSError(domain: "MonochromeCompositor", code: 1, userInfo: nil))
+        }
+    }
+
+    public func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) {}
 }

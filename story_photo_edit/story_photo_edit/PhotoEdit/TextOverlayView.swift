@@ -7,32 +7,26 @@
 
 import SwiftUI
 import Combine
-
 struct OverlayView: View {
+    
     @Binding var showOverlay: Bool
     @State var userText: String = ""
     @Binding var draggableTexts: [DraggableText]
     @Binding var globalIndex: CGFloat
-
+    @Binding var selectedTextIndex: Int?
     
     @State var textColor: Color = .white
     @State var backgroundColor: Color = .clear
     @State var backgroundOpacity: CGFloat = 0.0
     @State var selectedFont: CustomFont = .roboto
     @State var originalTextColor: Color = .clear
-    @State var fontSize: CGFloat = 34
-    
-
-
-    
-    
-    
+    @State var fontSize: CGFloat = 64
     @State private var textHeight: CGFloat = 30
     @State private var textWidth: CGFloat = 30
     @State private var keyboardHeight: CGFloat = 0
-    
     @State private var showFontCollection: Bool = false
     @State private var showColorCollection: Bool = true
+    @State private var isEditing: Bool = false
     
     var body: some View {
         ZStack {
@@ -40,10 +34,8 @@ struct OverlayView: View {
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     dismissKeyboard()
-                    appendTextAndCloseOverlay()
-
-//                    showOverlay = false
-                    
+                    saveAndCloseOverlay()
+                    showOverlay = false
                 }
             
             VStack {
@@ -104,33 +96,7 @@ struct OverlayView: View {
                     
                     Button(action: {
                         withAnimation {
-                            
-                            if textColor == .white && backgroundOpacity == 0.0 {
-                                backgroundColor = .black
-                                backgroundOpacity = 0.7
-                                
-                            } else if backgroundColor == .black && backgroundOpacity == 0.7 && textColor == .white {
-                                backgroundColor = .white
-                                textColor = .black
-                                backgroundOpacity = 0.7
-                                
-                            } else if  backgroundColor == .white && textColor == .black && backgroundOpacity == 0.7 {
-                                textColor = .white
-                                backgroundOpacity = 0.0
-                                
-                            } else if backgroundOpacity == 0.0 {
-                                backgroundOpacity = 0.7
-                                backgroundColor = .white
-                            } else if backgroundOpacity == 0.7
-                                        
-                                        && backgroundColor == .white {
-                                backgroundColor = textColor
-                                textColor = .white
-                            } else {
-                                
-                                textColor = originalTextColor
-                                backgroundOpacity = 0.0
-                            }
+                            toggleBackgroundAndTextColors()
                         }
                     }) {
                         Image(systemName: "square.text.square.fill")
@@ -142,7 +108,7 @@ struct OverlayView: View {
                     
                     Button(action: {
                         dismissKeyboard()
-                        appendTextAndCloseOverlay()
+                        saveAndCloseOverlay()
                         showOverlay = false
                     }) {
                         Text("Done")
@@ -174,10 +140,15 @@ struct OverlayView: View {
                 .frame(width: textWidth, height: textHeight)
                 .padding(8)
                 .background(Color.clear)
-              
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         focusTextView()
+                        if let index = selectedTextIndex {
+                            isEditing = true
+                            loadExistingText(index: index)
+                        } else {
+                            isEditing = false
+                        }
                     }
                 }
                 
@@ -208,31 +179,78 @@ struct OverlayView: View {
         }
     }
     
-    private func appendTextAndCloseOverlay() {
-        if userText.count > 1 {
-            let newDraggableText = DraggableText(
-                text: userText,
-                position: .zero,
-                scale: 1.0,
-                angle: .zero,
-                textColor: textColor,
-                backgroundColor: backgroundColor,
-                backgroundOpacity: backgroundOpacity,
-                font: selectedFont,
-                fontSize: fontSize,
-                originalTextColor: originalTextColor,
-                zIndex: globalIndex,
-               
-                lastScale: 1.0)
-            globalIndex += 1
-            draggableTexts.append(newDraggableText)
+    private func loadExistingText(index: Int) {
+        let selectedText = draggableTexts[index]
+        userText = selectedText.text
+        textColor = selectedText.textColor
+        backgroundColor = selectedText.backgroundColor
+        backgroundOpacity = selectedText.backgroundOpacity
+        selectedFont = selectedText.font
+        fontSize = selectedText.fontSize
+        originalTextColor = selectedText.originalTextColor
+    }
+    
+    private func toggleBackgroundAndTextColors() {
+        if textColor == .white && backgroundOpacity == 0.0 {
+            backgroundColor = .black
+            backgroundOpacity = 0.7
+            
+        } else if backgroundColor == .black && backgroundOpacity == 0.7 && textColor == .white {
+            backgroundColor = .white
+            textColor = .black
+            backgroundOpacity = 0.7
+            
+        } else if  backgroundColor == .white && textColor == .black && backgroundOpacity == 0.7 {
+            textColor = .white
+            backgroundOpacity = 0.0
+            
+        } else if backgroundOpacity == 0.0 {
+            backgroundOpacity = 0.7
+            backgroundColor = .white
+        } else if backgroundOpacity == 0.7
+                    
+                    && backgroundColor == .white {
+            backgroundColor = textColor
+            textColor = .white
+        } else {
+            
+            textColor = originalTextColor
+            backgroundOpacity = 0.0
         }
-        
-//        showOverlay = false
-      
+    }
+    
+    private func saveAndCloseOverlay() {
+        if userText.count > 1 {
+            if let index = selectedTextIndex {
+                draggableTexts[index].text = userText
+                draggableTexts[index].textColor = textColor
+                draggableTexts[index].backgroundColor = backgroundOpacity == 0.0 ? .clear : backgroundColor
+                draggableTexts[index].backgroundOpacity = backgroundOpacity
+                draggableTexts[index].font = selectedFont
+                draggableTexts[index].fontSize = fontSize
+                draggableTexts[index].originalTextColor = originalTextColor
+            } else {
+                let newDraggableText = DraggableText(
+                    text: userText,
+                    position: .zero,
+                    scale: 1.0,
+                    angle: .zero,
+                    textColor: textColor,
+                    backgroundColor: backgroundOpacity == 0.0 ? .clear : backgroundColor,
+                    backgroundOpacity: backgroundOpacity,
+                    font: selectedFont,
+                    fontSize: fontSize,
+                    originalTextColor: originalTextColor,
+                    zIndex: globalIndex,
+                    lastScale: 1.0
+                )
+                globalIndex += 1
+                draggableTexts.append(newDraggableText)
+            }
+        }
+        showOverlay = false
     }
 }
-
 
 struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var text: String
@@ -247,9 +265,8 @@ struct DynamicHeightTextView: UIViewRepresentable {
     @Binding var fontSize: CGFloat
     @Binding var lastScale: CGFloat
     
-    // Internal state for scaling
     @State private var currentScale: CGFloat = 1.0
-
+    
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: DynamicHeightTextView
         
@@ -299,17 +316,18 @@ struct DynamicHeightTextView: UIViewRepresentable {
         
         if let uiFont = selectedFont.toUIFont(size: fontSize) {
             uiView.font = uiFont
+        } else {
+            uiView.font = UIFont.systemFont(ofSize: fontSize)
         }
         
         let maxWidth = UIScreen.main.bounds.width * 0.9
         let size = uiView.sizeThatFits(CGSize(width: maxWidth, height: CGFloat.greatestFiniteMagnitude))
+        
         DispatchQueue.main.async {
             self.textHeight = max(self.minHeight, min(size.height, self.maxHeight))
             self.textWidth = min(size.width, maxWidth)
         }
     }
-
-   
 }
 
 
@@ -327,7 +345,6 @@ struct ColorSelectionView: View {
     
     var body: some View {
         HStack {
-            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(colors, id: \.self) { color in
@@ -393,6 +410,7 @@ struct FontCollectionView: View {
         }
     }
 }
+
 func dismissKeyboard() {
     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 }

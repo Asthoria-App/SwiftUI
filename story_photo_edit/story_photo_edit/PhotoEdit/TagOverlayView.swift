@@ -153,8 +153,7 @@ struct TagOverlayView: View {
                 scale: 1.0,
                 angle: .zero,
                 zIndex: globalIndex,
-                originalText: tagText,
-                image: UIImage()
+                originalText: tagText
             )
             globalIndex += 1
             draggableTags.append(newDraggableTag)

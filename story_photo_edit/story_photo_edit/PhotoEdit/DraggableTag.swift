@@ -19,9 +19,6 @@ struct DraggableTag {
     var textColor: Color = .white
     var useGradientText: Bool = false
     var originalText: String
-    var image: UIImage
-
-    
 }
 
 struct DraggableTagView: View {
@@ -41,107 +38,66 @@ struct DraggableTagView: View {
         endPoint: .trailing
     )
 
-
-
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack {
                     if !shouldRemove {
                         ZStack {
-                       
-                            Text(verbatim: draggableTag.text)
+                            // Background ile Text'i aynı pozisyon mantığı ile birlikte hareket ettirelim
+                            Text(draggableTag.text)
                                 .font(Font.system(size: 26))
-                            .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
-                            .overlay(
-                                draggableTag.useGradientText ?
-                                gradientColor.mask(Text(draggableTag.text).font(.system(size: 26))) : nil
-                            )
-                            .padding(6)
-                            .background(draggableTag.backgroundColor.opacity(0.6))
-                         
-                            .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale) // Apply the scale effect
-                            .rotationEffect(draggableTag.angle)
-                            .position(x: geometry.size.width / 2 + draggableTag.position.width + dragOffset.width,
-                                      y: geometry.size.height / 2 + draggableTag.position.height + dragOffset.height)
-                            .gesture(
-                                SimultaneousGesture(
-                                    DragGesture()
-                                        .onChanged { value in
-                                            hideButtons = true
-                                            dragOffset = value.translation
-
-                                            let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
-                                            if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
-                                                isDraggingOverDelete = true
-                                            } else {
-                                                isDraggingOverDelete = false
+                                .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
+                                .overlay(
+                                    draggableTag.useGradientText ?
+                                    gradientColor.mask(Text(draggableTag.text).font(.system(size: 26))) : nil
+                                )
+                                .padding(6)
+                                .background(draggableTag.backgroundColor.opacity(0.6))
+                                .cornerRadius(5)  // Arka planı yuvarlatıyoruz
+                                .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale)  // Ölçekleme
+                                .rotationEffect(draggableTag.angle)  // Döndürme
+                                .offset(x: draggableTag.position.width + dragOffset.width,
+                                        y: draggableTag.position.height + dragOffset.height)  // Konumlandırma
+                                .gesture(
+                                    SimultaneousGesture(
+                                        DragGesture()
+                                            .onChanged { value in
+                                                hideButtons = true
+                                                dragOffset = value.translation
                                             }
-                                        }
-                                        .onEnded { value in
-                                            if isDraggingOverDelete {
-                                                withAnimation(.smooth(duration: 0.3)) {
-                                                    shouldRemove = true
-                                                }
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                    draggableTag = DraggableTag(text: draggableTag.text, position: draggableTag.position, scale: draggableTag.scale, angle: draggableTag.angle, zIndex: draggableTag.zIndex, originalText: draggableTag.originalText, image: draggableTag.image)
-                                                }
-                                            } else {
+                                            .onEnded { value in
                                                 draggableTag.position.width += dragOffset.width
                                                 draggableTag.position.height += dragOffset.height
                                                 dragOffset = .zero
                                                 updateTagState(geo: geometry)
+                                                hideButtons = false
+                                            },
+                                        RotationGesture()
+                                            .onChanged { newAngle in
+                                                draggableTag.angle += newAngle - draggableTag.angle
                                             }
-                                            dragOffset = .zero
-                                            hideButtons = false
-                                            isDraggingOverDelete = false
-                                        },
-                                    RotationGesture()
-                                        .onChanged { newAngle in
-                                            draggableTag.angle += newAngle - draggableTag.angle
+                                            .onEnded { newAngle in
+                                                draggableTag.angle = newAngle
+                                                updateTagState(geo: geometry)
+                                            }
+                                    )
+                                    .simultaneously(with: MagnificationGesture()
+                                        .onChanged { value in
+                                            draggableTag.scale = value
                                         }
-                                        .onEnded { newAngle in
-                                            draggableTag.angle = newAngle
+                                        .onEnded { _ in
+                                            draggableTag.lastScaleValue *= draggableTag.scale
+                                            draggableTag.scale = 1.0
                                             updateTagState(geo: geometry)
                                         }
+                                    )
                                 )
-                                .simultaneously(with: MagnificationGesture()
-                                    .onChanged { value in
-                                        draggableTag.scale = value
-                                    }
-                                    .onEnded { _ in
-                                        draggableTag.lastScaleValue *= draggableTag.scale
-                                        draggableTag.scale = 1.0
-                                        updateTagState(geo: geometry)
-                                    }
-                                )
-                            )
-                            .onTapGesture {
-                                tapCount += 1
-                                updateTagAppearance()
-                            }
+                                .onTapGesture {
+                                    tapCount += 1
+                                    updateTagAppearance()  // Tap count'a göre görünüm değişimi
+                                }
                         }
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        let scale = draggableTag.lastScaleValue * draggableTag.scale
-                                        let globalFrame = geo.frame(in: .global)
-                                        
-                                        draggableTag.position = CGSize(
-                                            width: -geo.size.width / 2 + globalFrame.width * scale / 2,
-                                            height: -geo.size.height / 2 + globalFrame.height * scale / 2
-                                        )
-                                        
-                                        draggableTag.globalFrame = CGRect(
-                                            origin: globalFrame.origin,
-                                            size: CGSize(width: globalFrame.width * scale, height: globalFrame.height * scale)
-                                        )
-                                        
-                                        updateTagState(geo: geo)
-                                    }
-                            }
-                        )
                     }
                 }
             }
@@ -165,7 +121,6 @@ struct DraggableTagView: View {
         default:
             draggableTag = draggableTag.copyWith(newBackground: .black, newTextColor: .white, useGradientText: false)
             draggableTag.text = draggableTag.originalText
-
             tapCount = 0
         }
     }
@@ -204,5 +159,3 @@ extension DraggableTag {
         return copy
     }
 }
-
-

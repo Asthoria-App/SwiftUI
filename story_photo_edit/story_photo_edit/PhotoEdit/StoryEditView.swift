@@ -18,41 +18,47 @@ struct StoryEditView: View {
     @State private var hideButtons: Bool = false
     @State private var showBackgroundImagePicker: Bool = false
     @State private var showDraggableImagePicker: Bool = false
-    @State private var backgroundImage: UIImage? = nil
-    @State private var selectedDraggableImage: UIImage? = nil
-    @State private var selectedGradient: LinearGradient? = nil
-    @State private var generatedImage: UIImage? = nil
-    @State private var showGeneratedImageView: Bool = false
-    @State private var draggableTexts: [DraggableText] = []
-    @State private var selectedTextIndex: Int? = nil
-    @State private var draggableImages: [DraggableImage] = []
-    @State private var selectedImageIndex: Int? = nil
+    @State private var showTagOverlay: Bool = false
+    @State private var showDrawingOverlay: Bool = false
     @State private var showStickerPicker: Bool = false
+    @State private var showGeneratedImageView: Bool = false
+    @State private var showFullScreenPlayer: Bool = false
+    
+    @State private var draggableTexts: [DraggableText] = []
+    @State private var draggableImages: [DraggableImage] = []
     @State private var draggableStickers: [DraggableSticker] = []
     @State private var draggableTimes: [DraggableTime] = []
-    @State private var selectedTimeIndex: Int? = nil
     @State private var draggableLocations: [DraggableLocation] = []
+    @State private var draggableTags: [DraggableTag] = []
+    @State private var draggableDrawings: [DraggableDrawing] = []
+    
+    @State private var selectedTextIndex: Int? = nil
+    @State private var selectedImageIndex: Int? = nil
+    @State private var selectedTimeIndex: Int? = nil
     @State private var selectedLocationIndex: Int? = nil
     @State private var selectedTagIndex: Int? = nil
-    @State private var showTagOverlay: Bool = false
-    @State private var tagText: String = ""
-    @State private var draggableTags: [DraggableTag] = []
-    @State private var selectedStickerImage: UIImage? = nil
-    @State private var globalIndex: CGFloat = 1
-    @State private var showDrawingOverlay: Bool = false
-    @State private var draggableDrawings: [DraggableDrawing] = []
     @State private var selectedDrawingIndex: Int? = nil
-    @State private var backgroundType: BackgroundType = .video
-    //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
-    //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
+    @State private var globalIndex: CGFloat = 1
+    
+    @State private var selectedDraggableImage: UIImage? = nil
+    @State private var selectedStickerImage: UIImage? = nil
+    @State private var selectedEffect: EffectType? = nil
+    
+    @State private var backgroundType: BackgroundType = .photo
+    @State private var backgroundImage: UIImage? = nil
+    @State private var selectedGradient: LinearGradient? = nil
     @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
     
-    
-    @State private var showMusicSelectionOverlay: Bool = false
     @State private var selectedSoundURL: URL? = nil
-    
     @State private var isMuted: Bool = false
     @State private var  isPlaying: Bool = true
+    
+    @State private var processedVideoURL: URL? = nil
+    @State private var generatedImage: UIImage? = nil
+    @State private var tagText: String = ""
+    
+    //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
+    //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     
     let users = [
         User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
@@ -71,45 +77,11 @@ struct StoryEditView: View {
     ]
     
     
-    @State private var processedVideoURL: URL? = nil
-    @State private var selectedEffect: EffectType? = nil
-    @State private var showFullScreenPlayer: Bool = false
-    
-    
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .top, endPoint: .bottom),
         LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .top, endPoint: .bottom)
     ]
-    private func getVideoFrame() -> CGRect? {
-        guard let videoURL = exportedVideoURL else {
-            return nil
-        }
-        
-        let asset = AVAsset(url: videoURL)
-        guard let track = asset.tracks(withMediaType: .video).first else {
-            return nil
-        }
-        
-        let videoSize = track.naturalSize
-        let transform = track.preferredTransform
-        
-        let isPortrait = transform.a == 0 && transform.d == 0 && (transform.b == 1.0 || transform.b == -1.0)
-        
-        let correctedVideoSize = isPortrait ? CGSize(width: videoSize.height, height: videoSize.width) : videoSize
-        
-        let screenSize = UIScreen.main.bounds.size
-        let videoFrame: CGRect
-        
-        if correctedVideoSize.width / correctedVideoSize.height > screenSize.width / screenSize.height {
-            let height = screenSize.width * correctedVideoSize.height / correctedVideoSize.width
-            videoFrame = CGRect(x: 0, y: (screenSize.height - height) / 2, width: screenSize.width, height: height)
-        } else {
-            let width = screenSize.height * correctedVideoSize.width / correctedVideoSize.height
-            videoFrame = CGRect(x: (screenSize.width - width) / 2, y: 0, width: width, height: screenSize.height)
-        }
-        return videoFrame
-    }
     
     var body: some View {
         ZStack {
@@ -202,9 +174,8 @@ struct StoryEditView: View {
                             
                             
                             Button(action: {
-//                           hide buttons?
+                                selectedTextIndex = nil
                                 showOverlay = true
-//                                textColor = .white
                             }) {
                                 Image(systemName: "textformat")
                                     .resizable()
@@ -237,21 +208,22 @@ struct StoryEditView: View {
                         VStack {
                             Spacer()
                             Button("Done") {
-//                                                                generateImageFromPhoto()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    if let videoFrame = getVideoFrame() {
-                                        processVideo(videoFrame: videoFrame)
-                                    } else {
-                                        print("Video frame could not be determined")
-                                    }
-                                }
+                                generateVideoFromPhotoWithSound()
+                                
+//                                                     generateImageFromPhoto()
+//                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                                    if let videoFrame = getVideoFrame() {
+//                                        processVideo(videoFrame: videoFrame)
+//                                    } else {
+//                                        print("Video frame could not be determined")
+//                                    }
+//                                }
                                 
                             }
                             .font(.title2)
                             .padding()
                             .foregroundColor(.white)
                             .cornerRadius(10)
-                            
                         }
                     }
                     
@@ -316,7 +288,9 @@ struct StoryEditView: View {
             }
             
             if showOverlay {
-                OverlayView(showOverlay: $showOverlay, draggableTexts: $draggableTexts, globalIndex: $globalIndex)
+                OverlayView(showOverlay: $showOverlay,
+                            draggableTexts: $draggableTexts,
+                            globalIndex: $globalIndex, selectedTextIndex: $selectedTextIndex)
                 .zIndex(100)
             }
         }
@@ -328,12 +302,19 @@ struct StoryEditView: View {
         .fullScreenCover(isPresented: $showFullScreenPlayer, onDismiss: {
             isPlaying = true
         }) {
-            SimpleVideoPlayerView(videoURL: processedVideoURL!)
-                .edgesIgnoringSafeArea(.all)
-                .onAppear {
-                    isPlaying = false
-                }
+            if let url = processedVideoURL {
+                VideoPlayer(player: AVPlayer(url: url))
+                    .edgesIgnoringSafeArea(.all)
+                    .onAppear {
+                        isPlaying = false
+                    }
+            } else {
+                Text("Video could not be loaded")
+                    .foregroundColor(.red)
+            }
         }
+
+
         
         .sheet(isPresented: $showDraggableImagePicker) {
             ImagePicker(selectedImage: $selectedDraggableImage)
@@ -361,10 +342,16 @@ struct StoryEditView: View {
         }
         .sheet(isPresented: $showGeneratedImageView) {
             GeneratedImageView(image: generatedImage)
+                .background(Color.green)
         }
         .onChange(of: showOverlay) { newValue in
             hideButtons = newValue
         }
+        
+        .onChange(of: processedVideoURL) { newValue in
+            print("processedVideoURL changed: \(String(describing: newValue))")
+        }
+
     }
     
     private func addDraggableElements() -> some View {
@@ -372,25 +359,20 @@ struct StoryEditView: View {
             ForEach(draggableDrawings.indices, id: \.self) { index in
                 DraggableDrawingView(draggableDrawing: $draggableDrawings[index], selectedDrawingIndex: $selectedDrawingIndex, index: index, hideButtons: $hideButtons)
                     .zIndex(draggableDrawings[index].zIndex)
-                    .background(Color.clear)
             }
             
             ForEach(draggableImages.indices, id: \.self) { index in
                 DraggableImageView(draggableImage: $draggableImages[index], selectedImageIndex: $selectedImageIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 200, height: 200)
                     .aspectRatio(contentMode: .fill)
-                    .background(Color.clear)
                     .zIndex(draggableImages[index].zIndex)
-                    .onAppear {
-                        print("Image Position: \(draggableImages[index].position), Image Size: \(draggableImages[index].image.size)")
-                    }
+                  
             }
             
             ForEach(draggableTimes.indices, id: \.self) { index in
                 DraggableTimeView(draggableTime: $draggableTimes[index], selectedTimeIndex: $selectedTimeIndex, index: index, hideButtons: $hideButtons)
                     .frame(width: 150, height: draggableTimes[index].currentTimeStyle == .analogClock ? 150 : 50)
                     .aspectRatio(contentMode: .fit)
-                    .background(Color.clear)
                     .zIndex(draggableTimes[index].zIndex)
             }
             
@@ -399,14 +381,13 @@ struct StoryEditView: View {
                                  hideButtons: $hideButtons,
                                  selectedTagIndex: $selectedTagIndex)
                 .frame(width: 220, height: 40)
-                .background(Color.clear)
                 .zIndex(draggableTags[index].zIndex)
             }
             
             ForEach(draggableLocations.indices, id: \.self) { index in
                 DraggableLocationView(draggableLocation: $draggableLocations[index], selectedLocationIndex: $selectedLocationIndex, index: index, hideButtons: $hideButtons)
+                    .background(Color.purple)
                     .frame(width: 140, height: 40)
-                    .background(Color.clear)
                     .zIndex(draggableLocations[index].zIndex)
             }
             
@@ -415,22 +396,50 @@ struct StoryEditView: View {
                     draggableStickers.remove(at: index)
                 })
                 .frame(width: 100, height: 100)
-                .background(Color.clear)
                 .zIndex(draggableStickers[index].zIndex)
-                .onAppear {
-                    print(draggableStickers[index].globalFrame, "frame in editview")
-                }
+                
             }
             
             ForEach(draggableTexts.indices, id: \.self) { index in
-                DraggableTextView(draggableText: $draggableTexts[index], hideButtons: $hideButtons, selectedTextIndex: $selectedTextIndex)
-                .zIndex(draggableTexts[index].zIndex)
-                .onAppear {
-                    print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
-                }
+                DraggableTextView(draggableText: $draggableTexts[index], hideButtons: $hideButtons, showOverlay: $showOverlay, selectedTextIndex: $selectedTextIndex, index: index)
+                    .zIndex(draggableTexts[index].zIndex)
+                    .onAppear {
+                        print("Text Position: \(draggableTexts[index].position), Text Size: \(draggableTexts[index].fontSize)")
+                    }
             }
         }
     }
+    
+    private func getVideoFrame() -> CGRect? {
+        guard let videoURL = exportedVideoURL else {
+            return nil
+        }
+        
+        let asset = AVAsset(url: videoURL)
+        guard let track = asset.tracks(withMediaType: .video).first else {
+            return nil
+        }
+        
+        let videoSize = track.naturalSize
+        let transform = track.preferredTransform
+        
+        let isPortrait = transform.a == 0 && transform.d == 0 && (transform.b == 1.0 || transform.b == -1.0)
+        
+        let correctedVideoSize = isPortrait ? CGSize(width: videoSize.height, height: videoSize.width) : videoSize
+        
+        let screenSize = UIScreen.main.bounds.size
+        let videoFrame: CGRect
+        
+        if correctedVideoSize.width / correctedVideoSize.height > screenSize.width / screenSize.height {
+            let height = screenSize.width * correctedVideoSize.height / correctedVideoSize.width
+            videoFrame = CGRect(x: 0, y: (screenSize.height - height) / 2, width: screenSize.width, height: height)
+        } else {
+            let width = screenSize.height * correctedVideoSize.width / correctedVideoSize.height
+            videoFrame = CGRect(x: (screenSize.width - width) / 2, y: 0, width: width, height: screenSize.height)
+        }
+        return videoFrame
+    }
+    
     private func generateBackgroundImage(selectedEffect: EffectType? = nil) -> UIImage {
         let rootView = ZStack {
             if backgroundType == .photo {
@@ -445,42 +454,34 @@ struct StoryEditView: View {
                     Color.clear.edgesIgnoringSafeArea(.all)
                 }
             }
-            
             addDraggableElements()
         }
         
         let window = UIWindow(frame: UIScreen.main.bounds)
-        window.backgroundColor = .clear // Arka plan rengini clear yapıyoruz
         let hostingController = UIHostingController(rootView: rootView)
-        hostingController.view.backgroundColor = .clear // UIHostingController da clear olmalı
+        hostingController.view.backgroundColor = .clear
         window.rootViewController = hostingController
         window.makeKeyAndVisible()
-
         
-        // UIGraphicsImageRenderer ile ekran görüntüsünü oluştur
         let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
         let generatedImage = renderer.image { context in
             window.layer.render(in: context.cgContext)
             
-                        if let effect = selectedEffect {
-                            if case .color(let colorOverlay) = effect {
-                                context.cgContext.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
-                                context.cgContext.fill(window.bounds)
-                            }
-                        }
+            if let effect = selectedEffect {
+                if case .color(let colorOverlay) = effect {
+                    context.cgContext.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
+                    context.cgContext.fill(window.bounds)
+                }
+            }
         }
-        
         return generatedImage
     }
     
     private func generateImageFromPhoto() {
         let image = generateBackgroundImage()
-        
         generatedImage = image
-        
         showGeneratedImageView = true
     }
-    
     
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = exportedVideoURL else {
@@ -492,81 +493,172 @@ struct StoryEditView: View {
         for draggableTime in draggableTimes {
             print("DraggableTime Position: \(draggableTime.position)")
         }
-
-        // `generateBackgroundImage` fonksiyonunu kullanarak görüntüyü elde edin
+        
         let overlayImage = generateBackgroundImage(selectedEffect: selectedEffect)
-
-        // Video işleme işlemi
-        let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL)
+        
+        let videoProcessor = VideoProcessor(videoURL: videoURL, overlayImage: overlayImage, isMuted: isMuted, soundURL: soundURL, selectedEffect: selectedEffect)
 
         videoProcessor.processVideo { url in
             DispatchQueue.main.async {
                 self.processedVideoURL = url
                 if let processedURL = url {
-                    self.showProcessedVideo(processedURL: processedURL)
+                    self.processedVideoURL = processedURL
                     self.showFullScreenPlayer = true
                 }
             }
         }
     }
-
-    
-    
-    private func showProcessedVideo(processedURL: URL) {
-        self.processedVideoURL = processedURL
-    }
     
     private func generateOverlayImage(videoFrame: CGRect, selectedEffect: EffectType?) -> UIImage {
         let screenSize = UIScreen.main.bounds.size
         let rendererFormat = UIGraphicsImageRendererFormat.default()
-        rendererFormat.opaque = false // Şeffaf arka plan için opaque ayarını false yapıyoruz
+        rendererFormat.opaque = false
         rendererFormat.scale = UIScreen.main.scale
         
         let renderer = UIGraphicsImageRenderer(size: screenSize, format: rendererFormat)
         
         let composedImage = renderer.image { context in
-            // Arka planı clear yapıyoruz
             let image = generateBackgroundImage()
-            let rect = CGRect(x: 100, y: 100, width: 100, height: 100)
-
-            context.cgContext.setFillColor(UIColor.clear.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: screenSize))
+            let rect = CGRect(x: .zero, y: .zero, width: screenSize.width, height: screenSize.height)
             
-        
-                context.cgContext.saveGState()
-                
-                context.cgContext.translateBy(x: rect.midX, y: rect.midY)
-                context.cgContext.translateBy(x: -rect.midX, y: -rect.midY)
-                
-                // Çizim öncesinde rect'i clear yapıyoruz
-                context.cgContext.setFillColor(UIColor.clear.cgColor)
-                context.cgContext.fill(rect)
-                
-                // Elemanları çiziyoruz
-                    let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
-                    path.addClip() // Kenarları yuvarlatılmış şeffaf çerçeve
-                    
-                    // Resmi çiziyoruz
-                    image.draw(in: rect)
-                
+            context.cgContext.saveGState()
+            context.cgContext.translateBy(x: rect.midX, y: rect.midY)
+            context.cgContext.translateBy(x: -rect.midX, y: -rect.midY)
             
-                
-                context.cgContext.restoreGState()
-         
+            context.cgContext.fill(rect)
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
+            path.addClip()
+            image.draw(in: rect)
+            context.cgContext.restoreGState()
             
-            // Eğer bir efekt varsa, onu da uygula
             if let selectedEffect = selectedEffect {
                 if case .color(let colorOverlay) = selectedEffect {
                     context.cgContext.setFillColor(UIColor(colorOverlay).withAlphaComponent(0.1).cgColor)
                     context.cgContext.fill(CGRect(origin: .zero, size: screenSize))
                 }
-            
-        }
+            }
         }
         return composedImage
     }
-}
+    func createVideoWithSound(from image: UIImage, soundURL: URL, completion: @escaping (URL?) -> Void) {
+        let videoSize = CGSize(width: 720, height: 1280) // Daha düşük çözünürlük
+        let outputURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
 
+        // AVAssetWriter - Video oluşturucu
+        guard let writer = try? AVAssetWriter(outputURL: outputURL, fileType: .mp4) else {
+            print("Error: Could not create AVAssetWriter")
+            completion(nil)
+            return
+        }
+
+        // Video ayarlarını optimize et
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: videoSize.width,
+            AVVideoHeightKey: videoSize.height,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: 600_000 // Düşük bitrate, hızlı işleme
+            ]
+        ]
+
+        let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        let pixelBufferSettings: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),
+            kCVPixelBufferWidthKey as String: videoSize.width,
+            kCVPixelBufferHeightKey as String: videoSize.height
+        ]
+        
+        let pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoInput, sourcePixelBufferAttributes: pixelBufferSettings)
+        
+        if writer.canAdd(videoInput) {
+            writer.add(videoInput)
+        }
+
+        // Ses dosyasını ekle
+        let audioAsset = AVAsset(url: soundURL)
+        let audioTrack = audioAsset.tracks(withMediaType: .audio).first!
+        let audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: nil)
+        
+        if writer.canAdd(audioInput) {
+            writer.add(audioInput)
+        }
+
+        writer.startWriting()
+        writer.startSession(atSourceTime: .zero)
+
+        DispatchQueue.global().async {
+            let timeDuration = CMTime(seconds: CMTimeGetSeconds(audioAsset.duration), preferredTimescale: 600)
+            let frameTime = CMTime(seconds: 1 / 15, preferredTimescale: 600) // Düşük frame rate
+            
+            var currentTime = CMTime.zero
+            while currentTime < timeDuration {
+                if pixelBufferAdaptor.assetWriterInput.isReadyForMoreMediaData {
+                    let pixelBuffer = self.pixelBuffer(from: image, size: videoSize)
+                    pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: currentTime)
+                    currentTime = currentTime + frameTime
+                }
+            }
+
+            videoInput.markAsFinished()
+            writer.finishWriting {
+                if writer.status == .completed {
+                    print("Video generation completed successfully. Output URL: \(outputURL)")
+                    completion(outputURL)
+                } else {
+                    print("Video generation failed with error: \(writer.error?.localizedDescription ?? "Unknown error")")
+                    completion(nil)
+                }
+            }
+        }
+    }
+
+    func pixelBuffer(from image: UIImage, size: CGSize) -> CVPixelBuffer {
+        let options = [
+            kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue
+        ] as CFDictionary
+        
+        var pxbuffer: CVPixelBuffer?
+        CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, options, &pxbuffer)
+        
+        let lockFlags = CVPixelBufferLockFlags(rawValue: 0)
+        CVPixelBufferLockBaseAddress(pxbuffer!, lockFlags)
+        
+        let pxdata = CVPixelBufferGetBaseAddress(pxbuffer!)
+        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
+        
+        let context = CGContext(data: pxdata, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pxbuffer!), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
+        
+        context?.clear(CGRect(x: 0, y: 0, width: size.width, height: size.height))
+        let cgImage = image.cgImage
+        context?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+        
+        CVPixelBufferUnlockBaseAddress(pxbuffer!, lockFlags)
+        
+        return pxbuffer!
+    }
+    
+    private func generateVideoFromPhotoWithSound() {
+        if let backgroundImage = backgroundImage, let soundURL = selectedSoundURL {
+            print("Starting video generation from image with sound.")
+            createVideoWithSound(from: backgroundImage, soundURL: soundURL) { url in
+                if let processedURL = url {
+                    print("Video generated successfully. URL: \(processedURL)")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        self.processedVideoURL = processedURL
+                        self.showFullScreenPlayer = true
+                    }
+
+                } else {
+                    print("Failed to generate video.")
+                }
+            }
+        } else {
+            print("Error: Missing background image or sound URL.")
+        }
+    }
+
+}
 
 struct GeneratedImageView: View {
     var image: UIImage?
@@ -582,6 +674,5 @@ struct GeneratedImageView: View {
             Text("No image generated")
         }
     }
-        
 }
 

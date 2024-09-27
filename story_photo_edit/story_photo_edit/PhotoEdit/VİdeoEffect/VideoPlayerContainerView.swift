@@ -37,11 +37,13 @@ import AVFoundation
             switch selectedEffect {
             case .color(let color):
                 resetVideoCompositionIfNeeded()
+  
                 
                 let overlayView = UIView(frame: UIScreen.main.bounds)
                 overlayView.backgroundColor = UIColor(color)
                 overlayView.alpha = 0.1
                 uiViewController.view.addSubview(overlayView)
+     
                 
             case .monochrome:
                 if let currentPlayerItem = player.currentItem {
@@ -69,6 +71,7 @@ import AVFoundation
     private func resetVideoCompositionIfNeeded() {
         if let currentPlayerItem = player.currentItem {
             currentPlayerItem.videoComposition = nil
+            player.play()
         }
     }
 }

@@ -73,7 +73,7 @@ struct EffectSelectionView: View {
     }
 }
 
-enum EffectType: Hashable, Equatable {
+public enum EffectType: Hashable, Equatable {
     case color(Color)
     case monochrome
     
