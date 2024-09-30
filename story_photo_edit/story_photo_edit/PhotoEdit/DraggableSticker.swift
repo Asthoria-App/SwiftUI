@@ -21,7 +21,6 @@ struct DraggableStickerView: View {
     @Binding var draggableSticker: DraggableSticker
     @Binding var hideButtons: Bool
     let deleteArea: CGRect
-    var onDelete: () -> Void
     
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
@@ -70,7 +69,8 @@ struct DraggableStickerView: View {
                                                     shouldRemove = true
                                                 }
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                    onDelete()
+                                                    draggableSticker = DraggableSticker(image: UIImage(), position: .zero, zIndex: 1)
+                                                 
                                                 }
                                             } else {
                                                 draggableSticker.position.width += dragOffset.width
@@ -84,11 +84,14 @@ struct DraggableStickerView: View {
                                         },
                                     RotationGesture()
                                         .onChanged { newAngle in
-                                            currentAngle = newAngle - draggableSticker.angle
+                                            currentAngle = newAngle
                                         }
                                         .onEnded { newAngle in
                                             draggableSticker.angle += currentAngle
                                             currentAngle = .zero
+                                            if hideButtons == true {
+                                                hideButtons = false
+                                            }
                                             updateStickerState(geo: geometry)
                                         }
                                 )

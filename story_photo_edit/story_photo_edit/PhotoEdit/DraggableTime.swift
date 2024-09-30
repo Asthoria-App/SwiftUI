@@ -33,6 +33,8 @@ struct DraggableTimeView: View {
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
+    @State private var currentAngle: Angle = .zero
+
     
     var body: some View {
         ZStack {
@@ -42,9 +44,10 @@ struct DraggableTimeView: View {
                         Image(uiImage: getTimeImage(for: draggableTime.currentTimeStyle))
                             .resizable()
                             .scaledToFill()
+                            .opacity(draggableTime.image.size == .zero ? 0 : 1)
                             .frame(
-                                width: 150,
-                                height: draggableTime.currentTimeStyle == .normal ? 80 : 150
+                                width: 160,
+                                height: draggableTime.currentTimeStyle == .normal ? 80 : 160
                             )
                             .cornerRadius(5)
                             .clipped()
@@ -74,7 +77,7 @@ struct DraggableTimeView: View {
                                             hideButtons = true
                                             dragOffset = value.translation
                                             
-                                            let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 150, height: 150)
+                                            let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 160, height: 160)
                                             if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
                                                 isDraggingOverDelete = true
                                             } else {
@@ -92,7 +95,6 @@ struct DraggableTimeView: View {
                                             } else {
                                                 draggableTime.position.width += dragOffset.width
                                                 draggableTime.position.height += dragOffset.height
-                                                dragOffset = .zero
                                                 updateTimeState(geo: geometry)
                                             }
                                             dragOffset = .zero
@@ -101,11 +103,14 @@ struct DraggableTimeView: View {
                                         },
                                     RotationGesture()
                                         .onChanged { newAngle in
-                                            draggableTime.angle += newAngle - draggableTime.angle
+                                            draggableTime.angle = currentAngle + newAngle
                                         }
                                         .onEnded { newAngle in
-                                            draggableTime.angle = newAngle
+                                            currentAngle += newAngle
                                             updateTimeState(geo: geometry)
+                                            if hideButtons == true {
+                                                hideButtons = false
+                                            }
                                         }
                                 )
                                 .simultaneously(with: MagnificationGesture()
@@ -186,35 +191,68 @@ func getCurrentTimeAsImage() -> UIImage {
     return image ?? UIImage()
 }
 func getAnalogClockImage() -> UIImage {
-    let containerView = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+    let clockSize = CGSize(width: 160, height: 160)
+    let renderer = UIGraphicsImageRenderer(size: clockSize)
     
-    let clockFace = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
-    clockFace.layer.cornerRadius = 75
-    clockFace.layer.borderWidth = 4
-    clockFace.layer.borderColor = UIColor.black.cgColor
-    containerView.addSubview(clockFace)
+    let image = renderer.image { context in
+        let center = CGPoint(x: clockSize.width / 2, y: clockSize.height / 2)
+        let radius: CGFloat = 75
+        let clockFaceBounds = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+        
+        context.cgContext.setLineWidth(4)
+        context.cgContext.setStrokeColor(UIColor.black.cgColor)
+        context.cgContext.addEllipse(in: clockFaceBounds)
+        context.cgContext.strokePath()
+        
+        let numberFont = UIFont.systemFont(ofSize: 14, weight: .bold)
+        let numberAttributes: [NSAttributedString.Key: Any] = [
+            .font: numberFont,
+            .foregroundColor: UIColor.black
+        ]
+        
+        for hour in 1...12 {
+            let angle = CGFloat(hour) / 12.0 * .pi * 2 - .pi / 2
+            let numberString = "\(hour)" as NSString
+            let numberSize = numberString.size(withAttributes: numberAttributes)
+            
+            let numberPosition = CGPoint(
+                x: center.x + cos(angle) * (radius * 0.85) - numberSize.width / 2,
+                y: center.y + sin(angle) * (radius * 0.85) - numberSize.height / 2
+            )
+            
+            numberString.draw(at: numberPosition, withAttributes: numberAttributes)
+        }
+        
+        let date = Date()
+        let calendar = Calendar.current
+        let hour = CGFloat(calendar.component(.hour, from: date) % 12)
+        let minute = CGFloat(calendar.component(.minute, from: date))
+        let second = CGFloat(calendar.component(.second, from: date))
+        
+        context.cgContext.setLineWidth(4)
+        let hourAngle = ((hour / 12.0) + (minute / 60.0 / 12.0)) * .pi * 2 - .pi / 2
+        context.cgContext.move(to: center)
+        context.cgContext.addLine(to: CGPoint(
+            x: center.x + cos(hourAngle) * (radius * 0.5),
+            y: center.y + sin(hourAngle) * (radius * 0.5)
+        ))
+        context.cgContext.strokePath()
+        
+        context.cgContext.setLineWidth(3)
+        let minuteAngle = (minute / 60.0) * .pi * 2 - .pi / 2
+        context.cgContext.move(to: center)
+        context.cgContext.addLine(to: CGPoint(
+            x: center.x + cos(minuteAngle) * (radius * 0.7),
+            y: center.y + sin(minuteAngle) * (radius * 0.7)
+        ))
+        context.cgContext.strokePath()
+        
+     
+        
+        context.cgContext.setFillColor(UIColor.black.cgColor)
+        context.cgContext.addArc(center: center, radius: 4, startAngle: 0, endAngle: .pi * 2, clockwise: true)
+        context.cgContext.fillPath()
+    }
     
-    let date = Date()
-    let calendar = Calendar.current
-    let hour = CGFloat(calendar.component(.hour, from: date) % 12)
-    let minute = CGFloat(calendar.component(.minute, from: date))
-    
-    let hourHand = UIView(frame: CGRect(x: 75, y: 75, width: 4, height: 40))
-    hourHand.backgroundColor = .black
-    hourHand.layer.anchorPoint = CGPoint(x: 0.5, y: 0)
-    hourHand.transform = CGAffineTransform(rotationAngle: (hour / 12.0) * .pi * 2)
-    containerView.addSubview(hourHand)
-    
-    let minuteHand = UIView(frame: CGRect(x: 75, y: 75, width: 3, height: 60))
-    minuteHand.backgroundColor = .black
-    minuteHand.layer.anchorPoint = CGPoint(x: 0.5, y: 0)
-    minuteHand.transform = CGAffineTransform(rotationAngle: (minute / 60.0) * .pi * 2)
-    containerView.addSubview(minuteHand)
-    
-    UIGraphicsBeginImageContextWithOptions(containerView.bounds.size, false, 0)
-    containerView.layer.render(in: UIGraphicsGetCurrentContext()!)
-    let image = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
-    
-    return image ?? UIImage()
+    return image
 }

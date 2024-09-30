@@ -2,16 +2,15 @@ import SwiftUI
 import UIKit
 
 struct DraggableLocation {
-    var image: UIImage = UIImage()
     var position: CGSize
     var scale: CGFloat
     var angle: Angle
     var lastScaleValue: CGFloat = 1.0
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
-    var locationText: String = "Test City"
-    var backgroundColor: Color = .black
-    var textColor: Color = .white
+    var locationText: String
+    var backgroundColor: Color
+    var textColor: Color
 }
 
 struct DraggableLocationView: View {
@@ -32,7 +31,7 @@ struct DraggableLocationView: View {
                     if !shouldRemove {
                         ZStack {
                             HStack {
-                                Text("📍 " + draggableLocation.locationText)
+                                Text("" + draggableLocation.locationText)
                                     .font(Font.system(size: 24))
                                     .foregroundColor(draggableLocation.textColor)
                             }
@@ -51,7 +50,6 @@ struct DraggableLocationView: View {
                                 Color.clear
                                     .onAppear {
                                         updateLocationState(geo: geo)
-                                        draggableLocation.image = getViewAsImage()
                                         
                                     }
                             }
@@ -79,7 +77,16 @@ struct DraggableLocationView: View {
                                             }
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                                 if let selectedIndex = selectedLocationIndex {
-                                                    draggableLocation = DraggableLocation(image: UIImage(), position: draggableLocation.position, scale: 1.0, angle: .zero, zIndex: CGFloat(selectedIndex))
+                                                    draggableLocation = DraggableLocation(
+                                                        position: draggableLocation.position,
+                                                        scale: 1.0,
+                                                        angle: .zero,
+                                                        zIndex: CGFloat(selectedIndex),
+                                                        locationText: "",
+                                                        backgroundColor: .clear,
+                                                        textColor: .clear
+                                                        
+                                                    )
                                                 }
                                             }
                                         } else {
@@ -114,16 +121,8 @@ struct DraggableLocationView: View {
                         )
                         .onTapGesture {
                             tapCount += 1
-                            print("Tap count: \(tapCount)")
-                            print("Before generating image - locationText: \(draggableLocation.locationText), textColor: \(draggableLocation.textColor), backgroundColor: \(draggableLocation.backgroundColor)")
-                            
                             updateLocationOnTap()
                             
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                draggableLocation.image = getViewAsImage()
-                                
-                                print("After generating image - locationText: \(draggableLocation.locationText), textColor: \(draggableLocation.textColor), backgroundColor: \(draggableLocation.backgroundColor)")
-                            }
                         }
                     }
                 }
@@ -146,35 +145,6 @@ struct DraggableLocationView: View {
         print("Updated Location Global Frame: \(draggableLocation.globalFrame)", transformedSize)
     }
     
-    private func getViewAsImage() -> UIImage {
-        let label = UILabel()
-        label.text = "📍 " + draggableLocation.locationText
-        
-        
-        label.font = UIFont.systemFont(ofSize: 24)
-        
-        
-        let uiColor = convertColorToUIColor(color: draggableLocation.textColor)
-        let backgroundColor = convertColorToUIColor(color: draggableLocation.backgroundColor)
-        
-        label.textColor = uiColor
-        label.backgroundColor = backgroundColor.withAlphaComponent(0.6)
-        
-        print("Generating Image with text: \(draggableLocation.locationText)")
-        print("Generating Image with textColor: \(draggableLocation.textColor)")
-        print("Generating Image with backgroundColor: \(draggableLocation.backgroundColor)")
-        
-        label.textAlignment = .center
-        label.sizeToFit()
-        label.frame = CGRect(x: 0, y: 0, width: 140, height: 40)
-        
-        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
-        label.layer.render(in: UIGraphicsGetCurrentContext()!)
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        return image ?? UIImage()
-    }
     
     private func updateLocationOnTap() {
         switch tapCount {
@@ -190,7 +160,7 @@ struct DraggableLocationView: View {
             draggableLocation = draggableLocation.copyWith(newBackground: .white, newTextColor: .red)
             
         default:
-            draggableLocation.locationText = "Test City"
+            draggableLocation.locationText = "📍Test City"
             draggableLocation.textColor = .white
             draggableLocation.backgroundColor = .black
             draggableLocation = draggableLocation.copyWith(newBackground: .black, newTextColor: .white)
@@ -199,24 +169,16 @@ struct DraggableLocationView: View {
     }
 }
 
-func convertColorToUIColor(color: Color) -> UIColor {
-    if let cgColor = color.cgColor {
-        return UIColor(cgColor: cgColor)
-    } else {
-        return UIColor.systemRed
-    }
-}
+
 
 extension DraggableLocation {
     func copyWith(newBackground: Color? = nil, newTextColor: Color?) -> DraggableLocation {
         var copy = self
         if let newBackground = newBackground {
-            print(newBackground.description, "newBackground")
             copy.backgroundColor = newBackground
         }
         if let newTextColor = newTextColor {
             copy.textColor = newTextColor
-            print(newTextColor.description, "newTextColor")
         }
         return copy
     }

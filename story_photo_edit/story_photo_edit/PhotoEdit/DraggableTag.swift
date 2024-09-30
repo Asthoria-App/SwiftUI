@@ -15,8 +15,8 @@ struct DraggableTag {
     var lastScaleValue: CGFloat = 1.0
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
-    var backgroundColor: Color = .black
-    var textColor: Color = .white
+    var backgroundColor: Color
+    var textColor: Color
     var useGradientText: Bool = false
     var originalText: String
 }
@@ -24,13 +24,16 @@ struct DraggableTag {
 struct DraggableTagView: View {
     @Binding var draggableTag: DraggableTag
     @Binding var hideButtons: Bool
+    @Binding var selectedTagIndex: Int?
 
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
     @State private var tapCount: Int = 0
+    @State private var currentAngle: Angle = .zero
 
-    @Binding var selectedTagIndex: Int?
+
+   
 
     let gradientColor = LinearGradient(
         gradient: Gradient(colors: [.red, .blue]),
@@ -44,7 +47,7 @@ struct DraggableTagView: View {
                 VStack {
                     if !shouldRemove {
                         ZStack {
-                            // Background ile Text'i aynı pozisyon mantığı ile birlikte hareket ettirelim
+
                             Text(draggableTag.text)
                                 .font(Font.system(size: 26))
                                 .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
@@ -54,32 +57,63 @@ struct DraggableTagView: View {
                                 )
                                 .padding(6)
                                 .background(draggableTag.backgroundColor.opacity(0.6))
-                                .cornerRadius(5)  // Arka planı yuvarlatıyoruz
-                                .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale)  // Ölçekleme
-                                .rotationEffect(draggableTag.angle)  // Döndürme
+                                .cornerRadius(5)
+                                .scaleEffect(draggableTag.lastScaleValue * draggableTag.scale)
+                                .rotationEffect(draggableTag.angle)
                                 .offset(x: draggableTag.position.width + dragOffset.width,
-                                        y: draggableTag.position.height + dragOffset.height)  // Konumlandırma
+                                        y: draggableTag.position.height + dragOffset.height)
                                 .gesture(
                                     SimultaneousGesture(
                                         DragGesture()
                                             .onChanged { value in
                                                 hideButtons = true
                                                 dragOffset = value.translation
+                                                
+                                                let deleteAreaFrame = CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 200, height: 200)
+                                                if deleteAreaFrame.contains(CGPoint(x: value.location.x + geometry.frame(in: .global).minX, y: value.location.y + geometry.frame(in: .global).minY)) {
+                                                    isDraggingOverDelete = true
+                                                } else {
+                                                    isDraggingOverDelete = false
+                                                }
                                             }
                                             .onEnded { value in
-                                                draggableTag.position.width += dragOffset.width
-                                                draggableTag.position.height += dragOffset.height
+                                                if isDraggingOverDelete {
+                                                    withAnimation(.smooth(duration: 0.3)) {
+                                                        shouldRemove = true
+                                                    }
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                  
+                                                        draggableTag = DraggableTag(
+                                                            text: "",
+                                                            position: .zero,
+                                                            scale: 1.0,
+                                                            angle: .zero,
+                                                            zIndex: 1,
+                                                            backgroundColor: .clear,
+                                                            textColor: .clear,
+                                                            originalText: ""
+                                                            
+                                                        )
+                                                    }
+                                                    
+                                                } else {
+                                                    draggableTag.position.width += dragOffset.width
+                                                    draggableTag.position.height += dragOffset.height
+                                                }
                                                 dragOffset = .zero
-                                                updateTagState(geo: geometry)
                                                 hideButtons = false
+                                                isDraggingOverDelete = false
                                             },
                                         RotationGesture()
                                             .onChanged { newAngle in
-                                                draggableTag.angle += newAngle - draggableTag.angle
+                                                draggableTag.angle = currentAngle + newAngle
                                             }
                                             .onEnded { newAngle in
-                                                draggableTag.angle = newAngle
+                                                currentAngle += newAngle
                                                 updateTagState(geo: geometry)
+                                                if hideButtons == true {
+                                                    hideButtons = false
+                                                }
                                             }
                                     )
                                     .simultaneously(with: MagnificationGesture()
@@ -95,7 +129,7 @@ struct DraggableTagView: View {
                                 )
                                 .onTapGesture {
                                     tapCount += 1
-                                    updateTagAppearance()  // Tap count'a göre görünüm değişimi
+                                    updateTagAppearance()
                                 }
                         }
                     }
@@ -140,9 +174,11 @@ struct DraggableTagView: View {
             ),
             size: transformedSize
         )
-        print("Updated Location Global Frame: \(draggableTag.globalFrame)")
+        print("Updated Tag Global Frame: \(draggableTag.globalFrame)")
     }
 }
+
+
 
 extension DraggableTag {
     func copyWith(newBackground: Color? = nil, newTextColor: Color? = nil, useGradientText: Bool? = nil) -> DraggableTag {
