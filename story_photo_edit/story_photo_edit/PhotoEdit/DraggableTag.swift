@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct DraggableTag {
+struct DraggableTag: Identifiable, Equatable {
+    var id = UUID()
     var text: String
     var position: CGSize
     var scale: CGFloat
@@ -99,6 +100,7 @@ struct DraggableTagView: View {
                                                 } else {
                                                     draggableTag.position.width += dragOffset.width
                                                     draggableTag.position.height += dragOffset.height
+                                                    updateTagState(geo: geometry)
                                                 }
                                                 dragOffset = .zero
                                                 hideButtons = false

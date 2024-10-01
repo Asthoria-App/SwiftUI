@@ -44,7 +44,7 @@ struct StoryEditView: View {
     @State private var selectedStickerImage: UIImage? = nil
     @State private var selectedEffect: EffectType? = nil
     
-    @State private var backgroundType: BackgroundType = .photo
+    @State private var backgroundType: BackgroundType = .video
     @State private var backgroundImage: UIImage? = nil
     @State private var selectedGradient: LinearGradient? = nil
     @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
@@ -341,7 +341,12 @@ struct StoryEditView: View {
             set: { self.showFullScreenPlayer = $0 }
         )) {
             if let url = processedVideoURL {
-                SimpleVideoPlayerView(videoURL: url)
+                
+                
+                
+                SimpleVideoPlayerView(videoURL: url,
+                                      tagPositions: draggableTags.map { ($0.globalFrame.origin, draggableTags.firstIndex(of: $0) ?? 0) },
+                                      locationPositions: draggableLocations.map { ($0.globalFrame.origin, draggableLocations.firstIndex(of: $0) ?? 0) })
               
                     .onAppear {
                         print("Playing video from URL: \(url)")
@@ -380,10 +385,14 @@ struct StoryEditView: View {
         }
         
         .sheet(isPresented: $showGeneratedImageView) {
-            GeneratedImageView(image: generatedImage)
-                .background(Color.green)
-            
+            GeneratedImageView(
+                image: generatedImage,
+                tagPositions: draggableTags.map { ($0.globalFrame.origin, draggableTags.firstIndex(of: $0) ?? 0) },
+                locationPositions: draggableLocations.map { ($0.globalFrame.origin, draggableLocations.firstIndex(of: $0) ?? 0) }
+            )
         }
+
+
         
         .onChange(of: showOverlay) { newValue in
             hideButtons = newValue
@@ -520,6 +529,8 @@ struct StoryEditView: View {
         generatedImage = image
         showGeneratedImageView = true
     }
+
+
     
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = exportedVideoURL else {
@@ -582,17 +593,23 @@ struct StoryEditView: View {
 
 struct GeneratedImageView: View {
     var image: UIImage?
+    var tagPositions: [(position: CGPoint, index: Int)]
+    var locationPositions: [(position: CGPoint, index: Int)]
     
     var body: some View {
-        if let image = image {
-            Image(uiImage: image)
-            
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .edgesIgnoringSafeArea(.all)
-        } else {
-            Text("No image generated")
+        ZStack {
+            if let image = image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .edgesIgnoringSafeArea(.all)
+            } else {
+                Text("No image generated")
+            }
+
+        }
+        .onAppear {
+            print(tagPositions, locationPositions, "positions")
         }
     }
 }
-

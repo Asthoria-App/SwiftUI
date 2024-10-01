@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-struct DraggableLocation {
+struct DraggableLocation: Identifiable, Equatable {
+    var id = UUID()
     var position: CGSize
     var scale: CGFloat
     var angle: Angle

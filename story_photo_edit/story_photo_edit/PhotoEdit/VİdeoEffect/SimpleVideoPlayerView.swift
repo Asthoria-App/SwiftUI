@@ -10,6 +10,8 @@ import AVKit
 
 struct SimpleVideoPlayerView: UIViewControllerRepresentable {
     var videoURL: URL
+    var tagPositions: [(position: CGPoint, index: Int)]
+    var locationPositions: [(position: CGPoint, index: Int)]
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let playerViewController = AVPlayerViewController()
@@ -18,6 +20,9 @@ struct SimpleVideoPlayerView: UIViewControllerRepresentable {
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
             player.seek(to: .zero)
             player.play()
+               
+                    print(tagPositions, locationPositions, "positions")
+                
         }
         
         playerViewController.player = player
