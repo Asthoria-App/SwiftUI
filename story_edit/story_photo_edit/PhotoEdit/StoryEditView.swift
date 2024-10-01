@@ -387,7 +387,7 @@ struct StoryEditView: View {
                 locationPositions: draggableLocations.map { ($0.globalFrame.origin, draggableLocations.firstIndex(of: $0) ?? 0) }
             )
         }
-
+                                                   
 
         
         .onChange(of: showOverlay) { newValue in
@@ -525,9 +525,6 @@ struct StoryEditView: View {
         generatedImage = image
         showGeneratedImageView = true
     }
-
-
-    
     private func processVideo(videoFrame: CGRect) {
         guard let videoURL = inputVideoURL else {
             print("Video URL not found")
