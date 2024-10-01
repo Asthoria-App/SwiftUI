@@ -26,29 +26,29 @@ struct DraggableTagView: View {
     @Binding var draggableTag: DraggableTag
     @Binding var hideButtons: Bool
     @Binding var selectedTagIndex: Int?
-
+    
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
     @State private var tapCount: Int = 0
     @State private var currentAngle: Angle = .zero
-
-
-   
-
+    
+    
+    
+    
     let gradientColor = LinearGradient(
         gradient: Gradient(colors: [.red, .blue]),
         startPoint: .leading,
         endPoint: .trailing
     )
-
+    
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack {
                     if !shouldRemove {
                         ZStack {
-
+                            
                             Text(draggableTag.text)
                                 .font(Font.system(size: 26))
                                 .foregroundColor(draggableTag.useGradientText ? .clear : draggableTag.textColor)
@@ -83,7 +83,7 @@ struct DraggableTagView: View {
                                                         shouldRemove = true
                                                     }
                                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                  
+                                                        
                                                         draggableTag = DraggableTag(
                                                             text: "",
                                                             position: .zero,
@@ -139,7 +139,7 @@ struct DraggableTagView: View {
             }
         }
     }
-
+    
     private func updateTagAppearance() {
         switch tapCount {
         case 1:
@@ -179,6 +179,7 @@ struct DraggableTagView: View {
         print("Updated Tag Global Frame: \(draggableTag.globalFrame)")
     }
 }
+
 
 
 

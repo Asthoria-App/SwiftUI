@@ -6,11 +6,41 @@ import SceneKit
 struct story_photo_editApp: App {
     var body: some Scene {
         WindowGroup {
-            StoryEditView()
+            ContentView()
         }
     }
 }
 
+struct ContentView: View {
+    @State private var selectedBackgroundType: BackgroundType = .photo
+    @State private var backgroundImage: UIImage? = nil
+    @State private var inputVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+    @State private var showStoryEditView: Bool = false
+    
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Button("Video") {
+                selectedBackgroundType = .video
+                showStoryEditView = true
+            }
+          
+            
+            Button("Photo") {
+                selectedBackgroundType = .photo
+                showStoryEditView = true
+            }
+       
+        }
+        .fullScreenCover(isPresented: $showStoryEditView) {
+                 StoryEditView(
+                     backgroundType: $selectedBackgroundType,
+                     backgroundImage: $backgroundImage,
+                     inputVideoURL: $inputVideoURL
+                 )
+             }
+    }
+}
 
 struct ARFaceFilterView: UIViewControllerRepresentable {
     @Binding var selectedMask: MaskType
@@ -30,7 +60,7 @@ enum MaskType {
     case glasses, halfMask, beard, hair1, hair2
 }
 
-struct ContentView: View {
+struct MaskView: View {
     @State private var selectedMask: MaskType = .glasses
 
     var body: some View {

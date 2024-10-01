@@ -44,10 +44,10 @@ struct StoryEditView: View {
     @State private var selectedStickerImage: UIImage? = nil
     @State private var selectedEffect: EffectType? = nil
     
-    @State private var backgroundType: BackgroundType = .video
-    @State private var backgroundImage: UIImage? = nil
-    @State private var selectedGradient: LinearGradient? = nil
-    @State private var exportedVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+    @Binding var backgroundType: BackgroundType 
+    @Binding  var backgroundImage: UIImage?
+    @State  var selectedGradient: LinearGradient? = nil
+    @Binding  var inputVideoURL: URL? 
     
     @State private var selectedSoundURL: URL? = nil
     @State private var isMuted: Bool = false
@@ -55,8 +55,8 @@ struct StoryEditView: View {
     @State private var  isVideoPlaying: Bool = true
 
     
-    @State private var processedVideoURL: URL? = nil
-    @State private var generatedImage: UIImage? = nil
+    @State var processedVideoURL: URL?
+    @State  var generatedImage: UIImage?
     @State private var tagText: String = ""
     
     //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
@@ -112,7 +112,7 @@ struct StoryEditView: View {
                     FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted, isPlaying: $isVideoPlaying)
                         .edgesIgnoringSafeArea(.all)
                 }
-                else if let exportedVideoURL = exportedVideoURL {
+                else if let exportedVideoURL = inputVideoURL {
                     FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted, isPlaying: $isVideoPlaying)
                         .edgesIgnoringSafeArea(.all)
                 }
@@ -450,7 +450,7 @@ struct StoryEditView: View {
     }
     
     private func getVideoFrame() -> CGRect? {
-        guard let videoURL = exportedVideoURL else {
+        guard let videoURL = inputVideoURL else {
             return nil
         }
         
@@ -533,7 +533,7 @@ struct StoryEditView: View {
 
     
     private func processVideo(videoFrame: CGRect) {
-        guard let videoURL = exportedVideoURL else {
+        guard let videoURL = inputVideoURL else {
             print("Video URL not found")
             return
         }
