@@ -102,6 +102,7 @@ struct DraggableImageView: View {
                                             }
                                         }
                                 )
+                                
                                 .simultaneously(with: MagnificationGesture()
                                     .onChanged { value in
                                         draggableImage.scale = value

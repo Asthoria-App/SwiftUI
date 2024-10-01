@@ -23,6 +23,8 @@ struct DraggableLocationView: View {
     @State private var isDraggingOverDelete: Bool = false
     @State private var dragOffset: CGSize = .zero
     @State private var shouldRemove: Bool = false
+    @State private var currentAngle: Angle = .zero
+
     
     var body: some View {
         ZStack {
@@ -101,11 +103,14 @@ struct DraggableLocationView: View {
                                     },
                                 RotationGesture()
                                     .onChanged { newAngle in
-                                        draggableLocation.angle += newAngle - draggableLocation.angle
+                                        draggableLocation.angle  = currentAngle + newAngle
                                     }
                                     .onEnded { newAngle in
-                                        draggableLocation.angle = newAngle
+                                        currentAngle += newAngle
                                         updateLocationState(geo: geometry)
+                                        if hideButtons == true {
+                                            hideButtons = false
+                                        }
                                     }
                             )
                             .simultaneously(with: MagnificationGesture()

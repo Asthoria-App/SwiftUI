@@ -52,6 +52,8 @@ struct StoryEditView: View {
     @State private var selectedSoundURL: URL? = nil
     @State private var isMuted: Bool = false
     @State private var  isPlaying: Bool = true
+    @State private var  isVideoPlaying: Bool = true
+
     
     @State private var processedVideoURL: URL? = nil
     @State private var generatedImage: UIImage? = nil
@@ -89,13 +91,13 @@ struct StoryEditView: View {
             case .photo:
                 if let backgroundImage = backgroundImage {
                     GeometryReader { geometry in
-                                Image(uiImage: backgroundImage)
-                                    .resizable()
-                                    .scaledToFill() // Center-crop etkisi
-                                    .frame(width: geometry.size.width, height: geometry.size.height) // Ekran boyutlarını ayarlar
-                                    .clipped() // Taşan kısımları keser
-                                    .edgesIgnoringSafeArea(.all) // Tüm ekranı kaplayacak şekilde kenarlara taşır
-                            }
+                        Image(uiImage: backgroundImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                            .edgesIgnoringSafeArea(.all)
+                    }
                 } else if let selectedGradient = selectedGradient {
                     selectedGradient
                         .edgesIgnoringSafeArea(.all)
@@ -104,16 +106,18 @@ struct StoryEditView: View {
                         .resizable()
                         .edgesIgnoringSafeArea(.all)
                 }
+                
             case .video:
                 if let processedVideoURL = processedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted)
+                    FullScreenVideoPlayerView(videoURL: processedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted, isPlaying: $isVideoPlaying)
                         .edgesIgnoringSafeArea(.all)
                 }
                 else if let exportedVideoURL = exportedVideoURL {
-                    FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted)
+                    FullScreenVideoPlayerView(videoURL: exportedVideoURL, selectedEffect: $selectedEffect, hideButtons: $hideButtons, isMUted: $isMuted, isPlaying: $isVideoPlaying)
                         .edgesIgnoringSafeArea(.all)
                 }
             }
+            
             addDraggableElements()
             if !showDrawingOverlay && !hideButtons && !showTagOverlay{
                 GeometryReader { geometry in
@@ -332,17 +336,16 @@ struct StoryEditView: View {
             GradientImagePickerView(gradients: gradientOptions, selectedGradient: $selectedGradient, selectedImage: $backgroundImage, showBackgroundImagePicker: $showBackgroundImagePicker)
         }
         
-        
-        
         .fullScreenCover(isPresented: Binding(
             get: { self.processedVideoURL != nil && self.showFullScreenPlayer },
             set: { self.showFullScreenPlayer = $0 }
         )) {
             if let url = processedVideoURL {
-                VideoPlayer(player: AVPlayer(url: url))
-                    .edgesIgnoringSafeArea(.all)
+                SimpleVideoPlayerView(videoURL: url)
+              
                     .onAppear {
                         print("Playing video from URL: \(url)")
+                        isVideoPlaying = false
                         isPlaying = false
                     }
             } else {
@@ -375,6 +378,7 @@ struct StoryEditView: View {
                     }
                 }
         }
+        
         .sheet(isPresented: $showGeneratedImageView) {
             GeneratedImageView(image: generatedImage)
                 .background(Color.green)
@@ -384,9 +388,7 @@ struct StoryEditView: View {
         .onChange(of: showOverlay) { newValue in
             hideButtons = newValue
         }
-        
-        
-        
+
     }
     
     private func addDraggableElements() -> some View {
@@ -429,13 +431,11 @@ struct StoryEditView: View {
                 DraggableStickerView(draggableSticker: $draggableStickers[index], hideButtons: $hideButtons, deleteArea: CGRect(x: UIScreen.main.bounds.width / 2 - 100, y: UIScreen.main.bounds.height - 100, width: 100, height: 100))
                     .frame(width: 100, height: 100)
                     .zIndex(draggableStickers[index].zIndex)
-                
             }
             
             ForEach(draggableTexts.indices, id: \.self) { index in
                 DraggableTextView(draggableText: $draggableTexts[index], hideButtons: $hideButtons, showOverlay: $showOverlay, selectedTextIndex: $selectedTextIndex, index: index)
                     .zIndex(draggableTexts[index].zIndex)
-                
             }
         }
     }
@@ -475,13 +475,13 @@ struct StoryEditView: View {
             if backgroundType == .photo {
                 if let backgroundImage = backgroundImage {
                     GeometryReader { geometry in
-                                   Image(uiImage: backgroundImage)
-                                       .resizable()
-                                       .scaledToFill()
-                                       .frame(width: geometry.size.width, height: geometry.size.height)
-                                       .clipped()
-//                                       .edgesIgnoringSafeArea(.all)
-                               }
+                        Image(uiImage: backgroundImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                        //                                       .edgesIgnoringSafeArea(.all)
+                    }
                 } else if let selectedGradient = selectedGradient {
                     selectedGradient
                         .edgesIgnoringSafeArea(.all)
@@ -490,9 +490,8 @@ struct StoryEditView: View {
                 }
             }
             addDraggableElements()
+            
                 .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-            
-            
         }
         
         let window = UIWindow(frame: UIScreen.main.bounds)

@@ -131,21 +131,33 @@ struct DrawingOverlay: View {
             canvasView.isUserInteractionEnabled = true
         }
     }
-
     private func updateTool() {
         switch selectedTool {
         case .pen:
             tool = PKInkingTool(.pen, color: UIColor(toolColor), width: lineWidth)
         case .crayon:
-            tool = PKInkingTool(.crayon, color: UIColor(toolColor), width: lineWidth)
+            if #available(iOS 17.0, *) {
+                tool = PKInkingTool(.crayon, color: UIColor(toolColor), width: lineWidth)
+            } else {
+                // iOS 17'den önce crayon yok, alternatif olarak pencil kullan
+                tool = PKInkingTool(.pencil, color: UIColor(toolColor), width: lineWidth)
+            }
         case .marker:
             tool = PKInkingTool(.marker, color: UIColor(toolColor), width: lineWidth)
         case .watercolor:
-            tool = PKInkingTool(.watercolor, color: UIColor(toolColor), width: lineWidth)
+            if #available(iOS 17.0, *) {
+                tool = PKInkingTool(.watercolor, color: UIColor(toolColor), width: lineWidth)
+            } else {
+                // iOS 17'den önce watercolor yok, alternatif olarak pen kullan
+                tool = PKInkingTool(.pen, color: UIColor(toolColor), width: lineWidth)
+            }
         case .eraser:
             tool = PKEraserTool(.bitmap)
         }
     }
+
+
+
 
     private func undoLastDrawing() {
         if !drawings.isEmpty {

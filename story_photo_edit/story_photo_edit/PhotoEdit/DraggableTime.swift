@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-
 struct DraggableTime {
+    
     var image: UIImage
     var position: CGSize
     var scale: CGFloat
@@ -17,6 +17,7 @@ struct DraggableTime {
     var zIndex: CGFloat
     var globalFrame: CGRect = .zero
     var currentTimeStyle: TimeStyle = .normal
+    
 }
 
 enum TimeStyle {
@@ -165,6 +166,7 @@ struct DraggableTimeView: View {
         )
     }
 }
+
 func getCurrentTimeAsImage() -> UIImage {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "HH:mm"
@@ -245,14 +247,11 @@ func getAnalogClockImage() -> UIImage {
             x: center.x + cos(minuteAngle) * (radius * 0.7),
             y: center.y + sin(minuteAngle) * (radius * 0.7)
         ))
+        
         context.cgContext.strokePath()
-        
-     
-        
         context.cgContext.setFillColor(UIColor.black.cgColor)
         context.cgContext.addArc(center: center, radius: 4, startAngle: 0, endAngle: .pi * 2, clockwise: true)
         context.cgContext.fillPath()
     }
-    
     return image
 }

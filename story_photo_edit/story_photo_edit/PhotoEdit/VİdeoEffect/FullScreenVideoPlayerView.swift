@@ -15,14 +15,16 @@ struct FullScreenVideoPlayerView: View {
     @Binding var selectedEffect: EffectType?
     @Binding var hideButtons: Bool
     @Binding var isMUted: Bool
-    
+    @Binding var isPlaying: Bool  
     
     var body: some View {
         VStack {
             VideoPlayerContainer(player: player, selectedEffect: $selectedEffect)
                 .onAppear {
                     setupPlayer()
-                    player.play()
+                    if isPlaying {
+                        player.play()
+                    }
                 }
                 .onDisappear {
                     player.pause()
@@ -30,6 +32,13 @@ struct FullScreenVideoPlayerView: View {
                 }
                 .onChange(of: isMUted) { newValue in
                     player.isMuted = newValue
+                }
+                .onChange(of: isPlaying) { newValue in
+                    if newValue {
+                        player.play()
+                    } else {
+                        player.pause()
+                    }
                 }
                 .edgesIgnoringSafeArea(.all)
             
@@ -47,7 +56,9 @@ struct FullScreenVideoPlayerView: View {
         
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
             player.seek(to: .zero)
-            player.play()
+            if isPlaying {
+                player.play()
+            }
         }
     }
 }

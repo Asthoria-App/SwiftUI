@@ -16,14 +16,12 @@ struct ARFaceFilterView: UIViewControllerRepresentable {
     @Binding var selectedMask: MaskType
 
     func makeUIViewController(context: Context) -> ARFaceFilterViewController {
-        print("Creating ARFaceFilterViewController")
         let viewController = ARFaceFilterViewController()
         viewController.selectedMask = selectedMask
         return viewController
     }
     
     func updateUIViewController(_ uiViewController: ARFaceFilterViewController, context: Context) {
-        print("Updating ARFaceFilterViewController with selected mask: \(selectedMask)")
         uiViewController.updateMask(selectedMask: selectedMask)
     }
 }
@@ -42,20 +40,16 @@ struct ContentView: View {
             
             HStack {
                 Button("Glasses") {
-                    print("Glasses button pressed")
                     selectedMask = .glasses
                 }
                 Button("Half Mask") {
-                    print("Half Mask button pressed")
                     selectedMask = .halfMask
                 }
                 Button("Beard") {
-                    print("Beard button pressed")
                     selectedMask = .beard
                 }
                 
                 Button("Hair1") {
-                    print("Beard button pressed")
                     selectedMask = .hair1
                 }
             }
