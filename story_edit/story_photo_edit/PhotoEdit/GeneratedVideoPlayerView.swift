@@ -1,5 +1,5 @@
 //
-//  SimpleVideoPlayerView.swift
+//  GeneratedVideoPlayerView.swift
 //  story_photo_edit
 //
 //  Created by Aysema Çam on 19.09.2024.
@@ -8,7 +8,7 @@
 import SwiftUI
 import AVKit
 
-struct SimpleVideoPlayerView: UIViewControllerRepresentable {
+struct GeneratedVideoPlayerView: UIViewControllerRepresentable {
     var videoURL: URL
     var tagPositions: [(position: CGPoint, index: Int)]
     var locationPositions: [(position: CGPoint, index: Int)]

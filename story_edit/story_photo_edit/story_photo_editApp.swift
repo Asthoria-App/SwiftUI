@@ -13,7 +13,7 @@ struct story_photo_editApp: App {
 
 struct ContentView: View {
     @State private var selectedBackgroundType: BackgroundType = .photo
-    @State private var backgroundImage: UIImage? = nil
+    @State private var backgroundImage: UIImage? = UIImage(named: "image")
     @State private var inputVideoURL: URL? = URL(string: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
     @State private var showStoryEditView: Bool = false
     
@@ -30,8 +30,8 @@ struct ContentView: View {
                 selectedBackgroundType = .photo
                 showStoryEditView = true
             }
-       
         }
+        
         .fullScreenCover(isPresented: $showStoryEditView) {
                  StoryEditView(
                      backgroundType: $selectedBackgroundType,
@@ -41,6 +41,9 @@ struct ContentView: View {
              }
     }
 }
+
+
+// for test mask
 
 struct ARFaceFilterView: UIViewControllerRepresentable {
     @Binding var selectedMask: MaskType
@@ -87,9 +90,6 @@ struct MaskView: View {
         }
     }
 }
-
-
-
 
 class ARFaceFilterViewController: UIViewController, ARSCNViewDelegate {
     var sceneView: ARSCNView!

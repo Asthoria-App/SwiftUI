@@ -34,7 +34,7 @@
 		563B95012C80789200649B68 /* DrawingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95002C80789200649B68 /* DrawingOverlayView.swift */; };
 		563B95032C8078B800649B68 /* ToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563B95022C8078B800649B68 /* ToolButton.swift */; };
 		565CBD7F2C9C625C004A005C /* EffectSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD7E2C9C625C004A005C /* EffectSelectionView.swift */; };
-		565CBD812C9C628C004A005C /* SimpleVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD802C9C628C004A005C /* SimpleVideoPlayerView.swift */; };
+		565CBD812C9C628C004A005C /* GeneratedVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD802C9C628C004A005C /* GeneratedVideoPlayerView.swift */; };
 		565CBD832C9C62BC004A005C /* EffectButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD822C9C62BC004A005C /* EffectButton.swift */; };
 		565CBD852C9C62EF004A005C /* VideoPlayerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD842C9C62EF004A005C /* VideoPlayerContainerView.swift */; };
 		565CBD872C9C636B004A005C /* FullScreenVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565CBD862C9C636B004A005C /* FullScreenVideoPlayerView.swift */; };
@@ -50,6 +50,7 @@
 		568D7CB32C76285000A4D361 /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568D7CB22C76285000A4D361 /* Font+Extensions.swift */; };
 		56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56901BC82C8748DA00F611E9 /* VideoProcessor.swift */; };
 		569753862C9ADF2C00F8654D /* Hair_2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569753842C9ADF2900F8654D /* Hair_2.usdz */; };
+		569C2CEF2CABECCD006DB3D4 /* GeneratedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569C2CEE2CABECCD006DB3D4 /* GeneratedImageView.swift */; };
 		56AC5F2E2C7CDCA7000E04DD /* gif_1.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */; };
 		56AC5F2F2C7CDCA7000E04DD /* gif_3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */; };
 		56AC5F302C7CDCA7000E04DD /* gif_4.gif in Resources */ = {isa = PBXBuildFile; fileRef = 56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */; };
@@ -90,7 +91,7 @@
 		563B95002C80789200649B68 /* DrawingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingOverlayView.swift; sourceTree = "<group>"; };
 		563B95022C8078B800649B68 /* ToolButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButton.swift; sourceTree = "<group>"; };
 		565CBD7E2C9C625C004A005C /* EffectSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectSelectionView.swift; sourceTree = "<group>"; };
-		565CBD802C9C628C004A005C /* SimpleVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleVideoPlayerView.swift; sourceTree = "<group>"; };
+		565CBD802C9C628C004A005C /* GeneratedVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedVideoPlayerView.swift; sourceTree = "<group>"; };
 		565CBD822C9C62BC004A005C /* EffectButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectButton.swift; sourceTree = "<group>"; };
 		565CBD842C9C62EF004A005C /* VideoPlayerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerContainerView.swift; sourceTree = "<group>"; };
 		565CBD862C9C636B004A005C /* FullScreenVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenVideoPlayerView.swift; sourceTree = "<group>"; };
@@ -107,6 +108,7 @@
 		568D7CB22C76285000A4D361 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
 		56901BC82C8748DA00F611E9 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
 		569753842C9ADF2900F8654D /* Hair_2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Hair_2.usdz; sourceTree = "<group>"; };
+		569C2CEE2CABECCD006DB3D4 /* GeneratedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedImageView.swift; sourceTree = "<group>"; };
 		56AC5F2A2C7CDCA7000E04DD /* gif_1.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_1.gif; sourceTree = "<group>"; };
 		56AC5F2B2C7CDCA7000E04DD /* gif_3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_3.gif; sourceTree = "<group>"; };
 		56AC5F2C2C7CDCA7000E04DD /* gif_4.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = gif_4.gif; sourceTree = "<group>"; };
@@ -174,6 +176,8 @@
 			children = (
 				565CBD7D2C9C624A004A005C /* VİdeoEffect */,
 				561BAE152C73335200C0991E /* StoryEditView.swift */,
+				565CBD802C9C628C004A005C /* GeneratedVideoPlayerView.swift */,
+				569C2CEE2CABECCD006DB3D4 /* GeneratedImageView.swift */,
 				563B94FF2C80788000649B68 /* Drawing */,
 				563B94F82C80506B00649B68 /* DraggableImage.swift */,
 				563B94F62C804EC400649B68 /* ImagePicker.swift */,
@@ -205,7 +209,6 @@
 			isa = PBXGroup;
 			children = (
 				565CBD7E2C9C625C004A005C /* EffectSelectionView.swift */,
-				565CBD802C9C628C004A005C /* SimpleVideoPlayerView.swift */,
 				565CBD822C9C62BC004A005C /* EffectButton.swift */,
 				565CBD842C9C62EF004A005C /* VideoPlayerContainerView.swift */,
 				565CBD862C9C636B004A005C /* FullScreenVideoPlayerView.swift */,
@@ -368,7 +371,7 @@
 			files = (
 				56901BC92C8748DA00F611E9 /* VideoProcessor.swift in Sources */,
 				561BAE162C73335200C0991E /* StoryEditView.swift in Sources */,
-				565CBD812C9C628C004A005C /* SimpleVideoPlayerView.swift in Sources */,
+				565CBD812C9C628C004A005C /* GeneratedVideoPlayerView.swift in Sources */,
 				563B94F32C804E0D00649B68 /* TextOverlayView.swift in Sources */,
 				563B94F52C804E9800649B68 /* GradientImagePickerView.swift in Sources */,
 				563B94FE2C80783C00649B68 /* DrawingView.swift in Sources */,
@@ -376,6 +379,7 @@
 				5602720B2C90650D002194F8 /* DraggableLocation.swift in Sources */,
 				565CBD892C9C63A4004A005C /* SoundSelectionView.swift in Sources */,
 				565CBD852C9C62EF004A005C /* VideoPlayerContainerView.swift in Sources */,
+				569C2CEF2CABECCD006DB3D4 /* GeneratedImageView.swift in Sources */,
 				563B94F92C80506B00649B68 /* DraggableImage.swift in Sources */,
 				560272092C903098002194F8 /* DraggableTime.swift in Sources */,
 				563B94F72C804EC400649B68 /* ImagePicker.swift in Sources */,

@@ -46,21 +46,18 @@ struct StoryEditView: View {
     
     @Binding var backgroundType: BackgroundType 
     @Binding  var backgroundImage: UIImage?
-    @State  var selectedGradient: LinearGradient? = nil
-    @Binding  var inputVideoURL: URL? 
+    @State  var selectedGradient: LinearGradient? =  LinearGradient(gradient: Gradient(colors: [.red, .blue]), startPoint: .top, endPoint: .bottom)
+    @Binding  var inputVideoURL: URL?
     
     @State private var selectedSoundURL: URL? = nil
     @State private var isMuted: Bool = false
     @State private var  isPlaying: Bool = true
     @State private var  isVideoPlaying: Bool = true
 
-    
     @State var processedVideoURL: URL?
     @State  var generatedImage: UIImage?
     @State private var tagText: String = ""
     
-    //    @State private var exportedVideoURL: URL? = URL(string: "https://videos.pexels.com/video-files/853889/853889-hd_1920_1080_25fps.mp4")
-    //    @State private var exportedVideoURL: URL? = URL(string: "https://cdn.pixabay.com/video/2020/06/30/43459-436106182_small.mp4")
     
     let users = [
         User(username: "Dohn_doe", profileImage: UIImage(systemName: "person.circle.fill")!),
@@ -77,7 +74,6 @@ struct StoryEditView: View {
         User(username: "muzaffer", profileImage: UIImage(systemName: "person.circle.fill")!),
         User(username: "mohammad", profileImage: UIImage(systemName: "person.circle.fill")!),
     ]
-    
     
     let gradientOptions: [LinearGradient] = [
         LinearGradient(gradient: Gradient(colors: [.blue, .blue]), startPoint: .top, endPoint: .bottom),
@@ -344,7 +340,7 @@ struct StoryEditView: View {
                 
                 
                 
-                SimpleVideoPlayerView(videoURL: url,
+                GeneratedVideoPlayerView(videoURL: url,
                                       tagPositions: draggableTags.map { ($0.globalFrame.origin, draggableTags.firstIndex(of: $0) ?? 0) },
                                       locationPositions: draggableLocations.map { ($0.globalFrame.origin, draggableLocations.firstIndex(of: $0) ?? 0) })
               
@@ -591,25 +587,3 @@ struct StoryEditView: View {
     }
 }
 
-struct GeneratedImageView: View {
-    var image: UIImage?
-    var tagPositions: [(position: CGPoint, index: Int)]
-    var locationPositions: [(position: CGPoint, index: Int)]
-    
-    var body: some View {
-        ZStack {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .edgesIgnoringSafeArea(.all)
-            } else {
-                Text("No image generated")
-            }
-
-        }
-        .onAppear {
-            print(tagPositions, locationPositions, "positions")
-        }
-    }
-}
