@@ -13,12 +13,12 @@
 		5621F8902CA29208003F3F0F /* Eyelashes.scn in Resources */ = {isa = PBXBuildFile; fileRef = 5621F88F2CA29208003F3F0F /* Eyelashes.scn */; };
 		565CBD7A2C9C03E0004A005C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD792C9C03E0004A005C /* Vision.framework */; };
 		565CBD7C2C9C03E7004A005C /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 565CBD7B2C9C03E7004A005C /* CoreML.framework */; };
-		565CBD8E2C9D6B7D004A005C /* Lips.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 565CBD8D2C9D6B7C004A005C /* Lips.usdz */; };
-		565CBD902C9D6C6C004A005C /* Lips.scn in Resources */ = {isa = PBXBuildFile; fileRef = 565CBD8F2C9D6C6B004A005C /* Lips.scn */; };
 		569753992C9B0D1F00F8654D /* testApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569753982C9B0D1F00F8654D /* testApp.swift */; };
 		5697539B2C9B0D1F00F8654D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5697539A2C9B0D1F00F8654D /* ContentView.swift */; };
 		5697539D2C9B0D2100F8654D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5697539C2C9B0D2100F8654D /* Assets.xcassets */; };
 		569753A02C9B0D2100F8654D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5697539F2C9B0D2100F8654D /* Preview Assets.xcassets */; };
+		569C2CF32CABF1F4006DB3D4 /* Lips.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 569C2CF22CABF1F4006DB3D4 /* Lips.usdz */; };
+		569C2CF72CABF239006DB3D4 /* Lips.scn in Resources */ = {isa = PBXBuildFile; fileRef = 569C2CF62CABF239006DB3D4 /* Lips.scn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,13 +28,13 @@
 		5621F88F2CA29208003F3F0F /* Eyelashes.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Eyelashes.scn; sourceTree = "<group>"; };
 		565CBD792C9C03E0004A005C /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
 		565CBD7B2C9C03E7004A005C /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
-		565CBD8D2C9D6B7C004A005C /* Lips.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Lips.usdz; sourceTree = "<group>"; };
-		565CBD8F2C9D6C6B004A005C /* Lips.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Lips.scn; sourceTree = "<group>"; };
 		569753952C9B0D1F00F8654D /* test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		569753982C9B0D1F00F8654D /* testApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = testApp.swift; sourceTree = "<group>"; };
 		5697539A2C9B0D1F00F8654D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5697539C2C9B0D2100F8654D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5697539F2C9B0D2100F8654D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		569C2CF22CABF1F4006DB3D4 /* Lips.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Lips.usdz; sourceTree = "<group>"; };
+		569C2CF62CABF239006DB3D4 /* Lips.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = Lips.scn; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,10 +79,10 @@
 		569753972C9B0D1F00F8654D /* test */ = {
 			isa = PBXGroup;
 			children = (
-				565CBD8D2C9D6B7C004A005C /* Lips.usdz */,
-				565CBD8F2C9D6C6B004A005C /* Lips.scn */,
 				569753982C9B0D1F00F8654D /* testApp.swift */,
 				5603BC422CA1A812000A1711 /* Eyebrows.usdz */,
+				569C2CF22CABF1F4006DB3D4 /* Lips.usdz */,
+				569C2CF62CABF239006DB3D4 /* Lips.scn */,
 				5603BC442CA1AAEB000A1711 /* Eyebrows.scn */,
 				5697539A2C9B0D1F00F8654D /* ContentView.swift */,
 				5621F88D2CA291FD003F3F0F /* Eyelashes.usdz */,
@@ -159,12 +159,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				565CBD8E2C9D6B7D004A005C /* Lips.usdz in Resources */,
 				569753A02C9B0D2100F8654D /* Preview Assets.xcassets in Resources */,
+				569C2CF32CABF1F4006DB3D4 /* Lips.usdz in Resources */,
+				569C2CF72CABF239006DB3D4 /* Lips.scn in Resources */,
 				5621F8902CA29208003F3F0F /* Eyelashes.scn in Resources */,
 				5621F88E2CA291FD003F3F0F /* Eyelashes.usdz in Resources */,
 				5603BC452CA1AAEB000A1711 /* Eyebrows.scn in Resources */,
-				565CBD902C9D6C6C004A005C /* Lips.scn in Resources */,
 				5697539D2C9B0D2100F8654D /* Assets.xcassets in Resources */,
 				5603BC432CA1A813000A1711 /* Eyebrows.usdz in Resources */,
 			);
